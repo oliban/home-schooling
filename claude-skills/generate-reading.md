@@ -107,6 +107,42 @@ Include critical analysis:
 - Varför valde författaren att berätta ur detta perspektiv?
 - Hur utvecklas relationen mellan karaktärerna?
 
+## REQUIRED FIELDS (Validation)
+
+**The import will FAIL if these fields are missing or empty:**
+
+Every problem MUST have:
+- `question_text`: Non-empty string (the question in Swedish)
+- `correct_answer`: Non-empty string (A, B, C, or D)
+- `answer_type`: "multiple_choice" (required for reading)
+- `options`: Array with at least 2 items (usually 4: A, B, C, D)
+
+**Example of VALID problem:**
+```json
+{
+  "question_text": "Vem träffade Pippi i skogen?",
+  "correct_answer": "B",
+  "answer_type": "multiple_choice",
+  "options": [
+    "A: En björn",
+    "B: Tommy och Annika",
+    "C: Hennes pappa",
+    "D: En polis"
+  ],
+  "difficulty": "easy"
+}
+```
+
+**Example of INVALID problem (will be rejected):**
+```json
+{
+  "question_text": "Vem träffade Pippi?",
+  "correct_answer": "B",
+  "answer_type": "multiple_choice"
+}
+```
+This is invalid because `options` array is missing!
+
 ## Important Guidelines
 
 1. **No text extracts**: The child has already read the chapter

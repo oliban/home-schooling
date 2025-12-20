@@ -190,6 +190,35 @@ En cykel kostar 2500 kr. Med 20% rabatt, hur mycket sparar du?
 Lös ekvationen: 3x - 7 = 2x + 5
 ```
 
+## REQUIRED FIELDS (Validation)
+
+**The import will FAIL if these fields are missing or empty:**
+
+Every problem MUST have:
+- `question_text`: Non-empty string (the question in Swedish)
+- `correct_answer`: Non-empty string (the answer)
+
+For `answer_type: "multiple_choice"`:
+- `options`: Array with at least 2 items (usually 4: A, B, C, D)
+
+**Example of VALID problem:**
+```json
+{
+  "question_text": "Vad är 5 + 3?",
+  "correct_answer": "8",
+  "answer_type": "number",
+  "difficulty": "easy"
+}
+```
+
+**Example of INVALID problem (will be rejected):**
+```json
+{
+  "question_text": "",
+  "correct_answer": "8"
+}
+```
+
 ## Important Notes
 1. Always write in Swedish
 2. Include hints for medium/hard problems
