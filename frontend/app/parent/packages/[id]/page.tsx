@@ -1,0 +1,373 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
+import { packages, children } from '@/lib/api';
+
+interface Problem {
+  id: string;
+  problem_number: number;
+  question_text: string;
+  correct_answer: string;
+  answer_type: string;
+  options: string | null;
+  explanation: string | null;
+  hint: string | null;
+  difficulty: string;
+}
+
+interface PackageDetail {
+  id: string;
+  name: string;
+  grade_level: number;
+  category_id: string | null;
+  category_name: string | null;
+  problem_count: number;
+  difficulty_summary: string | null;
+  description: string | null;
+  is_global: number;
+  isOwner: boolean;
+  problems: Problem[];
+}
+
+interface ChildData {
+  id: string;
+  name: string;
+  grade_level: number;
+}
+
+export default function PackagePreview() {
+  const router = useRouter();
+  const params = useParams();
+  const packageId = params.id as string;
+
+  const [pkg, setPkg] = useState<PackageDetail | null>(null);
+  const [childrenList, setChildrenList] = useState<ChildData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Assign state
+  const [selectedChild, setSelectedChild] = useState<string>('');
+  const [customTitle, setCustomTitle] = useState('');
+  const [assigning, setAssigning] = useState(false);
+  const [assignSuccess, setAssignSuccess] = useState(false);
+
+  // Delete state
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('parentToken');
+    if (!token) {
+      router.push('/parent/login');
+      return;
+    }
+    loadData(token);
+  }, [router, packageId]);
+
+  const loadData = async (token: string) => {
+    try {
+      const [packageData, childrenData] = await Promise.all([
+        packages.get(token, packageId),
+        children.list(token),
+      ]);
+      setPkg(packageData);
+      setChildrenList(childrenData);
+      setCustomTitle(packageData.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load package');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!selectedChild || !pkg) return;
+
+    const token = localStorage.getItem('parentToken');
+    if (!token) return;
+
+    setAssigning(true);
+    setError(null);
+
+    try {
+      await packages.assign(token, packageId, {
+        childId: selectedChild,
+        title: customTitle || pkg.name,
+      });
+      setAssignSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to assign package');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const token = localStorage.getItem('parentToken');
+    if (!token) return;
+
+    setDeleting(true);
+    try {
+      await packages.delete(token, packageId);
+      router.push('/parent/packages');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete package');
+      setDeleting(false);
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return 'bg-green-100 text-green-700';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'hard':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!pkg) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl text-red-600 mb-4">{error || 'Package not found'}</p>
+          <Link href="/parent/packages" className="text-purple-600 hover:underline">
+            Back to packages
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+      <header className="bg-white shadow-sm p-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/parent/packages" className="text-gray-500 hover:text-gray-700">
+              &larr; Back
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">{pkg.name}</h1>
+              <p className="text-sm text-gray-500">
+                Grade {pkg.grade_level} | {pkg.problem_count} problems
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {pkg.is_global ? (
+              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                Global
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                Private
+              </span>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto p-6">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {assignSuccess ? (
+          <div className="bg-white p-8 rounded-2xl shadow-sm text-center mb-6">
+            <div className="text-4xl mb-4">.</div>
+            <p className="text-xl font-bold text-green-600 mb-4">Assignment Created!</p>
+            <p className="text-gray-600 mb-6">
+              The package has been assigned to{' '}
+              {childrenList.find((c) => c.id === selectedChild)?.name}
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setAssignSuccess(false);
+                  setSelectedChild('');
+                }}
+                className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700"
+              >
+                Assign to Another Child
+              </button>
+              <Link
+                href="/parent"
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Assign Section */}
+            <div className="lg:col-span-1">
+              <div className="bg-white p-6 rounded-2xl shadow-sm sticky top-6">
+                <h2 className="text-lg font-bold mb-4">Assign to Child</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Child
+                    </label>
+                    <select
+                      value={selectedChild}
+                      onChange={(e) => setSelectedChild(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Choose a child...</option>
+                      {childrenList.map((child) => (
+                        <option key={child.id} value={child.id}>
+                          {child.name} (Grade {child.grade_level})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Assignment Title
+                    </label>
+                    <input
+                      type="text"
+                      value={customTitle}
+                      onChange={(e) => setCustomTitle(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder={pkg.name}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleAssign}
+                    disabled={!selectedChild || assigning}
+                    className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {assigning ? 'Assigning...' : 'Assign Package'}
+                  </button>
+                </div>
+
+                {pkg.isOwner && (
+                  <div className="mt-6 pt-6 border-t">
+                    {showDeleteConfirm ? (
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-600">
+                          Are you sure you want to delete this package?
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {deleting ? 'Deleting...' : 'Yes, Delete'}
+                          </button>
+                          <button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                      >
+                        Delete Package
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Problems Preview */}
+            <div className="lg:col-span-2">
+              <div className="bg-white p-6 rounded-2xl shadow-sm">
+                <h2 className="text-lg font-bold mb-4">
+                  Problems Preview
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    ({pkg.problems.length} questions)
+                  </span>
+                </h2>
+
+                <div className="space-y-4">
+                  {pkg.problems.map((problem, index) => (
+                    <div
+                      key={problem.id}
+                      className="p-4 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-500">
+                          Question {index + 1}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${getDifficultyColor(
+                            problem.difficulty
+                          )}`}
+                        >
+                          {problem.difficulty}
+                        </span>
+                      </div>
+
+                      <p className="text-gray-800 mb-3">{problem.question_text}</p>
+
+                      {problem.answer_type === 'multiple_choice' && problem.options && (
+                        <div className="mb-3 pl-4 space-y-1">
+                          {JSON.parse(problem.options).map((option: string, i: number) => (
+                            <div key={i} className="text-sm text-gray-600">
+                              {option}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="text-green-600">
+                          Answer: <strong>{problem.correct_answer}</strong>
+                        </span>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-gray-500">
+                          Type: {problem.answer_type}
+                        </span>
+                      </div>
+
+                      {problem.hint && (
+                        <div className="mt-2 text-sm text-blue-600">
+                          Hint: {problem.hint}
+                        </div>
+                      )}
+
+                      {problem.explanation && (
+                        <div className="mt-2 text-sm text-gray-500">
+                          Explanation: {problem.explanation}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

@@ -210,3 +210,80 @@ export const collectibles = {
       newBalance: number;
     }>(`/collectibles/${id}/buy`, { method: 'POST', token }),
 };
+
+// Packages
+export const packages = {
+  import: (
+    token: string,
+    data: {
+      package: {
+        name: string;
+        grade_level: number;
+        category_id?: string;
+        description?: string;
+        global?: boolean;
+      };
+      problems: Array<{
+        question_text: string;
+        correct_answer: string;
+        answer_type?: 'number' | 'text' | 'multiple_choice';
+        options?: string[];
+        explanation?: string;
+        hint?: string;
+        difficulty?: 'easy' | 'medium' | 'hard';
+      }>;
+      isGlobal?: boolean;
+    }
+  ) => fetchApi<{ id: string; problemCount: number }>('/packages/import', { method: 'POST', body: data, token }),
+
+  list: (token: string, filters?: { grade?: number; category?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.grade) params.set('grade', String(filters.grade));
+    if (filters?.category) params.set('category', filters.category);
+    const query = params.toString() ? `?${params}` : '';
+    return fetchApi<{
+      id: string;
+      name: string;
+      grade_level: number;
+      category_id: string | null;
+      category_name: string | null;
+      problem_count: number;
+      difficulty_summary: string | null;
+      description: string | null;
+      is_global: number;
+      created_at: string;
+      isOwner: boolean;
+    }[]>(`/packages${query}`, { token });
+  },
+
+  get: (token: string, id: string) =>
+    fetchApi<{
+      id: string;
+      name: string;
+      grade_level: number;
+      category_id: string | null;
+      category_name: string | null;
+      problem_count: number;
+      difficulty_summary: string | null;
+      description: string | null;
+      is_global: number;
+      isOwner: boolean;
+      problems: Array<{
+        id: string;
+        problem_number: number;
+        question_text: string;
+        correct_answer: string;
+        answer_type: string;
+        options: string | null;
+        explanation: string | null;
+        hint: string | null;
+        difficulty: string;
+      }>;
+    }>(`/packages/${id}`, { token }),
+
+  assign: (token: string, packageId: string, data: { childId: string; title?: string }) =>
+    fetchApi<{ id: string }>(`/packages/${packageId}/assign`, { method: 'POST', body: data, token }),
+
+  delete: (token: string, id: string) =>
+    fetchApi<{ success: boolean }>(`/packages/${id}`, { method: 'DELETE', token }),
+};

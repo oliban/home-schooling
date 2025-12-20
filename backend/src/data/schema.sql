@@ -147,6 +147,47 @@ CREATE TABLE IF NOT EXISTS progress_logs (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Math packages (reusable problem sets)
+CREATE TABLE IF NOT EXISTS math_packages (
+    id TEXT PRIMARY KEY,
+    parent_id TEXT REFERENCES parents(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    grade_level INTEGER NOT NULL CHECK (grade_level >= 1 AND grade_level <= 9),
+    category_id TEXT REFERENCES math_categories(id),
+    problem_count INTEGER NOT NULL,
+    difficulty_summary TEXT,
+    description TEXT,
+    is_global INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_active INTEGER DEFAULT 1
+);
+
+-- Package problems (immutable question definitions)
+CREATE TABLE IF NOT EXISTS package_problems (
+    id TEXT PRIMARY KEY,
+    package_id TEXT NOT NULL REFERENCES math_packages(id) ON DELETE CASCADE,
+    problem_number INTEGER NOT NULL,
+    question_text TEXT NOT NULL,
+    correct_answer TEXT NOT NULL,
+    answer_type TEXT CHECK (answer_type IN ('number', 'text', 'multiple_choice')) DEFAULT 'number',
+    options TEXT,
+    explanation TEXT,
+    hint TEXT,
+    difficulty TEXT CHECK (difficulty IN ('easy', 'medium', 'hard')) DEFAULT 'medium',
+    UNIQUE(package_id, problem_number)
+);
+
+-- Child answers for package-based assignments
+CREATE TABLE IF NOT EXISTS assignment_answers (
+    id TEXT PRIMARY KEY,
+    assignment_id TEXT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    problem_id TEXT NOT NULL REFERENCES package_problems(id),
+    child_answer TEXT,
+    is_correct INTEGER,
+    answered_at DATETIME,
+    UNIQUE(assignment_id, problem_id)
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_children_parent ON children(parent_id);
 CREATE INDEX IF NOT EXISTS idx_books_parent ON books(parent_id);
@@ -155,6 +196,10 @@ CREATE INDEX IF NOT EXISTS idx_assignments_child ON assignments(child_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
 CREATE INDEX IF NOT EXISTS idx_math_problems_assignment ON math_problems(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_reading_questions_assignment ON reading_questions(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_packages_grade ON math_packages(grade_level);
+CREATE INDEX IF NOT EXISTS idx_packages_parent ON math_packages(parent_id);
+CREATE INDEX IF NOT EXISTS idx_package_problems_package ON package_problems(package_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_answers_assignment ON assignment_answers(assignment_id);
 
 -- Seed math categories (LGR 22)
 INSERT OR IGNORE INTO math_categories (id, name_sv, name_en, min_grade, max_grade) VALUES

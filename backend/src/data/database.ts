@@ -93,6 +93,12 @@ class TeacherDatabase {
     if (!parentColsForLang.some(c => c.name === 'preferred_language')) {
       this.db.exec("ALTER TABLE parents ADD COLUMN preferred_language TEXT DEFAULT 'sv'");
     }
+
+    // Migration: Add package_id to assignments table for package-based assignments
+    const assignmentColumns = this.db.prepare("PRAGMA table_info(assignments)").all() as { name: string }[];
+    if (!assignmentColumns.some(c => c.name === 'package_id')) {
+      this.db.exec('ALTER TABLE assignments ADD COLUMN package_id TEXT REFERENCES math_packages(id)');
+    }
   }
 
   get connection(): Database.Database {

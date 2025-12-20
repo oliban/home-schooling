@@ -51,6 +51,7 @@ export interface Assignment {
   status: 'pending' | 'in_progress' | 'completed';
   created_at: string;
   completed_at: string | null;
+  package_id: string | null;
 }
 
 export interface MathProblem {
@@ -96,6 +97,63 @@ export interface ChildCollectible {
   child_id: string;
   collectible_id: string;
   acquired_at: string;
+}
+
+export interface MathPackage {
+  id: string;
+  parent_id: string | null;
+  name: string;
+  grade_level: number;
+  category_id: string | null;
+  problem_count: number;
+  difficulty_summary: string | null;
+  description: string | null;
+  is_global: number;
+  created_at: string;
+  is_active: number;
+}
+
+export interface PackageProblem {
+  id: string;
+  package_id: string;
+  problem_number: number;
+  question_text: string;
+  correct_answer: string;
+  answer_type: 'number' | 'text' | 'multiple_choice';
+  options: string | null;
+  explanation: string | null;
+  hint: string | null;
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
+export interface AssignmentAnswer {
+  id: string;
+  assignment_id: string;
+  problem_id: string;
+  child_answer: string | null;
+  is_correct: number | null;
+  answered_at: string | null;
+}
+
+// Import package request types
+export interface ImportPackageRequest {
+  package: {
+    name: string;
+    grade_level: number;
+    category_id?: string;
+    description?: string;
+    global?: boolean;
+  };
+  problems: Array<{
+    question_text: string;
+    correct_answer: string;
+    answer_type?: 'number' | 'text' | 'multiple_choice';
+    options?: string[];
+    explanation?: string;
+    hint?: string;
+    difficulty?: 'easy' | 'medium' | 'hard';
+  }>;
+  isGlobal?: boolean;
 }
 
 // API request/response types

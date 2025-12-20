@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import childrenRoutes from './routes/children.js';
 import assignmentsRoutes from './routes/assignments.js';
 import collectiblesRoutes from './routes/collectibles.js';
+import packagesRoutes from './routes/packages.js';
 
 const app = express();
 const PORT = process.env.PORT || 6001;
@@ -21,6 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/children', childrenRoutes);
 app.use('/api/assignments', assignmentsRoutes);
 app.use('/api/collectibles', collectiblesRoutes);
+app.use('/api/packages', packagesRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

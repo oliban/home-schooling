@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { children, assignments } from '@/lib/api';
+import { children, assignments, packages } from '@/lib/api';
+import FileDropZone from '@/components/ui/FileDropZone';
 
 interface ChildData {
   id: string;
@@ -30,12 +31,51 @@ interface ParentData {
   name: string;
 }
 
+interface ImportedPackage {
+  package: {
+    name: string;
+    grade_level: number;
+    category_id?: string;
+    description?: string;
+    global?: boolean;
+  };
+  problems: Array<{
+    question_text: string;
+    correct_answer: string;
+    answer_type?: 'number' | 'text' | 'multiple_choice';
+    options?: string[];
+    explanation?: string;
+    hint?: string;
+    difficulty?: 'easy' | 'medium' | 'hard';
+  }>;
+}
+
+interface ImportedBatch {
+  batch: {
+    grade_level: number;
+    category_id?: string | null;
+    global?: boolean;
+  };
+  packages: ImportedPackage[];
+}
+
 export default function ParentDashboard() {
   const router = useRouter();
   const [parent, setParent] = useState<ParentData | null>(null);
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [assignmentsList, setAssignmentsList] = useState<AssignmentData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Import state
+  const [importedData, setImportedData] = useState<ImportedPackage | null>(null);
+  const [importedBatch, setImportedBatch] = useState<ImportedBatch | null>(null);
+  const [isGlobal, setIsGlobal] = useState(false);
+  const [autoAssign, setAutoAssign] = useState(false);
+  const [selectedChildId, setSelectedChildId] = useState<string>('');
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -69,6 +109,188 @@ export default function ParentDashboard() {
     localStorage.removeItem('parentToken');
     localStorage.removeItem('parentData');
     router.push('/parent/login');
+  };
+
+  // Auto-select child by matching grade
+  const autoSelectChildByGrade = (gradeLevel: number) => {
+    const matchingChild = childrenList.find(c => c.grade_level === gradeLevel);
+    if (matchingChild) {
+      setSelectedChildId(matchingChild.id);
+      setAutoAssign(true);
+    } else if (childrenList.length === 1) {
+      // If only one child, select them regardless of grade
+      setSelectedChildId(childrenList[0].id);
+      setAutoAssign(true);
+    } else {
+      setSelectedChildId('');
+      setAutoAssign(false);
+    }
+  };
+
+  const handleFileLoad = (data: unknown) => {
+    setImportError(null);
+    setImportSuccess(null);
+    setImportedData(null);
+    setImportedBatch(null);
+
+    const parsed = data as Record<string, unknown>;
+
+    // Check if it's a batch format
+    if (parsed.batch && parsed.packages && Array.isArray(parsed.packages)) {
+      const batch = parsed as unknown as ImportedBatch;
+
+      // Validate batch structure
+      if (!batch.batch.grade_level) {
+        setImportError('Batch must have "grade_level" field.');
+        return;
+      }
+
+      if (batch.packages.length === 0) {
+        setImportError('Batch must contain at least one package.');
+        return;
+      }
+
+      // Validate each package in the batch
+      for (let i = 0; i < batch.packages.length; i++) {
+        const pkg = batch.packages[i];
+        if (!pkg.package || !pkg.problems || !Array.isArray(pkg.problems)) {
+          setImportError(`Package ${i + 1} is invalid. Must have "package" and "problems" fields.`);
+          return;
+        }
+        if (!pkg.package.name || !pkg.package.grade_level) {
+          setImportError(`Package ${i + 1} must have "name" and "grade_level" fields.`);
+          return;
+        }
+        if (pkg.problems.length === 0) {
+          setImportError(`Package ${i + 1} must contain at least one problem.`);
+          return;
+        }
+      }
+
+      setImportedBatch(batch);
+      setIsGlobal(batch.batch.global ?? false);
+      autoSelectChildByGrade(batch.batch.grade_level);
+      return;
+    }
+
+    // Single package format
+    const singlePkg = parsed as unknown as ImportedPackage;
+    if (!singlePkg.package || !singlePkg.problems || !Array.isArray(singlePkg.problems)) {
+      setImportError('Invalid format. Must be single package (with "package" and "problems") or batch (with "batch" and "packages").');
+      return;
+    }
+
+    if (!singlePkg.package.name || !singlePkg.package.grade_level) {
+      setImportError('Package must have "name" and "grade_level" fields.');
+      return;
+    }
+
+    if (singlePkg.problems.length === 0) {
+      setImportError('Package must contain at least one problem.');
+      return;
+    }
+
+    setImportedData(singlePkg);
+    setIsGlobal(singlePkg.package.global ?? false);
+    autoSelectChildByGrade(singlePkg.package.grade_level);
+  };
+
+  const handleImport = async () => {
+    const token = localStorage.getItem('parentToken');
+    if (!token) return;
+
+    // Validate auto-assign has a child selected
+    if (autoAssign && !selectedChildId) {
+      setImportError('Please select a child for auto-assignment.');
+      return;
+    }
+
+    setImporting(true);
+    setImportError(null);
+    setImportProgress(0);
+
+    try {
+      let assignmentsCreated = 0;
+
+      // Handle batch import
+      if (importedBatch) {
+        let totalProblems = 0;
+        const totalPackages = importedBatch.packages.length;
+
+        for (let i = 0; i < importedBatch.packages.length; i++) {
+          const pkg = importedBatch.packages[i];
+          const result = await packages.import(token, {
+            package: pkg.package,
+            problems: pkg.problems,
+            isGlobal,
+          });
+          totalProblems += result.problemCount;
+
+          // Auto-assign if enabled
+          if (autoAssign && selectedChildId) {
+            await packages.assign(token, result.id, {
+              childId: selectedChildId,
+              title: pkg.package.name,
+            });
+            assignmentsCreated++;
+          }
+
+          setImportProgress(Math.round(((i + 1) / totalPackages) * 100));
+        }
+
+        const assignMsg = autoAssign ? ` and assigned ${assignmentsCreated} to ${childrenList.find(c => c.id === selectedChildId)?.name}` : '';
+        setImportSuccess(`Imported ${totalPackages} packages with ${totalProblems} total problems${assignMsg}!`);
+        setImportedBatch(null);
+
+        // Reload assignments if we created any
+        if (assignmentsCreated > 0) {
+          const updatedAssignments = await assignments.list(token);
+          setAssignmentsList(updatedAssignments);
+        }
+        return;
+      }
+
+      // Handle single package import
+      if (importedData) {
+        const result = await packages.import(token, {
+          package: importedData.package,
+          problems: importedData.problems,
+          isGlobal,
+        });
+
+        // Auto-assign if enabled
+        if (autoAssign && selectedChildId) {
+          await packages.assign(token, result.id, {
+            childId: selectedChildId,
+            title: importedData.package.name,
+          });
+          assignmentsCreated = 1;
+
+          // Reload assignments
+          const updatedAssignments = await assignments.list(token);
+          setAssignmentsList(updatedAssignments);
+        }
+
+        const assignMsg = autoAssign ? ` and assigned to ${childrenList.find(c => c.id === selectedChildId)?.name}` : '';
+        setImportSuccess(`Package imported successfully with ${result.problemCount} problems${assignMsg}!`);
+        setImportedData(null);
+      }
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to import package');
+    } finally {
+      setImporting(false);
+      setImportProgress(0);
+    }
+  };
+
+  const clearImport = () => {
+    setImportedData(null);
+    setImportedBatch(null);
+    setImportError(null);
+    setImportSuccess(null);
+    setImportProgress(0);
+    setAutoAssign(false);
+    setSelectedChildId('');
   };
 
   if (loading || !parent) {
@@ -271,10 +493,253 @@ export default function ParentDashboard() {
           )}
         </section>
 
+        {/* Import Package Section */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Import Problem Package</h2>
+            <Link
+              href="/parent/packages"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              Browse Packages
+            </Link>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm">
+            {importSuccess ? (
+              <div className="text-center">
+                <div className="text-4xl mb-3">.</div>
+                <p className="text-green-600 font-medium mb-4">{importSuccess}</p>
+                <button
+                  onClick={clearImport}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  Import Another
+                </button>
+              </div>
+            ) : importedBatch ? (
+              <div>
+                <div className="mb-4 p-4 bg-purple-50 rounded-lg">
+                  <h3 className="font-bold text-lg mb-2">Batch Import</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div>Grade: {importedBatch.batch.grade_level}</div>
+                    <div>Packages: {importedBatch.packages.length}</div>
+                    <div>Total Problems: {importedBatch.packages.reduce((sum, pkg) => sum + pkg.problems.length, 0)}</div>
+                    {importedBatch.batch.category_id && (
+                      <div>Category: {importedBatch.batch.category_id}</div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-sm text-gray-500">
+                    <strong>Packages:</strong>
+                    <ul className="mt-1 pl-4 list-disc max-h-32 overflow-y-auto">
+                      {importedBatch.packages.map((pkg, i) => (
+                        <li key={i}>{pkg.package.name} ({pkg.problems.length} problems)</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isGlobal}
+                    onChange={(e) => setIsGlobal(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  <div>
+                    <span className="font-medium">Share globally</span>
+                    <p className="text-sm text-gray-500">
+                      Visible to all parents with children in grade {importedBatch.batch.grade_level}
+                    </p>
+                  </div>
+                </label>
+
+                {childrenList.length > 0 && (
+                  <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoAssign}
+                        onChange={(e) => setAutoAssign(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <span className="font-medium">Auto-assign after import</span>
+                        <p className="text-sm text-gray-500">
+                          Immediately assign all packages to selected child
+                        </p>
+                      </div>
+                    </label>
+
+                    {autoAssign && (
+                      <div className="mt-3">
+                        <select
+                          value={selectedChildId}
+                          onChange={(e) => setSelectedChildId(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select child...</option>
+                          {childrenList.map((child) => (
+                            <option key={child.id} value={child.id}>
+                              {child.name} (Grade {child.grade_level})
+                              {child.grade_level === importedBatch.batch.grade_level ? ' ✓' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {importError && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                    {importError}
+                  </div>
+                )}
+
+                {importing && importProgress > 0 && (
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm text-gray-600 mb-1">
+                      <span>Importing packages...</span>
+                      <span>{importProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 h-2 rounded-full transition-all"
+                        style={{ width: `${importProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleImport}
+                    disabled={importing || (autoAssign && !selectedChildId)}
+                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {importing ? `Importing... ${importProgress}%` : `Import ${importedBatch.packages.length} Packages${autoAssign ? ' & Assign' : ''}`}
+                  </button>
+                  <button
+                    onClick={clearImport}
+                    disabled={importing}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : importedData ? (
+              <div>
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-bold text-lg mb-2">{importedData.package.name}</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div>Grade: {importedData.package.grade_level}</div>
+                    <div>Problems: {importedData.problems.length}</div>
+                    {importedData.package.category_id && (
+                      <div>Category: {importedData.package.category_id}</div>
+                    )}
+                    {importedData.package.description && (
+                      <div className="col-span-2">Description: {importedData.package.description}</div>
+                    )}
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isGlobal}
+                    onChange={(e) => setIsGlobal(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  <div>
+                    <span className="font-medium">Share globally</span>
+                    <p className="text-sm text-gray-500">
+                      Visible to all parents with children in grade {importedData.package.grade_level}
+                    </p>
+                  </div>
+                </label>
+
+                {childrenList.length > 0 && (
+                  <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoAssign}
+                        onChange={(e) => setAutoAssign(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <span className="font-medium">Auto-assign after import</span>
+                        <p className="text-sm text-gray-500">
+                          Immediately assign to selected child
+                        </p>
+                      </div>
+                    </label>
+
+                    {autoAssign && (
+                      <div className="mt-3">
+                        <select
+                          value={selectedChildId}
+                          onChange={(e) => setSelectedChildId(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select child...</option>
+                          {childrenList.map((child) => (
+                            <option key={child.id} value={child.id}>
+                              {child.name} (Grade {child.grade_level})
+                              {child.grade_level === importedData.package.grade_level ? ' ✓' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {importError && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                    {importError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleImport}
+                    disabled={importing || (autoAssign && !selectedChildId)}
+                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {importing ? 'Importing...' : `Import Package${autoAssign ? ' & Assign' : ''}`}
+                  </button>
+                  <button
+                    onClick={clearImport}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <FileDropZone
+                  onFileLoad={handleFileLoad}
+                  label="Drop problem package JSON here"
+                  description="Single package or batch (multiple packages)"
+                />
+                {importError && (
+                  <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                    {importError}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Quick Actions */}
         <section>
           <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link
               href="/parent/children/add"
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
@@ -288,6 +753,13 @@ export default function ParentDashboard() {
             >
               <div className="text-3xl mb-2">📝</div>
               <p className="font-medium">Create Assignment</p>
+            </Link>
+            <Link
+              href="/parent/packages"
+              className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
+            >
+              <div className="text-3xl mb-2">📦</div>
+              <p className="font-medium">Browse Packages</p>
             </Link>
             <Link
               href="/login"
