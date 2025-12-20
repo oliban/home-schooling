@@ -10,18 +10,28 @@ import { useTranslation } from '@/lib/LanguageContext';
 interface Question {
   id: string;
   question_text: string;
-  answer_type?: string;
-  options?: string;
+  correct_answer: string;
+  answer_type: string;
+  options: string | null;
+  explanation: string | null;
+  hint: string | null;
+  difficulty?: string;
   child_answer: string | null;
   is_correct: number | null;
+  answered_at?: string | null;
 }
 
 interface AssignmentData {
   id: string;
+  parent_id: string;
+  child_id: string;
   assignment_type: 'math' | 'reading';
   title: string;
   grade_level: number;
   status: string;
+  package_id: string | null;
+  created_at: string;
+  completed_at: string | null;
   questions: Question[];
 }
 
