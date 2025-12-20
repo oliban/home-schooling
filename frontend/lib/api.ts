@@ -117,6 +117,8 @@ export const assignments = {
       title: string;
       status: string;
       created_at: string;
+      correct_count: number;
+      total_count: number;
     }[]>(`/assignments${query}`, { token });
   },
 

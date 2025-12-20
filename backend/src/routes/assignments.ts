@@ -11,7 +11,25 @@ router.get('/', authenticateAny, (req, res) => {
   try {
     const db = getDb();
     let query = `
-      SELECT a.*, c.name as child_name
+      SELECT a.*, c.name as child_name,
+        -- Score calculation: correct answers
+        CASE
+          WHEN a.package_id IS NOT NULL THEN
+            (SELECT COUNT(*) FROM assignment_answers aa WHERE aa.assignment_id = a.id AND aa.is_correct = 1)
+          WHEN a.assignment_type = 'math' THEN
+            (SELECT COUNT(*) FROM math_problems mp WHERE mp.assignment_id = a.id AND mp.is_correct = 1)
+          ELSE
+            (SELECT COUNT(*) FROM reading_questions rq WHERE rq.assignment_id = a.id AND rq.is_correct = 1)
+        END as correct_count,
+        -- Score calculation: total questions
+        CASE
+          WHEN a.package_id IS NOT NULL THEN
+            (SELECT COUNT(*) FROM package_problems pp WHERE pp.package_id = a.package_id)
+          WHEN a.assignment_type = 'math' THEN
+            (SELECT COUNT(*) FROM math_problems mp WHERE mp.assignment_id = a.id)
+          ELSE
+            (SELECT COUNT(*) FROM reading_questions rq WHERE rq.assignment_id = a.id)
+        END as total_count
       FROM assignments a
       JOIN children c ON a.child_id = c.id
     `;
@@ -46,7 +64,7 @@ router.get('/', authenticateAny, (req, res) => {
 
     query += ' ORDER BY a.created_at DESC';
 
-    const assignments = db.all<Assignment & { child_name: string }>(query, params);
+    const assignments = db.all<Assignment & { child_name: string; correct_count: number; total_count: number }>(query, params);
 
     res.json(assignments);
   } catch (error) {

@@ -25,6 +25,8 @@ interface AssignmentData {
   title: string;
   status: string;
   created_at: string;
+  correct_count: number;
+  total_count: number;
 }
 
 interface ParentData {
@@ -444,9 +446,10 @@ export default function ParentDashboard() {
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.pending')} ({pendingAssignments.length})</h3>
                   <div className="space-y-2">
                     {pendingAssignments.map((assignment) => (
-                      <div
+                      <Link
                         key={assignment.id}
-                        className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between"
+                        href={`/parent/assignments/${assignment.id}`}
+                        className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">
@@ -462,7 +465,7 @@ export default function ParentDashboard() {
                         <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
                           {t('parent.dashboard.pending')}
                         </span>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -473,25 +476,38 @@ export default function ParentDashboard() {
                 <div>
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.completed')} ({completedAssignments.length})</h3>
                   <div className="space-y-2">
-                    {completedAssignments.slice(0, 5).map((assignment) => (
-                      <div
-                        key={assignment.id}
-                        className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between opacity-75"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">
-                            {assignment.assignment_type === 'math' ? '📐' : '📖'}
-                          </span>
-                          <div>
-                            <p className="font-medium">{assignment.title}</p>
-                            <p className="text-sm text-gray-600">{assignment.child_name}</p>
+                    {completedAssignments.slice(0, 5).map((assignment) => {
+                      const percentage = assignment.total_count > 0
+                        ? Math.round((assignment.correct_count / assignment.total_count) * 100)
+                        : 0;
+                      const scoreColor = percentage >= 80 ? 'text-green-600' : percentage >= 60 ? 'text-yellow-600' : 'text-red-600';
+
+                      return (
+                        <Link
+                          key={assignment.id}
+                          href={`/parent/assignments/${assignment.id}`}
+                          className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between opacity-75 hover:opacity-100 hover:shadow-md transition-all block"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">
+                              {assignment.assignment_type === 'math' ? '📐' : '📖'}
+                            </span>
+                            <div>
+                              <p className="font-medium">{assignment.title}</p>
+                              <p className="text-sm text-gray-600">{assignment.child_name}</p>
+                            </div>
                           </div>
-                        </div>
-                        <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                          {t('parent.dashboard.completed')}
-                        </span>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-3">
+                            <span className={`font-semibold ${scoreColor}`}>
+                              {assignment.correct_count}/{assignment.total_count} ({percentage}%)
+                            </span>
+                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                              {t('parent.dashboard.completed')}
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}
