@@ -230,7 +230,10 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         }
 
         correctAnswer = problem.correct_answer;
-        isCorrect = answer.toString().trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+        // Normalize answers: accept both "," and ".", and ignore trailing % signs
+        const normalizeNumber = (val: string) =>
+          val.trim().toLowerCase().replace(',', '.').replace(/\s*%$/, '');
+        isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
 
         db.run(
           `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP

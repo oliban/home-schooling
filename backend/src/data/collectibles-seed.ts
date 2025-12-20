@@ -1495,11 +1495,13 @@ export function seedCollectibles(db: {
   db.run('DELETE FROM child_collectibles');
   db.run('DELETE FROM collectibles');
 
-  // Insert all collectibles
+  // Insert all collectibles with generated IDs
   for (const collectible of collectibles) {
+    // Generate ID from name: lowercase, replace spaces with underscores
+    const id = collectible.name.toLowerCase().replace(/ /g, '_').replace(/'/g, '');
     db.run(
-      'INSERT INTO collectibles (name, ascii_art, price, rarity) VALUES (?, ?, ?, ?)',
-      [collectible.name, collectible.ascii_art, collectible.price, collectible.rarity]
+      'INSERT INTO collectibles (id, name, ascii_art, price, rarity) VALUES (?, ?, ?, ?, ?)',
+      [id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity]
     );
   }
 
