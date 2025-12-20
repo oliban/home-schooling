@@ -36,3 +36,8 @@ SQLite database at `/data/teacher.db`. Schema in `/backend/src/data/schema.sql`.
 - `GET /api/children` - List children
 - `GET /api/assignments` - List assignments
 - `POST /api/assignments/:id/submit` - Submit answers
+
+## Development Practices
+
+- **TDD (Test-Driven Development)**: Always write tests first before implementing new features or fixing bugs.
+- **Pre-commit hook**: A git hook enforces TDD by rejecting commits with source code changes but no tests. Install with: `./scripts/install-hooks.sh`

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# TDD Pre-commit Hook
+# Ensures that when source code is modified, tests are also included in the commit
+
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Patterns for source code files (excluding tests)
+SOURCE_PATTERNS="\.js$|\.ts$|\.tsx$|\.jsx$"
+
+# Patterns for test files
+TEST_PATTERNS="\.test\.|\.spec\.|__tests__/"
+
+# Patterns to exclude from requiring tests
+EXCLUDE_PATTERNS="node_modules|\.config\.|config/|\.md$|\.json$|\.yml$|\.yaml$|\.sql$|\.css$|\.scss$|Dockerfile|\.toml$|\.env|\.gitignore|hooks/"
+
+# Check if there are source code changes (excluding tests and config)
+SOURCE_CHANGES=$(echo "$STAGED_FILES" | grep -E "$SOURCE_PATTERNS" | grep -vE "$TEST_PATTERNS" | grep -vE "$EXCLUDE_PATTERNS")
+
+# Check if there are test file changes
+TEST_CHANGES=$(echo "$STAGED_FILES" | grep -E "$TEST_PATTERNS")
+
+if [ -n "$SOURCE_CHANGES" ]; then
+    echo "📝 Source code changes detected:"
+    echo "$SOURCE_CHANGES" | sed 's/^/   /'
+    echo ""
+
+    if [ -z "$TEST_CHANGES" ]; then
+        echo "❌ TDD VIOLATION: No test files included in this commit!"
+        echo ""
+        echo "You are committing source code changes without tests."
+        echo "Please write tests first (TDD) and include them in your commit."
+        echo ""
+        echo "To bypass this check (not recommended), use:"
+        echo "   git commit --no-verify"
+        echo ""
+        exit 1
+    else
+        echo "✅ Tests included:"
+        echo "$TEST_CHANGES" | sed 's/^/   /'
+        echo ""
+    fi
+fi
+
+exit 0

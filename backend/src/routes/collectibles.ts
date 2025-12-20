@@ -10,37 +10,26 @@ router.get('/', authenticateChild, (req, res) => {
   try {
     const db = getDb();
 
-    // Get child's unlocked shop items count
-    const childData = db.get<{ unlocked_shop_items: number }>(
-      'SELECT unlocked_shop_items FROM children WHERE id = ?',
+    // Get child's unlocked shop items count and rowid for seeded ordering
+    const childData = db.get<{ unlocked_shop_items: number; child_rowid: number }>(
+      'SELECT unlocked_shop_items, rowid as child_rowid FROM children WHERE id = ?',
       [req.child!.id]
     );
     const unlockedCount = childData?.unlocked_shop_items || 3;
+    const childRowid = childData?.child_rowid || 1;
 
     // Get all collectibles with ownership status
+    // Uses seeded pseudo-random ordering so each child sees a unique shop order
+    // Formula mixes child rowid with collectible rowid using multiplication for true shuffling
     const collectibles = db.all<Collectible & { owned: number; row_num: number }>(`
       SELECT c.*,
         CASE WHEN cc.child_id IS NOT NULL THEN 1 ELSE 0 END as owned,
         ROW_NUMBER() OVER (
-          ORDER BY
-            CASE c.rarity
-              WHEN 'common' THEN 1
-              WHEN 'rare' THEN 2
-              WHEN 'epic' THEN 3
-              WHEN 'legendary' THEN 4
-            END,
-            c.price
+          ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
         ) as row_num
       FROM collectibles c
       LEFT JOIN child_collectibles cc ON c.id = cc.collectible_id AND cc.child_id = ?
-      ORDER BY
-        CASE c.rarity
-          WHEN 'common' THEN 1
-          WHEN 'rare' THEN 2
-          WHEN 'epic' THEN 3
-          WHEN 'legendary' THEN 4
-        END,
-        c.price
+      ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
     `, [req.child!.id]);
 
     // For shop items (not owned), only show up to unlockedCount
