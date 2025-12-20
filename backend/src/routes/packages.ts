@@ -276,19 +276,37 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
   }
 });
 
-// Soft-delete package (owner only)
+// Delete package (owner only) - cascades to assignments
 router.delete('/:id', authenticateParent, (req, res) => {
   try {
     const db = getDb();
+    const packageId = req.params.id;
 
-    const result = db.run(
-      'UPDATE math_packages SET is_active = 0 WHERE id = ? AND parent_id = ?',
-      [req.params.id, req.user!.id]
+    // Verify ownership first
+    const pkg = db.get<{ id: string }>(
+      'SELECT id FROM math_packages WHERE id = ? AND parent_id = ? AND is_active = 1',
+      [packageId, req.user!.id]
     );
 
-    if (result.changes === 0) {
+    if (!pkg) {
       return res.status(404).json({ error: 'Package not found or not owned by you' });
     }
+
+    // Cascade delete in transaction
+    db.transaction(() => {
+      // Delete assignment answers for assignments linked to this package
+      db.run(
+        `DELETE FROM assignment_answers
+         WHERE assignment_id IN (SELECT id FROM assignments WHERE package_id = ?)`,
+        [packageId]
+      );
+
+      // Delete assignments linked to this package
+      db.run('DELETE FROM assignments WHERE package_id = ?', [packageId]);
+
+      // Soft-delete the package
+      db.run('UPDATE math_packages SET is_active = 0 WHERE id = ?', [packageId]);
+    });
 
     res.json({ success: true });
   } catch (error) {

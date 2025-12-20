@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/LanguageContext';
 import {
   BarChart,
@@ -24,7 +25,7 @@ interface ProgressChartProps {
   onPeriodChange: (period: '7d' | '30d' | 'all') => void;
 }
 
-// Get date range string based on period
+// Get date range string based on period (client-only to avoid hydration mismatch)
 function getDateRangeString(period: '7d' | '30d' | 'all', locale: string): string {
   const now = new Date();
   const formatDate = (date: Date) => date.toLocaleDateString(locale === 'sv' ? 'sv-SE' : 'en-US', {
@@ -46,7 +47,12 @@ function getDateRangeString(period: '7d' | '30d' | 'all', locale: string): strin
 
 export default function ProgressChart({ data, period, onPeriodChange }: ProgressChartProps) {
   const { t, locale } = useTranslation();
-  const dateRange = getDateRangeString(period, locale);
+  const [dateRange, setDateRange] = useState('');
+
+  // Compute date range only on client to avoid hydration mismatch
+  useEffect(() => {
+    setDateRange(getDateRangeString(period, locale));
+  }, [period, locale]);
 
   if (!data || data.length === 0) {
     return (

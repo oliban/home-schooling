@@ -426,5 +426,67 @@ describe('Math Package System', () => {
       expect(deletedPkg).toBeDefined();
       expect(deletedPkg?.is_active).toBe(0);
     });
+
+    it('should cascade delete assignments when package is deleted', () => {
+      const db = getDb();
+
+      // Create a package
+      const cascadePackageId = uuidv4();
+      const problemId = uuidv4();
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_active)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [cascadePackageId, parent1Id, 'Cascade Test', 3, 1, 1]
+      );
+
+      // Add a problem to the package
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId, cascadePackageId, 1, 'Test question?', '42']
+      );
+
+      // Create an assignment from this package
+      const assignmentId = uuidv4();
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [assignmentId, parent1Id, child1Id, 'Test Assignment', 3, cascadePackageId]
+      );
+
+      // Add an answer to the assignment
+      const answerId = uuidv4();
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct)
+         VALUES (?, ?, ?, ?, ?)`,
+        [answerId, assignmentId, problemId, '42', 1]
+      );
+
+      // Verify assignment and answer exist
+      expect(db.get('SELECT id FROM assignments WHERE id = ?', [assignmentId])).toBeDefined();
+      expect(db.get('SELECT id FROM assignment_answers WHERE id = ?', [answerId])).toBeDefined();
+
+      // Simulate cascade delete (as the API does)
+      db.transaction(() => {
+        db.run(
+          `DELETE FROM assignment_answers
+           WHERE assignment_id IN (SELECT id FROM assignments WHERE package_id = ?)`,
+          [cascadePackageId]
+        );
+        db.run('DELETE FROM assignments WHERE package_id = ?', [cascadePackageId]);
+        db.run('UPDATE math_packages SET is_active = 0 WHERE id = ?', [cascadePackageId]);
+      });
+
+      // Verify assignment and answer are deleted
+      expect(db.get('SELECT id FROM assignments WHERE id = ?', [assignmentId])).toBeUndefined();
+      expect(db.get('SELECT id FROM assignment_answers WHERE id = ?', [answerId])).toBeUndefined();
+
+      // Package should still exist (soft deleted)
+      const deletedPkg = db.get<{ is_active: number }>(
+        'SELECT is_active FROM math_packages WHERE id = ?',
+        [cascadePackageId]
+      );
+      expect(deletedPkg?.is_active).toBe(0);
+    });
   });
 });

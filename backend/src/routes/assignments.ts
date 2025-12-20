@@ -97,25 +97,24 @@ router.get('/:id', authenticateAny, (req, res) => {
 
     let questions: (MathProblem | ReadingQuestion | (PackageProblem & Partial<AssignmentAnswer>))[] = [];
 
-    if (assignment.assignment_type === 'math') {
-      if (assignment.package_id) {
-        // Package-based assignment: load problems from package_problems with answers from assignment_answers
-        questions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
-          `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at
-           FROM package_problems pp
-           LEFT JOIN assignment_answers aa ON pp.id = aa.problem_id AND aa.assignment_id = ?
-           WHERE pp.package_id = ?
-           ORDER BY pp.problem_number`,
-          [req.params.id, assignment.package_id]
-        );
-      } else {
-        // Legacy embedded problems
-        questions = db.all<MathProblem>(
-          'SELECT * FROM math_problems WHERE assignment_id = ? ORDER BY problem_number',
-          [req.params.id]
-        );
-      }
+    // Package-based assignments (both math and reading) load from package_problems
+    if (assignment.package_id) {
+      questions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
+        `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at
+         FROM package_problems pp
+         LEFT JOIN assignment_answers aa ON pp.id = aa.problem_id AND aa.assignment_id = ?
+         WHERE pp.package_id = ?
+         ORDER BY pp.problem_number`,
+        [req.params.id, assignment.package_id]
+      );
+    } else if (assignment.assignment_type === 'math') {
+      // Legacy embedded math problems
+      questions = db.all<MathProblem>(
+        'SELECT * FROM math_problems WHERE assignment_id = ? ORDER BY problem_number',
+        [req.params.id]
+      );
     } else {
+      // Legacy embedded reading questions
       questions = db.all<ReadingQuestion>(
         'SELECT * FROM reading_questions WHERE assignment_id = ? ORDER BY question_number',
         [req.params.id]
@@ -254,52 +253,56 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         );
       }
 
-      if (assignment.assignment_type === 'math') {
-        if (assignment.package_id) {
-          // Package-based assignment: get problem from package_problems
-          const problem = db.get<PackageProblem>(
-            'SELECT * FROM package_problems WHERE id = ? AND package_id = ?',
-            [questionId, assignment.package_id]
-          );
+      // Package-based assignments (both math and reading)
+      if (assignment.package_id) {
+        const problem = db.get<PackageProblem>(
+          'SELECT * FROM package_problems WHERE id = ? AND package_id = ?',
+          [questionId, assignment.package_id]
+        );
 
-          if (!problem) {
-            throw new Error('Problem not found');
-          }
-
-          correctAnswer = problem.correct_answer;
-          isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
-
-          // Insert or update answer in assignment_answers
-          db.run(
-            `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
-             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-             ON CONFLICT(assignment_id, problem_id) DO UPDATE SET
-               child_answer = excluded.child_answer,
-               is_correct = excluded.is_correct,
-               answered_at = excluded.answered_at`,
-            [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0]
-          );
-        } else {
-          // Legacy embedded problems
-          const problem = db.get<MathProblem>(
-            'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
-            [questionId, req.params.id]
-          );
-
-          if (!problem) {
-            throw new Error('Problem not found');
-          }
-
-          correctAnswer = problem.correct_answer;
-          isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
-
-          db.run(
-            `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
-             WHERE id = ?`,
-            [answer, isCorrect ? 1 : 0, questionId]
-          );
+        if (!problem) {
+          throw new Error('Problem not found');
         }
+
+        correctAnswer = problem.correct_answer;
+        // For multiple choice (reading), compare letters; for math, normalize numbers
+        if (problem.answer_type === 'multiple_choice') {
+          isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
+        } else {
+          isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
+        }
+
+        // Insert or update answer in assignment_answers
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+           ON CONFLICT(assignment_id, problem_id) DO UPDATE SET
+             child_answer = excluded.child_answer,
+             is_correct = excluded.is_correct,
+             answered_at = excluded.answered_at`,
+          [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0]
+        );
+      } else if (assignment.assignment_type === 'math') {
+        // Legacy embedded math problems
+        const problem = db.get<MathProblem>(
+          'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
+          [questionId, req.params.id]
+        );
+
+        if (!problem) {
+          throw new Error('Problem not found');
+        }
+
+        correctAnswer = problem.correct_answer;
+        isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
+
+        db.run(
+          `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+           WHERE id = ?`,
+          [answer, isCorrect ? 1 : 0, questionId]
+        );
       } else {
+        // Legacy embedded reading questions
         const question = db.get<ReadingQuestion>(
           'SELECT * FROM reading_questions WHERE id = ? AND assignment_id = ?',
           [questionId, req.params.id]
@@ -355,27 +358,26 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
 
       // Check if assignment is complete
       let allAnswered = false;
-      if (assignment.assignment_type === 'math') {
-        if (assignment.package_id) {
-          // Package-based: count problems vs answers
-          const totalProblems = db.get<{ count: number }>(
-            'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
-            [assignment.package_id]
-          );
-          const answeredProblems = db.get<{ count: number }>(
-            'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?',
-            [req.params.id]
-          );
-          allAnswered = (answeredProblems?.count || 0) >= (totalProblems?.count || 0);
-        } else {
-          // Legacy: check math_problems
-          const unanswered = db.get<{ count: number }>(
-            'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND child_answer IS NULL',
-            [req.params.id]
-          );
-          allAnswered = (unanswered?.count || 0) === 0;
-        }
+      if (assignment.package_id) {
+        // Package-based (both math and reading): count problems vs answers
+        const totalProblems = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
+          [assignment.package_id]
+        );
+        const answeredProblems = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?',
+          [req.params.id]
+        );
+        allAnswered = (answeredProblems?.count || 0) >= (totalProblems?.count || 0);
+      } else if (assignment.assignment_type === 'math') {
+        // Legacy: check math_problems
+        const unanswered = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND child_answer IS NULL',
+          [req.params.id]
+        );
+        allAnswered = (unanswered?.count || 0) === 0;
       } else {
+        // Legacy: check reading_questions
         const unanswered = db.get<{ count: number }>(
           'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ? AND child_answer IS NULL',
           [req.params.id]

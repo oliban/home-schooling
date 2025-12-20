@@ -39,6 +39,8 @@ export default function PackageBrowser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<PackageData | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -83,6 +85,24 @@ export default function PackageBrowser() {
       return JSON.parse(summary);
     } catch {
       return {};
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+
+    const token = localStorage.getItem('parentToken');
+    if (!token) return;
+
+    setDeleting(true);
+    try {
+      await packages.delete(token, deleteConfirm.id);
+      setPackagesList(prev => prev.filter(p => p.id !== deleteConfirm.id));
+      setDeleteConfirm(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete package');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -179,22 +199,38 @@ export default function PackageBrowser() {
                     {pkgs.map((pkg) => {
                       const difficulty = parseDifficulty(pkg.difficulty_summary);
                       return (
-                        <Link
+                        <div
                           key={pkg.id}
-                          href={`/parent/packages/${pkg.id}`}
-                          className="bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                          onClick={() => router.push(`/parent/packages/${pkg.id}`)}
+                          className="bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                         >
                           <div className="flex items-start justify-between mb-2">
                             <h3 className="font-bold text-lg leading-tight">{pkg.name}</h3>
-                            {pkg.is_global ? (
-                              <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
-                                Global
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                                Private
-                              </span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {pkg.isOwner && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteConfirm(pkg);
+                                  }}
+                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                  title="Delete package"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
+                              {pkg.is_global ? (
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
+                                  Global
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                                  Private
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           <div className="text-sm text-gray-500 mb-3">
@@ -253,7 +289,7 @@ export default function PackageBrowser() {
                               Created by you
                             </div>
                           )}
-                        </Link>
+                        </div>
                       );
                     })}
                   </div>
@@ -262,6 +298,48 @@ export default function PackageBrowser() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-xl font-bold mb-4">Delete Package?</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete &quot;{deleteConfirm.name}&quot;?
+            </p>
+            {deleteConfirm.childAssignments.length > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-yellow-800 text-sm font-medium">
+                  This will also remove {deleteConfirm.childAssignments.length} assignment{deleteConfirm.childAssignments.length !== 1 ? 's' : ''} from:
+                </p>
+                <ul className="mt-2 text-sm text-yellow-700">
+                  {deleteConfirm.childAssignments.map((ca) => (
+                    <li key={ca.childId}>
+                      {ca.childName} ({ca.status === 'completed' ? 'Done' : ca.status === 'in_progress' ? 'In progress' : 'Pending'})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
