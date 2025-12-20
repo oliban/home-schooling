@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { children, assignments } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 interface ChildData {
   id: string;
@@ -32,6 +34,7 @@ interface ParentData {
 
 export default function ParentDashboard() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [parent, setParent] = useState<ParentData | null>(null);
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [assignmentsList, setAssignmentsList] = useState<AssignmentData[]>([]);
@@ -74,7 +77,7 @@ export default function ParentDashboard() {
   if (loading || !parent) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-xl">{t('common.loading')}</div>
       </div>
     );
   }
@@ -90,16 +93,19 @@ export default function ParentDashboard() {
           <div className="flex items-center gap-4">
             <div className="text-2xl">👨‍👩‍👧‍👦</div>
             <div>
-              <h1 className="text-xl font-bold">Parent Dashboard</h1>
+              <h1 className="text-xl font-bold">{t('parent.dashboard.title')}</h1>
               <p className="text-sm text-gray-600">{parent.email}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher showLabel={true} />
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              {t('common.logout')}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -107,7 +113,7 @@ export default function ParentDashboard() {
       <div className="bg-blue-50 border-b border-blue-100 py-3">
         <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-blue-700 font-medium">Familjekod:</span>
+            <span className="text-blue-700 font-medium">{t('parent.dashboard.familyCode')}:</span>
             <code className="bg-white px-4 py-2 rounded border text-2xl font-bold tracking-widest">{(parent as ParentData & { familyCode?: string }).familyCode || '----'}</code>
           </div>
           <button
@@ -115,12 +121,12 @@ export default function ParentDashboard() {
               const code = (parent as ParentData & { familyCode?: string }).familyCode;
               if (code) {
                 navigator.clipboard.writeText(code);
-                alert('Familjekod kopierad!');
+                alert(t('parent.dashboard.familyCodeCopied'));
               }
             }}
             className="text-blue-600 hover:text-blue-700 text-sm font-medium"
           >
-            Kopiera
+            {t('parent.dashboard.copy')}
           </button>
         </div>
       </div>
@@ -129,24 +135,24 @@ export default function ParentDashboard() {
         {/* Children Section */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Children</h2>
+            <h2 className="text-xl font-bold">{t('parent.dashboard.children')}</h2>
             <Link
               href="/parent/children/add"
               className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
             >
-              + Add Child
+              + {t('parent.dashboard.addChild')}
             </Link>
           </div>
 
           {childrenList.length === 0 ? (
             <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
               <div className="text-4xl mb-4">👶</div>
-              <p className="text-gray-600 mb-4">No children added yet</p>
+              <p className="text-gray-600 mb-4">{t('parent.dashboard.noChildren')}</p>
               <Link
                 href="/parent/children/add"
                 className="inline-block px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700"
               >
-                Add Your First Child
+                {t('parent.dashboard.addFirstChild')}
               </Link>
             </div>
           ) : (
@@ -161,18 +167,18 @@ export default function ParentDashboard() {
                     <div className="text-3xl">👤</div>
                     <div>
                       <h3 className="font-bold text-lg">{child.name}</h3>
-                      <p className="text-sm text-gray-600">Grade {child.grade_level}</p>
+                      <p className="text-sm text-gray-600">{t('parent.dashboard.grade', { level: child.grade_level })}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-yellow-600">
                       <span>💰</span>
-                      <span>{child.coins} coins</span>
+                      <span>{child.coins} {t('common.coins')}</span>
                     </div>
                     <div className={`px-2 py-1 rounded-full text-xs ${
                       child.hasPin ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {child.hasPin ? 'PIN set' : 'No PIN'}
+                      {child.hasPin ? t('parent.dashboard.pinSet') : t('parent.dashboard.noPin')}
                     </div>
                   </div>
                 </Link>
@@ -184,28 +190,28 @@ export default function ParentDashboard() {
         {/* Assignments Section */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Assignments</h2>
+            <h2 className="text-xl font-bold">{t('parent.dashboard.assignments')}</h2>
             <Link
               href="/parent/assignments/create"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
-              + Create Assignment
+              + {t('parent.dashboard.createAssignment')}
             </Link>
           </div>
 
           {assignmentsList.length === 0 ? (
             <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
               <div className="text-4xl mb-4">📚</div>
-              <p className="text-gray-600 mb-4">No assignments created yet</p>
+              <p className="text-gray-600 mb-4">{t('parent.dashboard.noAssignments')}</p>
               {childrenList.length > 0 ? (
                 <Link
                   href="/parent/assignments/create"
                   className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
                 >
-                  Create First Assignment
+                  {t('parent.dashboard.createFirstAssignment')}
                 </Link>
               ) : (
-                <p className="text-sm text-gray-500">Add a child first to create assignments</p>
+                <p className="text-sm text-gray-500">{t('parent.dashboard.addChildFirst')}</p>
               )}
             </div>
           ) : (
@@ -213,7 +219,7 @@ export default function ParentDashboard() {
               {/* Pending */}
               {pendingAssignments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Pending ({pendingAssignments.length})</h3>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.pending')} ({pendingAssignments.length})</h3>
                   <div className="space-y-2">
                     {pendingAssignments.map((assignment) => (
                       <div
@@ -227,12 +233,12 @@ export default function ParentDashboard() {
                           <div>
                             <p className="font-medium">{assignment.title}</p>
                             <p className="text-sm text-gray-600">
-                              {assignment.child_name} • Created {new Date(assignment.created_at).toLocaleDateString()}
+                              {assignment.child_name} • {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                         <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
-                          Pending
+                          {t('parent.dashboard.pending')}
                         </span>
                       </div>
                     ))}
@@ -243,7 +249,7 @@ export default function ParentDashboard() {
               {/* Completed */}
               {completedAssignments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Completed ({completedAssignments.length})</h3>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.completed')} ({completedAssignments.length})</h3>
                   <div className="space-y-2">
                     {completedAssignments.slice(0, 5).map((assignment) => (
                       <div
@@ -260,7 +266,7 @@ export default function ParentDashboard() {
                           </div>
                         </div>
                         <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                          Completed
+                          {t('parent.dashboard.completed')}
                         </span>
                       </div>
                     ))}
@@ -273,28 +279,28 @@ export default function ParentDashboard() {
 
         {/* Quick Actions */}
         <section>
-          <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
+          <h2 className="text-xl font-bold mb-4">{t('parent.dashboard.quickActions')}</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               href="/parent/children/add"
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">👶</div>
-              <p className="font-medium">Add Child</p>
+              <p className="font-medium">{t('parent.dashboard.addChild')}</p>
             </Link>
             <Link
               href="/parent/assignments/create"
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">📝</div>
-              <p className="font-medium">Create Assignment</p>
+              <p className="font-medium">{t('parent.dashboard.createAssignment')}</p>
             </Link>
             <Link
               href="/login"
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">🎮</div>
-              <p className="font-medium">Child Login</p>
+              <p className="font-medium">{t('parent.dashboard.childLogin')}</p>
             </Link>
             <button
               onClick={() => {
@@ -302,13 +308,13 @@ export default function ParentDashboard() {
                 if (parentData) {
                   const p = JSON.parse(parentData);
                   localStorage.setItem('parentId', p.id);
-                  alert(`Parent ID saved: ${p.id}\n\nChildren can now log in at /login`);
+                  alert(t('parent.dashboard.setupComplete', { id: p.id }));
                 }
               }}
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">🔑</div>
-              <p className="font-medium">Setup Child Login</p>
+              <p className="font-medium">{t('parent.dashboard.setupChildLogin')}</p>
             </button>
           </div>
         </section>
