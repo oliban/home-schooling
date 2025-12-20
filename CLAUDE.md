@@ -1,4 +1,4 @@
-# Teacher Portal - Educational Assignment Platform
+# Home Schooling - Educational Assignment Platform
 
 ## Overview
 A web portal for serving math and reading comprehension (läsförståelse) assignments to children, based on Swedish curriculum LGR 22.
@@ -27,7 +27,7 @@ Skills are in `/claude-skills/`. To generate content:
 3. **Process book OCR**: "Use process-book skill on the OCR output"
 
 ## Database
-SQLite database at `/data/teacher.db`. Schema in `/backend/src/data/schema.sql`.
+SQLite database at `/data/homeschooling.db`. Schema in `/backend/src/data/schema.sql`.
 
 ## Key Endpoints
 - `POST /api/auth/register` - Parent registration
@@ -41,3 +41,9 @@ SQLite database at `/data/teacher.db`. Schema in `/backend/src/data/schema.sql`.
 
 - **TDD (Test-Driven Development)**: Always write tests first before implementing new features or fixing bugs.
 - **Pre-commit hook**: A git hook enforces TDD by rejecting commits with source code changes but no tests. Install with: `./scripts/install-hooks.sh`
+- **Codebase analysis before writing code**: Before implementing any new function, utility, or component:
+  1. Search the codebase for existing similar functionality (use Grep/Glob)
+  2. Check for utility functions that already solve the problem
+  3. Look for patterns used elsewhere in the codebase
+  4. Reuse existing code rather than duplicating functionality
+  5. If extending existing code, understand the current implementation first

@@ -1,4 +1,4 @@
--- Teacher Portal Database Schema
+-- Home Schooling Database Schema
 
 -- Parents (main accounts)
 CREATE TABLE IF NOT EXISTS parents (

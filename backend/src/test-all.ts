@@ -1,5 +1,5 @@
 /**
- * Comprehensive test script for the Teacher Portal backend
+ * Comprehensive test script for the Home Schooling backend
  * Run with: npx tsx src/test-all.ts
  */
 
@@ -20,7 +20,7 @@ async function test(name: string, fn: () => Promise<void> | void) {
 
 async function main() {
   console.log('='.repeat(50));
-  console.log('Teacher Portal - Backend Tests');
+  console.log('Home Schooling - Backend Tests');
   console.log('='.repeat(50));
   console.log('');
 

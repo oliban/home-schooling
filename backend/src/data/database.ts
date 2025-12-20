@@ -8,10 +8,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // From compiled location (backend/dist/data/) go up 3 levels to project root, then into data/
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../../data/teacher.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../../data/homeschooling.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
-class TeacherDatabase {
+class HomeSchoolingDatabase {
   private db: Database.Database;
 
   constructor() {
@@ -131,13 +131,13 @@ class TeacherDatabase {
 }
 
 // Singleton instance
-let dbInstance: TeacherDatabase | null = null;
+let dbInstance: HomeSchoolingDatabase | null = null;
 
-export function getDb(): TeacherDatabase {
+export function getDb(): HomeSchoolingDatabase {
   if (!dbInstance) {
-    dbInstance = new TeacherDatabase();
+    dbInstance = new HomeSchoolingDatabase();
   }
   return dbInstance;
 }
 
-export type { TeacherDatabase };
+export type { HomeSchoolingDatabase };

@@ -36,5 +36,5 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 app.listen(PORT, () => {
-  console.log(`Teacher API running on http://localhost:${PORT}`);
+  console.log(`Home Schooling API running on http://localhost:${PORT}`);
 });

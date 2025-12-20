@@ -1,4 +1,4 @@
-# Skolan - Educational Portal for Kids
+# Home Schooling - Educational Portal for Kids
 
 A gamified educational platform for children based on the Swedish curriculum (LGR 22), featuring math exercises and reading comprehension with a collectible reward system.
 
@@ -29,7 +29,7 @@ A gamified educational platform for children based on the Swedish curriculum (LG
 ## Project Structure
 
 ```
-teacher/
+homeschooling/
 ├── backend/
 │   ├── src/
 │   │   ├── data/           # Database, schema, seeds
@@ -46,7 +46,7 @@ teacher/
 │   ├── lib/                # API client, language context
 │   └── messages/           # i18n translations (sv.json, en.json)
 └── data/
-    └── teacher.db          # SQLite database
+    └── homeschooling.db    # SQLite database
 ```
 
 ## Setup
@@ -61,7 +61,7 @@ teacher/
 1. **Clone and install dependencies:**
 
 ```bash
-cd teacher
+cd homeschooling
 
 # Backend
 cd backend
@@ -141,7 +141,7 @@ Main tables:
 ```
 PORT=6001
 JWT_SECRET=your-secret-key
-DATABASE_PATH=/path/to/teacher.db  # Optional, defaults to ./data/teacher.db
+DATABASE_PATH=/path/to/homeschooling.db  # Optional, defaults to ./data/homeschooling.db
 ```
 
 **Frontend:**
