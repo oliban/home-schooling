@@ -19,6 +19,17 @@ Do NOT generate problems without a confirmed grade level.
 - **count**: number of problems (default: 10 per package)
 - **difficulty_mix**: e.g., "3 easy, 4 medium, 3 hard" (default: balanced mix)
 
+## IMPORTANT: Automatic Package Chunking
+
+**Always divide problems into packages of exactly 10 questions each.**
+
+- If user requests 50 problems → generate 5 packages of 10
+- If user requests 30 problems → generate 3 packages of 10
+- If user requests 10 or fewer → generate 1 package
+- Name packages sequentially: "Paket 1", "Paket 2", etc.
+
+**Always use the batch format when generating more than 10 problems.**
+
 ## Output Format (JSON)
 
 ### Single Package Format (for import)
