@@ -1,0 +1,158 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "logout": "Log out",
+    "back": "Back",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "submit": "Submit",
+    "yes": "Yes",
+    "no": "No",
+    "coins": "coins",
+    "error": "Something went wrong",
+    "success": "Done!"
+  },
+  "login": {
+    "title": "Welcome to School!",
+    "parentTitle": "Parent Login",
+    "childTitle": "Student Login",
+    "familyCode": "Family Code",
+    "familyCodePlaceholder": "4-digit code",
+    "email": "Email",
+    "password": "Password",
+    "pin": "PIN Code",
+    "pinPlaceholder": "4 digits",
+    "selectChild": "Select child",
+    "loginButton": "Log in",
+    "registerLink": "Register new family",
+    "parentLink": "Parent login",
+    "childLink": "Student login",
+    "invalidCredentials": "Invalid credentials",
+    "familyNotFound": "Family not found"
+  },
+  "register": {
+    "title": "Create Family",
+    "name": "Your name",
+    "namePlaceholder": "First Last",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "registerButton": "Create account",
+    "loginLink": "Already have an account?",
+    "success": "Account created!",
+    "emailExists": "Email already exists"
+  },
+  "childDashboard": {
+    "greeting": "Hello {name}!",
+    "gradeLevel": "Grade {grade}",
+    "todaysTasks": "Today's Tasks",
+    "math": "MATH",
+    "reading": "READING",
+    "tasksCount": "{count} task to do",
+    "tasksCountPlural": "{count} tasks to do",
+    "startButton": "Start!",
+    "doneForToday": "Done for today!",
+    "myCollections": "My Collections",
+    "questions": "{count} questions",
+    "newItemAlert": {
+      "title": "New collectible unlocked!",
+      "message": "A new brainrot artwork is now available in the shop!",
+      "viewButton": "View!"
+    }
+  },
+  "assignment": {
+    "question": "Question {current}/{total}",
+    "answerPlaceholder": "Type your answer...",
+    "submitButton": "Answer",
+    "submitting": "Submitting...",
+    "nextButton": "Next",
+    "doneButton": "Done!",
+    "correct": "Correct!",
+    "incorrect": "Wrong",
+    "correctAnswer": "Correct answer: {answer}",
+    "streak": "Streak: {count}!",
+    "listenToQuestion": "Listen to question",
+    "completed": {
+      "title": "Great job!",
+      "score": "{correct} of {total} correct",
+      "coinsEarned": "{coins} coins",
+      "questionLabel": "Question {number}",
+      "backButton": "Back"
+    }
+  },
+  "collection": {
+    "title": "Collection",
+    "myCollection": "My Collection",
+    "shop": "Shop",
+    "owned": "Owned",
+    "buyButton": "Buy",
+    "buying": "Buying...",
+    "noItems": "No collectibles yet. Visit the shop!",
+    "allOwned": "You own all collectibles! Amazing!",
+    "clickToHear": "Click to hear",
+    "newCollectible": "New Collectible!",
+    "awesome": "Awesome!",
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    }
+  },
+  "parent": {
+    "dashboard": {
+      "title": "Parent Dashboard",
+      "familyCode": "Family Code",
+      "children": "Your Children",
+      "noChildren": "No children added yet",
+      "addChild": "Add Child",
+      "viewProgress": "View Progress",
+      "createAssignment": "Create Assignment"
+    },
+    "child": {
+      "addTitle": "Add Child",
+      "editTitle": "Edit Child",
+      "name": "Name",
+      "namePlaceholder": "Child's name",
+      "birthdate": "Birthdate",
+      "gradeLevel": "Grade Level",
+      "pin": "PIN Code",
+      "pinPlaceholder": "4 digits",
+      "pinHelp": "PIN code for child login",
+      "coins": "coins",
+      "streak": "day streak",
+      "hasPin": "Has PIN",
+      "noPin": "No PIN"
+    },
+    "assignment": {
+      "createTitle": "Create Assignment",
+      "type": "Type",
+      "math": "Math",
+      "reading": "Reading Comprehension",
+      "difficulty": "Difficulty",
+      "questionCount": "Number of questions",
+      "readingText": "Reading text",
+      "readingTextPlaceholder": "Paste or write a text...",
+      "createButton": "Create Assignment",
+      "creating": "Creating...",
+      "success": "Assignment created!"
+    },
+    "progress": {
+      "title": "{name}'s Progress",
+      "totalAssignments": "Total Assignments",
+      "completed": "Completed",
+      "mathAccuracy": "Math - correct answers",
+      "readingAccuracy": "Reading - correct answers"
+    }
+  },
+  "language": {
+    "switch": "Change language",
+    "swedish": "Svenska",
+    "english": "English"
+  }
+}

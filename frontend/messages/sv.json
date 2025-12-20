@@ -1,0 +1,158 @@
+{
+  "common": {
+    "loading": "Laddar...",
+    "logout": "Logga ut",
+    "back": "Tillbaka",
+    "close": "Stäng",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "edit": "Redigera",
+    "create": "Skapa",
+    "submit": "Skicka",
+    "yes": "Ja",
+    "no": "Nej",
+    "coins": "mynt",
+    "error": "Något gick fel",
+    "success": "Klart!"
+  },
+  "login": {
+    "title": "Välkommen till Skolan!",
+    "parentTitle": "Förälder-inloggning",
+    "childTitle": "Elev-inloggning",
+    "familyCode": "Familj-kod",
+    "familyCodePlaceholder": "4-siffrig kod",
+    "email": "E-post",
+    "password": "Lösenord",
+    "pin": "PIN-kod",
+    "pinPlaceholder": "4 siffror",
+    "selectChild": "Välj barn",
+    "loginButton": "Logga in",
+    "registerLink": "Registrera ny familj",
+    "parentLink": "Förälder-inloggning",
+    "childLink": "Elev-inloggning",
+    "invalidCredentials": "Fel inloggningsuppgifter",
+    "familyNotFound": "Familjen hittades inte"
+  },
+  "register": {
+    "title": "Skapa familj",
+    "name": "Ditt namn",
+    "namePlaceholder": "Förnamn Efternamn",
+    "email": "E-post",
+    "emailPlaceholder": "din@epost.se",
+    "password": "Lösenord",
+    "passwordPlaceholder": "Minst 6 tecken",
+    "registerButton": "Skapa konto",
+    "loginLink": "Har du redan ett konto?",
+    "success": "Kontot har skapats!",
+    "emailExists": "E-postadressen finns redan"
+  },
+  "childDashboard": {
+    "greeting": "Hej {name}!",
+    "gradeLevel": "Årskurs {grade}",
+    "todaysTasks": "Dagens uppgifter",
+    "math": "MATTE",
+    "reading": "LÄSNING",
+    "tasksCount": "{count} uppgift att göra",
+    "tasksCountPlural": "{count} uppgifter att göra",
+    "startButton": "Börja!",
+    "doneForToday": "Klart för idag!",
+    "myCollections": "Mina samlingar",
+    "questions": "{count} frågor",
+    "newItemAlert": {
+      "title": "Nytt samlarobjekt upplåst!",
+      "message": "Ett nytt brainrot-konstverk finns nu i butiken!",
+      "viewButton": "Titta!"
+    }
+  },
+  "assignment": {
+    "question": "Fråga {current}/{total}",
+    "answerPlaceholder": "Skriv ditt svar...",
+    "submitButton": "Svara",
+    "submitting": "Skickar...",
+    "nextButton": "Nästa",
+    "doneButton": "Klar!",
+    "correct": "Rätt!",
+    "incorrect": "Fel",
+    "correctAnswer": "Rätt svar: {answer}",
+    "streak": "Streak: {count}!",
+    "listenToQuestion": "Lyssna på frågan",
+    "completed": {
+      "title": "Bra jobbat!",
+      "score": "{correct} av {total} rätt",
+      "coinsEarned": "{coins} coins",
+      "questionLabel": "Fråga {number}",
+      "backButton": "Tillbaka"
+    }
+  },
+  "collection": {
+    "title": "Samling",
+    "myCollection": "Min samling",
+    "shop": "Butik",
+    "owned": "Ägd",
+    "buyButton": "Köp",
+    "buying": "Köper...",
+    "noItems": "Inga samlarobjekt än. Besök butiken!",
+    "allOwned": "Du äger alla samlarobjekt! Fantastiskt!",
+    "clickToHear": "Klicka för att höra",
+    "newCollectible": "Nytt samlarobjekt!",
+    "awesome": "Fantastiskt!",
+    "rarity": {
+      "common": "Vanlig",
+      "rare": "Sällsynt",
+      "epic": "Episk",
+      "legendary": "Legendarisk"
+    }
+  },
+  "parent": {
+    "dashboard": {
+      "title": "Förälder-panel",
+      "familyCode": "Familj-kod",
+      "children": "Dina barn",
+      "noChildren": "Inga barn tillagda än",
+      "addChild": "Lägg till barn",
+      "viewProgress": "Se framsteg",
+      "createAssignment": "Skapa uppgift"
+    },
+    "child": {
+      "addTitle": "Lägg till barn",
+      "editTitle": "Redigera barn",
+      "name": "Namn",
+      "namePlaceholder": "Barnets namn",
+      "birthdate": "Födelsedatum",
+      "gradeLevel": "Årskurs",
+      "pin": "PIN-kod",
+      "pinPlaceholder": "4 siffror",
+      "pinHelp": "PIN-kod för barninloggning",
+      "coins": "mynt",
+      "streak": "dagsstreak",
+      "hasPin": "Har PIN",
+      "noPin": "Ingen PIN"
+    },
+    "assignment": {
+      "createTitle": "Skapa uppgift",
+      "type": "Typ",
+      "math": "Matte",
+      "reading": "Läsförståelse",
+      "difficulty": "Svårighetsgrad",
+      "questionCount": "Antal frågor",
+      "readingText": "Läsförståelsetext",
+      "readingTextPlaceholder": "Klistra in eller skriv en text...",
+      "createButton": "Skapa uppgift",
+      "creating": "Skapar...",
+      "success": "Uppgiften har skapats!"
+    },
+    "progress": {
+      "title": "{name}s framsteg",
+      "totalAssignments": "Totalt antal uppgifter",
+      "completed": "Avklarade",
+      "mathAccuracy": "Matte - korrekta svar",
+      "readingAccuracy": "Läsning - korrekta svar"
+    }
+  },
+  "language": {
+    "switch": "Byt språk",
+    "swedish": "Svenska",
+    "english": "English"
+  }
+}

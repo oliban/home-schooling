@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 249, 250, 251;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+/* ASCII Art Display */
+.ascii-art {
+  font-family: 'Courier New', Courier, monospace;
+  white-space: pre;
+  line-height: 1.2;
+  font-size: 12px;
+}
+
+/* Coin animation */
+@keyframes coinPop {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.coin-pop {
+  animation: coinPop 0.5s ease-out;
+}
+
+/* Streak fire effect */
+@keyframes fireGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px #ff6b35, 0 0 10px #ff6b35, 0 0 15px #ff6b35;
+  }
+  50% {
+    text-shadow: 0 0 10px #ff6b35, 0 0 20px #ff6b35, 0 0 30px #ff6b35;
+  }
+}
+
+.fire-glow {
+  animation: fireGlow 0.5s ease-in-out infinite;
+  color: #ff6b35;
+}
