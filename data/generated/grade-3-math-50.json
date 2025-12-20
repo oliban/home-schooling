@@ -1,0 +1,472 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "category_id": null,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Matematik Årskurs 3 - Paket 1",
+        "grade_level": 3,
+        "category_id": "taluppfattning",
+        "description": "Addition och subtraktion",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Lisa har 47 äpplen. Hon plockar 28 äpplen till. Hur många äpplen har Lisa nu?",
+          "correct_answer": "75",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Lägg ihop de två talen",
+          "explanation": "47 + 28 = 75 äpplen"
+        },
+        {
+          "question_text": "Det finns 83 fåglar i ett träd. 35 fåglar flyger iväg. Hur många fåglar är kvar?",
+          "correct_answer": "48",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Dra bort antalet som flyger iväg",
+          "explanation": "83 - 35 = 48 fåglar"
+        },
+        {
+          "question_text": "Erik har 156 kr. Han får 89 kr av sin mormor. Hur mycket pengar har Erik nu?",
+          "correct_answer": "245",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Addera de två beloppen",
+          "explanation": "156 + 89 = 245 kr"
+        },
+        {
+          "question_text": "En skola har 234 elever. 67 elever är hemma sjuka. Hur många elever är i skolan?",
+          "correct_answer": "167",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Subtrahera de sjuka från totalen",
+          "explanation": "234 - 67 = 167 elever"
+        },
+        {
+          "question_text": "Maja samlar frimärken. Hon har 58 svenska och 34 utländska frimärken. Hur många frimärken har hon totalt?",
+          "correct_answer": "92",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Lägg ihop alla frimärken",
+          "explanation": "58 + 34 = 92 frimärken"
+        },
+        {
+          "question_text": "Det var 100 kakor på ett fat. Barnen åt 43 kakor. Hur många kakor är kvar?",
+          "correct_answer": "57",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Ta bort de uppätna kakorna",
+          "explanation": "100 - 43 = 57 kakor"
+        },
+        {
+          "question_text": "En buss har 45 passagerare. Vid nästa hållplats kliver 18 på och 7 av. Hur många passagerare finns på bussen nu?",
+          "correct_answer": "56",
+          "answer_type": "number",
+          "difficulty": "hard",
+          "hint": "Först addera de som kliver på, sedan subtrahera de som kliver av",
+          "explanation": "45 + 18 = 63, sedan 63 - 7 = 56 passagerare"
+        },
+        {
+          "question_text": "Kalle har 200 kr. Han köper en bok för 79 kr. Hur mycket pengar har han kvar?",
+          "correct_answer": "121",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Dra bort bokens pris från pengarna",
+          "explanation": "200 - 79 = 121 kr"
+        },
+        {
+          "question_text": "I en ask finns 65 röda och 47 blå kulor. Hur många kulor finns det totalt?",
+          "correct_answer": "112",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Addera röda och blå kulor",
+          "explanation": "65 + 47 = 112 kulor"
+        },
+        {
+          "question_text": "En affär hade 350 bananer. De sålde 186 bananer. Hur många bananer har de kvar?",
+          "correct_answer": "164",
+          "answer_type": "number",
+          "difficulty": "hard",
+          "hint": "Subtrahera de sålda bananerna från totalen",
+          "explanation": "350 - 186 = 164 bananer"
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Matematik Årskurs 3 - Paket 2",
+        "grade_level": 3,
+        "category_id": "taluppfattning",
+        "description": "Multiplikation - tabellerna 1-5",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad är 3 × 4?",
+          "correct_answer": "12",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Tänk 3 + 3 + 3 + 3",
+          "explanation": "3 × 4 = 12"
+        },
+        {
+          "question_text": "Vad är 5 × 5?",
+          "correct_answer": "25",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Fem gånger fem",
+          "explanation": "5 × 5 = 25"
+        },
+        {
+          "question_text": "Det finns 4 burkar med 5 pennor i varje. Hur många pennor finns det totalt?",
+          "correct_answer": "20",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Multiplicera antal burkar med pennor per burk",
+          "explanation": "4 × 5 = 20 pennor"
+        },
+        {
+          "question_text": "Vad är 2 × 8?",
+          "correct_answer": "16",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Dubbla 8",
+          "explanation": "2 × 8 = 16"
+        },
+        {
+          "question_text": "Anna köper 3 påsar godis. Varje påse kostar 9 kr. Hur mycket kostar det totalt?",
+          "correct_answer": "27",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Multiplicera antal påsar med priset per påse",
+          "explanation": "3 × 9 = 27 kr"
+        },
+        {
+          "question_text": "Vad är 4 × 7?",
+          "correct_answer": "28",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Fyra gånger sju",
+          "explanation": "4 × 7 = 28"
+        },
+        {
+          "question_text": "Det finns 5 rader med 6 stolar i varje rad. Hur många stolar finns det?",
+          "correct_answer": "30",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Multiplicera antal rader med stolar per rad",
+          "explanation": "5 × 6 = 30 stolar"
+        },
+        {
+          "question_text": "Vad är 3 × 9?",
+          "correct_answer": "27",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Tre gånger nio",
+          "explanation": "3 × 9 = 27"
+        },
+        {
+          "question_text": "Oscar har 4 askar med 8 leksaker i varje. Hur många leksaker har han?",
+          "correct_answer": "32",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Multiplicera antal askar med leksaker per ask",
+          "explanation": "4 × 8 = 32 leksaker"
+        },
+        {
+          "question_text": "Vad är 5 × 7?",
+          "correct_answer": "35",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Fem gånger sju",
+          "explanation": "5 × 7 = 35"
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Matematik Årskurs 3 - Paket 3",
+        "grade_level": 3,
+        "category_id": "taluppfattning",
+        "description": "Bråk - halvor, tredjedelar och fjärdedelar",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad är hälften av 10?",
+          "correct_answer": "5",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Dela 10 i två lika delar",
+          "explanation": "10 ÷ 2 = 5"
+        },
+        {
+          "question_text": "Lisa delar en pizza i 4 lika stora bitar. Hur stor del av pizzan är en bit?",
+          "correct_answer": "en fjärdedel",
+          "answer_type": "multiple_choice",
+          "options": ["A: en halv", "B: en tredjedel", "C: en fjärdedel", "D: en femtedel"],
+          "difficulty": "easy",
+          "hint": "4 bitar betyder att varje bit är 1/4",
+          "explanation": "En pizza delad i 4 bitar ger fjärdedelar"
+        },
+        {
+          "question_text": "Vad är hälften av 20?",
+          "correct_answer": "10",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Dela 20 i två lika delar",
+          "explanation": "20 ÷ 2 = 10"
+        },
+        {
+          "question_text": "En tårta delas i 3 lika stora bitar. Erik äter en bit. Hur stor del av tårtan åt Erik?",
+          "correct_answer": "en tredjedel",
+          "answer_type": "multiple_choice",
+          "options": ["A: en halv", "B: en tredjedel", "C: en fjärdedel", "D: två tredjedelar"],
+          "difficulty": "easy",
+          "hint": "Tre bitar betyder att varje bit är 1/3",
+          "explanation": "En tårta delad i 3 bitar: varje bit är en tredjedel"
+        },
+        {
+          "question_text": "Vad är en fjärdedel av 8?",
+          "correct_answer": "2",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Dela 8 i fyra lika delar",
+          "explanation": "8 ÷ 4 = 2"
+        },
+        {
+          "question_text": "Maja har 12 äpplen. Hon ger bort hälften. Hur många äpplen ger hon bort?",
+          "correct_answer": "6",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Hälften av 12",
+          "explanation": "12 ÷ 2 = 6 äpplen"
+        },
+        {
+          "question_text": "Vad är en tredjedel av 9?",
+          "correct_answer": "3",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Dela 9 i tre lika delar",
+          "explanation": "9 ÷ 3 = 3"
+        },
+        {
+          "question_text": "En chokladkaka har 16 bitar. Kalle äter en fjärdedel. Hur många bitar äter Kalle?",
+          "correct_answer": "4",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "En fjärdedel av 16",
+          "explanation": "16 ÷ 4 = 4 bitar"
+        },
+        {
+          "question_text": "Vilken bråkdel är störst?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": ["A: 1/4", "B: 1/2", "C: 1/3", "D: 1/5"],
+          "difficulty": "hard",
+          "hint": "Ju färre delar, desto större är varje del",
+          "explanation": "1/2 (en halv) är störst eftersom den delar i minst antal delar"
+        },
+        {
+          "question_text": "Det finns 24 bollar. En tredjedel är röda. Hur många röda bollar finns det?",
+          "correct_answer": "8",
+          "answer_type": "number",
+          "difficulty": "hard",
+          "hint": "Dela 24 i tre lika delar",
+          "explanation": "24 ÷ 3 = 8 röda bollar"
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Matematik Årskurs 3 - Paket 4",
+        "grade_level": 3,
+        "category_id": "geometri",
+        "description": "Former och mått",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Hur många sidor har en triangel?",
+          "correct_answer": "3",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Tri betyder tre",
+          "explanation": "En triangel har 3 sidor"
+        },
+        {
+          "question_text": "Vilken form har en fotboll?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": ["A: Kvadrat", "B: Triangel", "C: Cirkel", "D: Rektangel"],
+          "difficulty": "easy",
+          "hint": "En boll är rund",
+          "explanation": "En fotboll är rund som en cirkel (sfär i 3D)"
+        },
+        {
+          "question_text": "Hur många hörn har en rektangel?",
+          "correct_answer": "4",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Räkna hörnen på formen",
+          "explanation": "En rektangel har 4 hörn"
+        },
+        {
+          "question_text": "En sida på en kvadrat är 5 cm lång. Hur lång är omkretsen?",
+          "correct_answer": "20",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "En kvadrat har 4 lika långa sidor",
+          "explanation": "4 × 5 = 20 cm"
+        },
+        {
+          "question_text": "Hur många centimeter är 1 meter?",
+          "correct_answer": "100",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Centi betyder hundradel",
+          "explanation": "1 meter = 100 centimeter"
+        },
+        {
+          "question_text": "En rektangel är 6 cm lång och 4 cm bred. Vad är omkretsen?",
+          "correct_answer": "20",
+          "answer_type": "number",
+          "difficulty": "hard",
+          "hint": "Lägg ihop alla fyra sidorna: 6 + 4 + 6 + 4",
+          "explanation": "6 + 4 + 6 + 4 = 20 cm"
+        },
+        {
+          "question_text": "Vilken form har ett fönster vanligtvis?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": ["A: Triangel", "B: Cirkel", "C: Pentagon", "D: Rektangel"],
+          "difficulty": "easy",
+          "hint": "Tänk på vanliga husfönster",
+          "explanation": "De flesta fönster är rektangulära"
+        },
+        {
+          "question_text": "Ett rep är 2 meter långt. Hur många centimeter är det?",
+          "correct_answer": "200",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "1 meter = 100 cm",
+          "explanation": "2 × 100 = 200 cm"
+        },
+        {
+          "question_text": "Hur många sidor har en sexhörning?",
+          "correct_answer": "6",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Sex-hörning",
+          "explanation": "En sexhörning har 6 sidor"
+        },
+        {
+          "question_text": "En sträcka är 150 cm. Hur många meter och centimeter är det?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": ["A: 1 m 5 cm", "B: 1 m 50 cm", "C: 15 m", "D: 1 m 500 cm"],
+          "difficulty": "hard",
+          "hint": "100 cm = 1 m, så 150 cm = 100 cm + 50 cm",
+          "explanation": "150 cm = 1 meter och 50 centimeter"
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Matematik Årskurs 3 - Paket 5",
+        "grade_level": 3,
+        "category_id": "problemlosning",
+        "description": "Vardagsproblem och pengar",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "En glass kostar 15 kr. Maja köper 2 glassar. Hur mycket betalar hon?",
+          "correct_answer": "30",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Multiplicera priset med antalet",
+          "explanation": "15 × 2 = 30 kr"
+        },
+        {
+          "question_text": "Erik har 50 kr. Han köper en tidning för 35 kr. Hur mycket får han tillbaka?",
+          "correct_answer": "15",
+          "answer_type": "number",
+          "difficulty": "easy",
+          "hint": "Dra bort priset från pengarna",
+          "explanation": "50 - 35 = 15 kr"
+        },
+        {
+          "question_text": "En bok kostar 89 kr. Anna betalar med en hundralapp. Hur mycket får hon tillbaka?",
+          "correct_answer": "11",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "100 - 89",
+          "explanation": "100 - 89 = 11 kr"
+        },
+        {
+          "question_text": "Oscar sparar 5 kr varje dag. Hur mycket har han sparat efter en vecka (7 dagar)?",
+          "correct_answer": "35",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Multiplicera dagsbeloppet med antal dagar",
+          "explanation": "5 × 7 = 35 kr"
+        },
+        {
+          "question_text": "Tre barn delar lika på 24 karameller. Hur många karameller får varje barn?",
+          "correct_answer": "8",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Dela antalet karameller med antal barn",
+          "explanation": "24 ÷ 3 = 8 karameller"
+        },
+        {
+          "question_text": "En biljett till bio kostar 45 kr. Hur mycket kostar 3 biljetter?",
+          "correct_answer": "135",
+          "answer_type": "number",
+          "difficulty": "hard",
+          "hint": "Multiplicera biljettpriset med 3",
+          "explanation": "45 × 3 = 135 kr"
+        },
+        {
+          "question_text": "Klockan är 14:00. Filmen börjar om 2 timmar och 30 minuter. Vilken tid börjar filmen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": ["A: 16:00", "B: 16:15", "C: 16:30", "D: 17:00"],
+          "difficulty": "hard",
+          "hint": "Lägg till 2 timmar och 30 minuter till 14:00",
+          "explanation": "14:00 + 2:30 = 16:30"
+        },
+        {
+          "question_text": "Lisa har 4 tjugor och 3 femkronor. Hur mycket pengar har hon?",
+          "correct_answer": "95",
+          "answer_type": "number",
+          "difficulty": "hard",
+          "hint": "Räkna ut värdet av tjugorna och femkronorna separat",
+          "explanation": "4 × 20 = 80, 3 × 5 = 15, 80 + 15 = 95 kr"
+        },
+        {
+          "question_text": "Det går 12 barn i en klass. Hälften är flickor. Hur många pojkar finns det?",
+          "correct_answer": "6",
+          "answer_type": "number",
+          "difficulty": "medium",
+          "hint": "Om hälften är flickor, är resten pojkar",
+          "explanation": "12 ÷ 2 = 6 pojkar"
+        },
+        {
+          "question_text": "En buss avgår kl 08:15 och resan tar 45 minuter. När kommer bussen fram?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": ["A: 08:45", "B: 09:00", "C: 09:15", "D: 09:45"],
+          "difficulty": "hard",
+          "hint": "Lägg till 45 minuter till avgångstiden",
+          "explanation": "08:15 + 45 minuter = 09:00"
+        }
+      ]
+    }
+  ]
+}

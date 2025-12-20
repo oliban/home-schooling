@@ -1,0 +1,71 @@
+{
+  "package": {
+    "name": "Harry Potter - Kapitel 1: Pojken som överlevde",
+    "grade_level": 5,
+    "category_id": null,
+    "description": "Läsförståelsefrågor för kapitel 1 där vi möter familjen Dursley och får hints om Harry Potters värld",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "Vad arbetade mr Dursley med?",
+      "correct_answer": "C",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Han var bankdirektör",
+        "B: Han sålde bilar",
+        "C: Han arbetade på ett företag som tillverkade borrar",
+        "D: Han var lärare"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "question_text": "Vad var det märkliga med katten som mr Dursley såg på Privet Drive?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Den var ovanligt stor",
+        "B: Den verkade läsa en karta eller skylt",
+        "C: Den kunde prata",
+        "D: Den var helt vit"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_text": "Varför blev mr Dursley orolig när han hörde främlingarna prata om 'Potter'?",
+      "correct_answer": "D",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Han kände familjen Potter personligen",
+        "B: Han var rädd för trollkarlar",
+        "C: Han hade själv hemligheter att dölja",
+        "D: Hans frus syster hette Potter och han ville inte bli påmind om henne"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_text": "Vilka ovanliga saker hände under dagen som mr Dursley försökte ignorera?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Ugglor flög på ljusa dagen och konstigt klädda människor var överallt",
+        "B: Det började snöa mitt i sommaren",
+        "C: Alla bilar stannade samtidigt",
+        "D: Telefonen ringde hela tiden med mystiska meddelanden"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_text": "Vad kan man förstå om mr Dursleys personlighet utifrån hur han reagerar på de konstiga händelserna?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Han är nyfiken och vill veta mer om den magiska världen",
+        "B: Han ogillar allt som är annorlunda och vill att allt ska vara normalt",
+        "C: Han är modig och konfronterar de konstiga människorna",
+        "D: Han är vänlig mot alla han möter"
+      ],
+      "difficulty": "hard"
+    }
+  ]
+}

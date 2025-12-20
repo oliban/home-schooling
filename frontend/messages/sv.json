@@ -171,6 +171,23 @@
       "mathAccuracy": "Matte - korrekta svar",
       "readingAccuracy": "Läsning - korrekta svar"
     },
+    "stats": {
+      "title": "Framstegsöversikt",
+      "last7Days": "Senaste 7 dagarna",
+      "last30Days": "Senaste 30 dagarna",
+      "allTime": "All tid",
+      "noData": "Inga barn tillagda än",
+      "noAnswers": "Inga frågor besvarade än",
+      "math": "Matte",
+      "reading": "Läsning",
+      "correct": "Rätt",
+      "incorrect": "Fel",
+      "total": "Totalt",
+      "mathCorrect": "Matte - Rätt",
+      "mathIncorrect": "Matte - Fel",
+      "readingCorrect": "Läsning - Rätt",
+      "readingIncorrect": "Läsning - Fel"
+    },
     "assignmentPreview": {
       "notFound": "Uppgiften hittades inte",
       "backToDashboard": "Tillbaka till panelen",

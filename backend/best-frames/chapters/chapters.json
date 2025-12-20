@@ -1,0 +1,12 @@
+{
+  "totalChapters": 1,
+  "hasChapters": false,
+  "chapters": [
+    {
+      "chapterNumber": 1,
+      "title": "Untitled",
+      "textLength": 3155,
+      "file": "chapter_01.txt"
+    }
+  ]
+}

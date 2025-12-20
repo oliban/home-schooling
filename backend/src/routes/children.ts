@@ -86,6 +86,87 @@ router.post('/', authenticateParent, async (req, res) => {
   }
 });
 
+// Get aggregated stats for all children (for progress chart)
+// IMPORTANT: This route must be defined BEFORE /:id routes
+router.get('/stats', authenticateParent, (req, res) => {
+  try {
+    const db = getDb();
+    const period = req.query.period as string || 'all';
+
+    // Build date filter based on period
+    let dateFilter = '';
+    if (period === '7d') {
+      dateFilter = "AND answered_at >= datetime('now', '-7 days')";
+    } else if (period === '30d') {
+      dateFilter = "AND answered_at >= datetime('now', '-30 days')";
+    }
+
+    // Get all children for this parent with their stats
+    const childrenList = db.all<{ id: string; name: string }>(
+      `SELECT id, name FROM children WHERE parent_id = ? ORDER BY name`,
+      [req.user!.id]
+    );
+
+    const stats = childrenList.map(child => {
+      // Math stats - package-based assignments
+      const mathPackage = db.get<{ correct: number; incorrect: number }>(`
+        SELECT
+          COALESCE(SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
+          COALESCE(SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
+        FROM assignments a
+        JOIN assignment_answers aa ON a.id = aa.assignment_id
+        WHERE a.child_id = ?
+          AND a.assignment_type = 'math'
+          AND a.package_id IS NOT NULL
+          ${dateFilter.replace('answered_at', 'aa.answered_at')}
+      `, [child.id]) || { correct: 0, incorrect: 0 };
+
+      // Math stats - legacy embedded problems
+      const mathLegacy = db.get<{ correct: number; incorrect: number }>(`
+        SELECT
+          COALESCE(SUM(CASE WHEN mp.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
+          COALESCE(SUM(CASE WHEN mp.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
+        FROM assignments a
+        JOIN math_problems mp ON a.id = mp.assignment_id
+        WHERE a.child_id = ?
+          AND a.assignment_type = 'math'
+          AND a.package_id IS NULL
+          ${dateFilter.replace('answered_at', 'mp.answered_at')}
+      `, [child.id]) || { correct: 0, incorrect: 0 };
+
+      // Reading stats
+      const reading = db.get<{ correct: number; incorrect: number }>(`
+        SELECT
+          COALESCE(SUM(CASE WHEN rq.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
+          COALESCE(SUM(CASE WHEN rq.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
+        FROM assignments a
+        JOIN reading_questions rq ON a.id = rq.assignment_id
+        WHERE a.child_id = ?
+          AND a.assignment_type = 'reading'
+          ${dateFilter.replace('answered_at', 'rq.answered_at')}
+      `, [child.id]) || { correct: 0, incorrect: 0 };
+
+      return {
+        childId: child.id,
+        childName: child.name,
+        math: {
+          correct: mathPackage.correct + mathLegacy.correct,
+          incorrect: mathPackage.incorrect + mathLegacy.incorrect
+        },
+        reading: {
+          correct: reading.correct,
+          incorrect: reading.incorrect
+        }
+      };
+    });
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Get children stats error:', error);
+    res.status(500).json({ error: 'Failed to get children stats' });
+  }
+});
+
 // Get child details
 router.get('/:id', authenticateParent, (req, res) => {
   try {

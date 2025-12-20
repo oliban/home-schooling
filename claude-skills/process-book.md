@@ -2,8 +2,57 @@
 
 Clean up OCR-extracted text and identify chapter boundaries.
 
+## Video to OCR Pipeline
+
+If the input is a video file (e.g., `.MOV`, `.mp4`), use the smart frame selection pipeline:
+
+### Recommended: Smart Pipeline (auto-selects best frames)
+```bash
+cd backend && npx tsx src/test-video-ocr.ts /path/to/video.mov [rotation]
+```
+
+This pipeline automatically:
+1. Extracts frames at 2fps for quality analysis
+2. Scores each frame for sharpness and readability
+3. Selects only the clearest frame from each 2-second window
+4. Runs OCR only on the best frames (typically 70-80% reduction)
+
+Output is saved to `backend/best-frames/ocr_output.txt`.
+
+**Rotation options:** If the video was recorded on a phone held sideways:
+- `90` - Rotate 90° clockwise
+- `180` - Rotate 180°
+- `270` - Rotate 90° counter-clockwise
+
+Example:
+```bash
+cd backend && npx tsx src/test-video-ocr.ts /path/to/video.mov 270
+```
+
+### Manual Pipeline (if you need more control)
+
+**Step 1:** Extract frames
+```bash
+cd backend && npx tsx src/test-ffmpeg.ts /path/to/video.mov [rotation]
+```
+
+**Step 2:** Run OCR on all frames
+```bash
+cd backend && npx tsx src/test-ocr.ts
+```
+
+Output: `test-frames/ocr_output.txt`
+
+### Use the OCR output as input
+The `ocr_output.txt` file contains the raw text ready for cleanup below.
+
+### Output location
+Save generated reading question JSON files to `data/generated/`
+
+---
+
 ## Input Required
-- **raw_text**: The OCR output from all pages
+- **raw_text**: The OCR output from all pages (or from `ocr_output.txt` after video processing)
 - **book_title**: Name of the book
 
 ## Output Format (JSON)

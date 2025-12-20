@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { packages, children } from '@/lib/api';
 
+interface ChildAssignment {
+  childId: string;
+  childName: string;
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
 interface PackageData {
   id: string;
   name: string;
@@ -17,6 +23,7 @@ interface PackageData {
   is_global: number;
   created_at: string;
   isOwner: boolean;
+  childAssignments: ChildAssignment[];
 }
 
 interface ChildData {
@@ -218,6 +225,28 @@ export default function PackageBrowser() {
                               </span>
                             )}
                           </div>
+
+                          {pkg.childAssignments.length > 0 && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="text-xs text-gray-500 mb-1">Assigned to:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {pkg.childAssignments.map((ca) => (
+                                  <span
+                                    key={ca.childId}
+                                    className={`px-2 py-0.5 rounded text-xs ${
+                                      ca.status === 'completed'
+                                        ? 'bg-green-100 text-green-700'
+                                        : ca.status === 'in_progress'
+                                        ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-gray-100 text-gray-600'
+                                    }`}
+                                  >
+                                    {ca.childName}: {ca.status === 'completed' ? 'Done' : ca.status === 'in_progress' ? 'In progress' : 'Pending'}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           {pkg.isOwner && (
                             <div className="mt-3 pt-3 border-t text-xs text-gray-400">

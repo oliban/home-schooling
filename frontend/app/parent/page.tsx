@@ -7,6 +7,7 @@ import { children, assignments, packages } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import FileDropZone from '@/components/ui/FileDropZone';
+import ProgressChart, { ChildStatsData } from '@/components/ui/ProgressChart';
 
 interface ChildData {
   id: string;
@@ -82,6 +83,10 @@ export default function ParentDashboard() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
+  // Stats chart state
+  const [statsData, setStatsData] = useState<ChildStatsData[]>([]);
+  const [statsPeriod, setStatsPeriod] = useState<'7d' | '30d' | 'all'>('7d');
+
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
     const parentData = localStorage.getItem('parentData');
@@ -97,18 +102,30 @@ export default function ParentDashboard() {
 
   const loadData = async (token: string) => {
     try {
-      const [childrenData, assignmentsData] = await Promise.all([
+      const [childrenData, assignmentsData, statsResponse] = await Promise.all([
         children.list(token),
         assignments.list(token),
+        children.getStats(token, statsPeriod),
       ]);
       setChildrenList(childrenData);
       setAssignmentsList(assignmentsData);
+      setStatsData(statsResponse);
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Refresh stats when period changes
+  useEffect(() => {
+    const token = localStorage.getItem('parentToken');
+    if (token && !loading) {
+      children.getStats(token, statsPeriod)
+        .then(setStatsData)
+        .catch(err => console.error('Failed to load stats:', err));
+    }
+  }, [statsPeriod, loading]);
 
   const handleLogout = () => {
     localStorage.removeItem('parentToken');
@@ -411,6 +428,17 @@ export default function ParentDashboard() {
             </div>
           )}
         </section>
+
+        {/* Progress Chart Section */}
+        {childrenList.length > 0 && (
+          <section className="mb-8">
+            <ProgressChart
+              data={statsData}
+              period={statsPeriod}
+              onPeriodChange={setStatsPeriod}
+            />
+          </section>
+        )}
 
         {/* Assignments Section */}
         <section className="mb-8">

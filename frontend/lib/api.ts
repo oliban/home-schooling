@@ -99,6 +99,14 @@ export const children = {
       reading_correct: number;
       reading_total: number;
     }>(`/children/${id}/progress`, { token }),
+
+  getStats: (token: string, period?: '7d' | '30d' | 'all') =>
+    fetchApi<{
+      childId: string;
+      childName: string;
+      math: { correct: number; incorrect: number };
+      reading: { correct: number; incorrect: number };
+    }[]>(`/children/stats${period ? `?period=${period}` : ''}`, { token }),
 };
 
 // Assignments
@@ -267,6 +275,11 @@ export const packages = {
       is_global: number;
       created_at: string;
       isOwner: boolean;
+      childAssignments: Array<{
+        childId: string;
+        childName: string;
+        status: 'pending' | 'in_progress' | 'completed';
+      }>;
     }[]>(`/packages${query}`, { token });
   },
 

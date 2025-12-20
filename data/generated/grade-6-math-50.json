@@ -1,0 +1,403 @@
+{
+  "package": {
+    "name": "Matematik Årskurs 6 - Blandade uppgifter",
+    "grade_level": 6,
+    "category_id": null,
+    "description": "50 blandade uppgifter: procent, bråk, geometri, ekvationer och statistik",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "En jacka kostar 800 kr. Med 25% rabatt, vad kostar jackan?",
+      "correct_answer": "600",
+      "answer_type": "number",
+      "explanation": "25% av 800 = 200. 800 - 200 = 600 kr",
+      "difficulty": "easy",
+      "hint": "Räkna först ut hur mycket 25% av 800 är"
+    },
+    {
+      "question_text": "Vad är 15% av 240?",
+      "correct_answer": "36",
+      "answer_type": "number",
+      "explanation": "15% = 0,15. 0,15 × 240 = 36",
+      "difficulty": "easy",
+      "hint": "15% är samma som 15/100 eller 0,15"
+    },
+    {
+      "question_text": "Ett pris höjs från 500 kr till 600 kr. Hur många procent är höjningen?",
+      "correct_answer": "20",
+      "answer_type": "number",
+      "explanation": "Höjningen är 100 kr. 100/500 = 0,20 = 20%",
+      "difficulty": "medium",
+      "hint": "Räkna ut höjningen i kronor först, dela sedan med ursprungspriset"
+    },
+    {
+      "question_text": "Förenkla bråket 24/36 till enklaste form. Skriv svaret som ett bråk (t.ex. 1/2).",
+      "correct_answer": "2/3",
+      "answer_type": "text",
+      "explanation": "SGD för 24 och 36 är 12. 24÷12 = 2, 36÷12 = 3. Svar: 2/3",
+      "difficulty": "medium",
+      "hint": "Hitta största gemensamma delare"
+    },
+    {
+      "question_text": "Beräkna: 3/4 + 1/8. Svara som bråk.",
+      "correct_answer": "7/8",
+      "answer_type": "text",
+      "explanation": "3/4 = 6/8. 6/8 + 1/8 = 7/8",
+      "difficulty": "medium",
+      "hint": "Gör om till samma nämnare först"
+    },
+    {
+      "question_text": "Vad är 2/5 av 45?",
+      "correct_answer": "18",
+      "answer_type": "number",
+      "explanation": "45 ÷ 5 = 9. 9 × 2 = 18",
+      "difficulty": "easy",
+      "hint": "Dela först med nämnaren, multiplicera sedan med täljaren"
+    },
+    {
+      "question_text": "En rektangel har sidorna 12 cm och 8 cm. Vad är arean i cm²?",
+      "correct_answer": "96",
+      "answer_type": "number",
+      "explanation": "Area = längd × bredd = 12 × 8 = 96 cm²",
+      "difficulty": "easy",
+      "hint": "Area av rektangel = längd × bredd"
+    },
+    {
+      "question_text": "En rektangel har sidorna 15 m och 9 m. Vad är omkretsen i meter?",
+      "correct_answer": "48",
+      "answer_type": "number",
+      "explanation": "Omkrets = 2 × (15 + 9) = 2 × 24 = 48 m",
+      "difficulty": "easy",
+      "hint": "Omkrets = 2 × (längd + bredd)"
+    },
+    {
+      "question_text": "En triangel har basen 10 cm och höjden 6 cm. Vad är arean i cm²?",
+      "correct_answer": "30",
+      "answer_type": "number",
+      "explanation": "Area = (bas × höjd) / 2 = (10 × 6) / 2 = 30 cm²",
+      "difficulty": "easy",
+      "hint": "Area av triangel = (bas × höjd) / 2"
+    },
+    {
+      "question_text": "Lös ekvationen: x + 15 = 42",
+      "correct_answer": "27",
+      "answer_type": "number",
+      "explanation": "x = 42 - 15 = 27",
+      "difficulty": "easy",
+      "hint": "Flytta 15 till andra sidan"
+    },
+    {
+      "question_text": "Lös ekvationen: 3x = 27",
+      "correct_answer": "9",
+      "answer_type": "number",
+      "explanation": "x = 27 ÷ 3 = 9",
+      "difficulty": "easy",
+      "hint": "Dela båda sidor med 3"
+    },
+    {
+      "question_text": "Lös ekvationen: 2x + 5 = 19",
+      "correct_answer": "7",
+      "answer_type": "number",
+      "explanation": "2x = 19 - 5 = 14. x = 14 ÷ 2 = 7",
+      "difficulty": "medium",
+      "hint": "Flytta först 5 till andra sidan, dela sedan med 2"
+    },
+    {
+      "question_text": "Lös ekvationen: 4x - 8 = 20",
+      "correct_answer": "7",
+      "answer_type": "number",
+      "explanation": "4x = 20 + 8 = 28. x = 28 ÷ 4 = 7",
+      "difficulty": "medium",
+      "hint": "Flytta -8 till andra sidan, dela sedan med 4"
+    },
+    {
+      "question_text": "Medelvärdet av 5 tal är 24. Vad är summan av de 5 talen?",
+      "correct_answer": "120",
+      "answer_type": "number",
+      "explanation": "Summa = medelvärde × antal = 24 × 5 = 120",
+      "difficulty": "medium",
+      "hint": "Medelvärde = summa ÷ antal"
+    },
+    {
+      "question_text": "Beräkna medelvärdet av: 12, 18, 15, 21, 14",
+      "correct_answer": "16",
+      "answer_type": "number",
+      "explanation": "Summa = 12+18+15+21+14 = 80. Medelvärde = 80 ÷ 5 = 16",
+      "difficulty": "easy",
+      "hint": "Addera alla tal och dela med antalet"
+    },
+    {
+      "question_text": "Vad är medianen av: 3, 7, 2, 9, 5?",
+      "correct_answer": "5",
+      "answer_type": "number",
+      "explanation": "Sorterat: 2, 3, 5, 7, 9. Medianen är mittersta värdet = 5",
+      "difficulty": "easy",
+      "hint": "Sortera talen i storleksordning och hitta mittersta värdet"
+    },
+    {
+      "question_text": "Vad är typvärdet av: 4, 7, 4, 9, 4, 6, 7?",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "4 förekommer 3 gånger, vilket är mest",
+      "difficulty": "easy",
+      "hint": "Typvärdet är det tal som förekommer flest gånger"
+    },
+    {
+      "question_text": "En klass har 24 elever. 3/8 av eleverna har glasögon. Hur många har glasögon?",
+      "correct_answer": "9",
+      "answer_type": "number",
+      "explanation": "24 × 3/8 = 24 ÷ 8 × 3 = 3 × 3 = 9",
+      "difficulty": "medium",
+      "hint": "Dela 24 med 8, multiplicera sedan med 3"
+    },
+    {
+      "question_text": "Skriv 0,35 som bråk i enklaste form.",
+      "correct_answer": "7/20",
+      "answer_type": "text",
+      "explanation": "0,35 = 35/100 = 7/20 (dela med 5)",
+      "difficulty": "medium",
+      "hint": "0,35 = 35 hundradelar"
+    },
+    {
+      "question_text": "Skriv 3/5 som decimaltal.",
+      "correct_answer": "0,6",
+      "answer_type": "text",
+      "explanation": "3 ÷ 5 = 0,6",
+      "difficulty": "easy",
+      "hint": "Dela täljaren med nämnaren"
+    },
+    {
+      "question_text": "Skriv 45% som decimaltal.",
+      "correct_answer": "0,45",
+      "answer_type": "text",
+      "explanation": "45% = 45/100 = 0,45",
+      "difficulty": "easy",
+      "hint": "Dela med 100"
+    },
+    {
+      "question_text": "En bil kör 75 km på en timme. Hur långt kör den på 2,5 timmar?",
+      "correct_answer": "187,5",
+      "answer_type": "text",
+      "explanation": "75 × 2,5 = 187,5 km",
+      "difficulty": "medium",
+      "hint": "Sträcka = hastighet × tid"
+    },
+    {
+      "question_text": "3 kg äpplen kostar 54 kr. Hur mycket kostar 5 kg?",
+      "correct_answer": "90",
+      "answer_type": "number",
+      "explanation": "1 kg = 54 ÷ 3 = 18 kr. 5 kg = 18 × 5 = 90 kr",
+      "difficulty": "medium",
+      "hint": "Räkna ut kilopriset först"
+    },
+    {
+      "question_text": "En karta har skala 1:50000. Två städer är 4 cm ifrån varandra på kartan. Hur långt är det i verkligheten? Svara i km.",
+      "correct_answer": "2",
+      "answer_type": "number",
+      "explanation": "4 cm × 50000 = 200000 cm = 2000 m = 2 km",
+      "difficulty": "hard",
+      "hint": "Multiplicera med skalan och omvandla till km"
+    },
+    {
+      "question_text": "Beräkna: (-5) + 8",
+      "correct_answer": "3",
+      "answer_type": "number",
+      "explanation": "(-5) + 8 = 3 (från -5, gå 8 steg åt höger)",
+      "difficulty": "easy",
+      "hint": "Tänk på tallinjen"
+    },
+    {
+      "question_text": "Beräkna: 6 - (-4)",
+      "correct_answer": "10",
+      "answer_type": "number",
+      "explanation": "6 - (-4) = 6 + 4 = 10 (minus minus blir plus)",
+      "difficulty": "medium",
+      "hint": "Minus ett negativt tal = plus"
+    },
+    {
+      "question_text": "Beräkna: (-3) × 7",
+      "correct_answer": "-21",
+      "answer_type": "text",
+      "explanation": "(-3) × 7 = -21 (negativt × positivt = negativt)",
+      "difficulty": "medium",
+      "hint": "Negativt gånger positivt ger negativt"
+    },
+    {
+      "question_text": "Beräkna: (-8) × (-4)",
+      "correct_answer": "32",
+      "answer_type": "number",
+      "explanation": "(-8) × (-4) = 32 (negativt × negativt = positivt)",
+      "difficulty": "medium",
+      "hint": "Negativt gånger negativt ger positivt"
+    },
+    {
+      "question_text": "En kvadrat har arean 49 cm². Hur lång är sidan?",
+      "correct_answer": "7",
+      "answer_type": "number",
+      "explanation": "Sidan = √49 = 7 cm",
+      "difficulty": "easy",
+      "hint": "Vilken sida gånger sig själv ger 49?"
+    },
+    {
+      "question_text": "Beräkna: 5² + 3²",
+      "correct_answer": "34",
+      "answer_type": "number",
+      "explanation": "5² + 3² = 25 + 9 = 34",
+      "difficulty": "easy",
+      "hint": "5² = 5 × 5 och 3² = 3 × 3"
+    },
+    {
+      "question_text": "Vad är √144?",
+      "correct_answer": "12",
+      "answer_type": "number",
+      "explanation": "√144 = 12 eftersom 12 × 12 = 144",
+      "difficulty": "easy",
+      "hint": "Vilket tal gånger sig själv ger 144?"
+    },
+    {
+      "question_text": "En rektangel har arean 72 cm² och längden 9 cm. Hur bred är den?",
+      "correct_answer": "8",
+      "answer_type": "number",
+      "explanation": "Bredd = Area ÷ Längd = 72 ÷ 9 = 8 cm",
+      "difficulty": "medium",
+      "hint": "Area = längd × bredd, så bredd = area ÷ längd"
+    },
+    {
+      "question_text": "Hur många minuter är 2,5 timmar?",
+      "correct_answer": "150",
+      "answer_type": "number",
+      "explanation": "2,5 × 60 = 150 minuter",
+      "difficulty": "easy",
+      "hint": "1 timme = 60 minuter"
+    },
+    {
+      "question_text": "Omvandla 3400 gram till kilogram. Svara med decimaltal.",
+      "correct_answer": "3,4",
+      "answer_type": "text",
+      "explanation": "3400 g = 3400 ÷ 1000 = 3,4 kg",
+      "difficulty": "easy",
+      "hint": "1 kg = 1000 g"
+    },
+    {
+      "question_text": "Omvandla 2,75 km till meter.",
+      "correct_answer": "2750",
+      "answer_type": "number",
+      "explanation": "2,75 × 1000 = 2750 m",
+      "difficulty": "easy",
+      "hint": "1 km = 1000 m"
+    },
+    {
+      "question_text": "En punkt har koordinaterna (3, 5). Punkten flyttas 4 steg åt höger och 2 steg nedåt. Vilka är de nya koordinaterna? Svara som (x,y).",
+      "correct_answer": "(7,3)",
+      "answer_type": "text",
+      "explanation": "x: 3 + 4 = 7, y: 5 - 2 = 3. Nya koordinater: (7, 3)",
+      "difficulty": "medium",
+      "hint": "Höger = öka x, nedåt = minska y"
+    },
+    {
+      "question_text": "Vilken punkt ligger mitt emellan (2, 6) och (8, 6)? Svara som (x,y).",
+      "correct_answer": "(5,6)",
+      "answer_type": "text",
+      "explanation": "Mittpunkten: x = (2+8)/2 = 5, y = 6. Svar: (5, 6)",
+      "difficulty": "medium",
+      "hint": "Ta medelvärdet av x-koordinaterna"
+    },
+    {
+      "question_text": "Du kastar en vanlig tärning. Vad är sannolikheten att få en 6? Svara som bråk.",
+      "correct_answer": "1/6",
+      "answer_type": "text",
+      "explanation": "En tärning har 6 sidor, endast en är 6. P = 1/6",
+      "difficulty": "easy",
+      "hint": "Antal gynnsamma utfall delat med antal möjliga utfall"
+    },
+    {
+      "question_text": "Du kastar en tärning. Vad är sannolikheten att få ett jämnt tal? Svara som bråk i enklaste form.",
+      "correct_answer": "1/2",
+      "answer_type": "text",
+      "explanation": "Jämna tal: 2, 4, 6 = 3 utfall av 6. P = 3/6 = 1/2",
+      "difficulty": "easy",
+      "hint": "Hur många av tärningens sidor visar jämna tal?"
+    },
+    {
+      "question_text": "I en påse finns 3 röda, 5 blå och 2 gröna kulor. Du tar en kula utan att titta. Vad är sannolikheten att den är blå? Svara som bråk i enklaste form.",
+      "correct_answer": "1/2",
+      "answer_type": "text",
+      "explanation": "Totalt: 3+5+2 = 10. P(blå) = 5/10 = 1/2",
+      "difficulty": "medium",
+      "hint": "Antal blå delat med totalt antal kulor"
+    },
+    {
+      "question_text": "Förläng bråket 3/4 så att nämnaren blir 20.",
+      "correct_answer": "15/20",
+      "answer_type": "text",
+      "explanation": "4 × 5 = 20, så 3 × 5 = 15. Svar: 15/20",
+      "difficulty": "easy",
+      "hint": "Multiplicera täljare och nämnare med samma tal"
+    },
+    {
+      "question_text": "Beräkna: 5/6 - 1/3. Svara som bråk.",
+      "correct_answer": "1/2",
+      "answer_type": "text",
+      "explanation": "1/3 = 2/6. 5/6 - 2/6 = 3/6 = 1/2",
+      "difficulty": "medium",
+      "hint": "Gör om till samma nämnare"
+    },
+    {
+      "question_text": "Beräkna: 2/3 × 3/4. Svara som bråk i enklaste form.",
+      "correct_answer": "1/2",
+      "answer_type": "text",
+      "explanation": "2/3 × 3/4 = 6/12 = 1/2",
+      "difficulty": "medium",
+      "hint": "Multiplicera täljare med täljare och nämnare med nämnare"
+    },
+    {
+      "question_text": "En butik sänker priset med 30%. Det nya priset är 280 kr. Vad var ursprungspriset?",
+      "correct_answer": "400",
+      "answer_type": "number",
+      "explanation": "280 kr = 70% av ursprungspriset. 280 ÷ 0,7 = 400 kr",
+      "difficulty": "hard",
+      "hint": "Om priset sänks med 30% är nya priset 70% av ursprunget"
+    },
+    {
+      "question_text": "Erik sparar 15% av sin månadslön. Han sparar 3600 kr. Hur stor är hans månadslön?",
+      "correct_answer": "24000",
+      "answer_type": "number",
+      "explanation": "3600 = 15% av lönen. Lön = 3600 ÷ 0,15 = 24000 kr",
+      "difficulty": "hard",
+      "hint": "Om 15% = 3600, vad är 100%?"
+    },
+    {
+      "question_text": "En cirkel har radien 7 cm. Vad är diametern?",
+      "correct_answer": "14",
+      "answer_type": "number",
+      "explanation": "Diameter = 2 × radie = 2 × 7 = 14 cm",
+      "difficulty": "easy",
+      "hint": "Diametern är dubbla radien"
+    },
+    {
+      "question_text": "Tre vänner delar på notan. Notan är 435 kr. Hur mycket betalar var och en?",
+      "correct_answer": "145",
+      "answer_type": "number",
+      "explanation": "435 ÷ 3 = 145 kr",
+      "difficulty": "easy",
+      "hint": "Dela totalsumman med 3"
+    },
+    {
+      "question_text": "Ett tåg avgår kl 09:45 och anländer kl 12:20. Hur lång tid tar resan i minuter?",
+      "correct_answer": "155",
+      "answer_type": "number",
+      "explanation": "09:45 till 12:20 = 2 timmar 35 min = 155 min",
+      "difficulty": "medium",
+      "hint": "Räkna timmar och minuter separat"
+    },
+    {
+      "question_text": "Lös ekvationen: x/4 = 15",
+      "correct_answer": "60",
+      "answer_type": "number",
+      "explanation": "x = 15 × 4 = 60",
+      "difficulty": "easy",
+      "hint": "Multiplicera båda sidor med 4"
+    }
+  ]
+}

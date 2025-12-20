@@ -171,6 +171,23 @@
       "mathAccuracy": "Math - correct answers",
       "readingAccuracy": "Reading - correct answers"
     },
+    "stats": {
+      "title": "Progress Overview",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "allTime": "All time",
+      "noData": "No children added yet",
+      "noAnswers": "No questions answered yet",
+      "math": "Math",
+      "reading": "Reading",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "total": "Total",
+      "mathCorrect": "Math - Correct",
+      "mathIncorrect": "Math - Incorrect",
+      "readingCorrect": "Reading - Correct",
+      "readingIncorrect": "Reading - Incorrect"
+    },
     "assignmentPreview": {
       "notFound": "Assignment not found",
       "backToDashboard": "Back to dashboard",

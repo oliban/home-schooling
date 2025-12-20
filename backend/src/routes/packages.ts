@@ -88,12 +88,12 @@ router.get('/', authenticateParent, (req, res) => {
     const db = getDb();
     const { grade, category } = req.query;
 
-    // Get grades of parent's children
-    const children = db.all<{ grade_level: number }>(
-      'SELECT DISTINCT grade_level FROM children WHERE parent_id = ?',
+    // Get all children for this parent
+    const allChildren = db.all<{ id: string; name: string; grade_level: number }>(
+      'SELECT id, name, grade_level FROM children WHERE parent_id = ?',
       [req.user!.id]
     );
-    const childGrades = children.map(c => c.grade_level);
+    const childGrades = [...new Set(allChildren.map(c => c.grade_level))];
 
     let query = `
       SELECT p.*, c.name_sv as category_name
@@ -117,10 +117,39 @@ router.get('/', authenticateParent, (req, res) => {
 
     const packages = db.all<MathPackage & { category_name: string | null }>(query, params);
 
-    // Add isOwner flag to each package
+    // Get assignment status for each package per child
+    const assignmentStatusQuery = `
+      SELECT a.package_id, a.child_id, a.status, c.name as child_name
+      FROM assignments a
+      JOIN children c ON a.child_id = c.id
+      WHERE a.package_id IN (${packages.map(() => '?').join(',') || "''"})
+        AND a.parent_id = ?
+    `;
+    const assignmentParams = [...packages.map(p => p.id), req.user!.id];
+
+    const assignments = packages.length > 0
+      ? db.all<{ package_id: string; child_id: string; status: string; child_name: string }>(
+          assignmentStatusQuery,
+          assignmentParams
+        )
+      : [];
+
+    // Group assignments by package_id
+    const assignmentsByPackage = assignments.reduce((acc, a) => {
+      if (!acc[a.package_id]) acc[a.package_id] = [];
+      acc[a.package_id].push({
+        childId: a.child_id,
+        childName: a.child_name,
+        status: a.status
+      });
+      return acc;
+    }, {} as Record<string, Array<{ childId: string; childName: string; status: string }>>);
+
+    // Add isOwner flag and assignment stats to each package
     const result = packages.map(pkg => ({
       ...pkg,
-      isOwner: pkg.parent_id === req.user!.id
+      isOwner: pkg.parent_id === req.user!.id,
+      childAssignments: assignmentsByPackage[pkg.id] || []
     }));
 
     res.json(result);

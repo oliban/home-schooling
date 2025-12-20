@@ -9,9 +9,10 @@ import fs from 'fs';
 
 async function main() {
   const videoPath = process.argv[2];
+  const forceRotate = process.argv[3] ? parseInt(process.argv[3]) : undefined;
 
   if (!videoPath) {
-    console.error('Usage: npx tsx src/test-ffmpeg.ts /path/to/video.mov');
+    console.error('Usage: npx tsx src/test-ffmpeg.ts /path/to/video.mov [rotation: 90|180|270]');
     process.exit(1);
   }
 
@@ -47,6 +48,7 @@ async function main() {
       fps: 0.5, // 1 frame every 2 seconds
       outputFormat: 'jpg',
       maxFrames: 50,
+      forceRotate,
     });
 
     console.log('');
