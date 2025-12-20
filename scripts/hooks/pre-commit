@@ -43,4 +43,40 @@ if [ -n "$SOURCE_CHANGES" ]; then
     fi
 fi
 
+# Run all tests
+echo "🧪 Running all tests..."
+echo ""
+
+# Get the repository root
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# Run backend tests
+echo "📦 Running backend tests..."
+cd "$REPO_ROOT/backend"
+if ! npm test 2>&1; then
+    echo ""
+    echo "❌ Backend tests failed! Commit aborted."
+    echo ""
+    echo "To bypass this check (not recommended), use:"
+    echo "   git commit --no-verify"
+    exit 1
+fi
+echo "✅ Backend tests passed"
+echo ""
+
+# Run frontend tests
+echo "📦 Running frontend tests..."
+cd "$REPO_ROOT/frontend"
+if ! npm test 2>&1; then
+    echo ""
+    echo "❌ Frontend tests failed! Commit aborted."
+    echo ""
+    echo "To bypass this check (not recommended), use:"
+    echo "   git commit --no-verify"
+    exit 1
+fi
+echo "✅ Frontend tests passed"
+echo ""
+
+echo "✅ All tests passed!"
 exit 0
