@@ -14,6 +14,7 @@
 import { extractFramesFromVideo, getVideoDuration } from './services/ffmpeg.js';
 import { selectBestFrames, copyBestFrames } from './services/frame-quality.js';
 import { extractTextFromImages, extractTextFromImage } from './services/ocr.js';
+import { detectChapters, formatChapterSummary } from './services/chapter-detection.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -203,9 +204,44 @@ async function main() {
 
     const ocrResult = await extractTextFromImages(bestPaths, 'swe');
 
-    // Save results
+    // Save raw OCR results
     const outputPath = path.join(bestFramesDir, 'ocr_output.txt');
     fs.writeFileSync(outputPath, ocrResult.combinedText);
+
+    // Step 5: Detect chapters
+    console.log('');
+    console.log('─'.repeat(60));
+    console.log('STEP 5: Detecting chapters');
+    console.log('─'.repeat(60));
+
+    const chapterResult = detectChapters(ocrResult.combinedText);
+    console.log(formatChapterSummary(chapterResult));
+
+    // Save chapter files
+    const chaptersDir = path.join(bestFramesDir, 'chapters');
+    if (!fs.existsSync(chaptersDir)) {
+      fs.mkdirSync(chaptersDir, { recursive: true });
+    }
+
+    for (const chapter of chapterResult.chapters) {
+      const chapterFileName = `chapter_${String(chapter.chapterNumber).padStart(2, '0')}.txt`;
+      const chapterPath = path.join(chaptersDir, chapterFileName);
+      const chapterContent = `# ${chapter.chapterNumber}. ${chapter.title}\n\n${chapter.text}`;
+      fs.writeFileSync(chapterPath, chapterContent);
+    }
+
+    // Save chapter metadata as JSON
+    const metadataPath = path.join(chaptersDir, 'chapters.json');
+    fs.writeFileSync(metadataPath, JSON.stringify({
+      totalChapters: chapterResult.chapters.length,
+      hasChapters: chapterResult.hasChapters,
+      chapters: chapterResult.chapters.map(c => ({
+        chapterNumber: c.chapterNumber,
+        title: c.title,
+        textLength: c.text.length,
+        file: `chapter_${String(c.chapterNumber).padStart(2, '0')}.txt`
+      }))
+    }, null, 2));
 
     // Final summary
     console.log('');
@@ -216,16 +252,19 @@ async function main() {
     console.log(`Best frames selected: ${bestFrames.length} (reduction: ${((1 - bestFrames.length / result.frameCount) * 100).toFixed(0)}%)`);
     console.log(`OCR confidence: ${ocrResult.averageConfidence.toFixed(1)}%`);
     console.log(`Text extracted: ${ocrResult.combinedText.length} characters`);
+    console.log(`Chapters detected: ${chapterResult.chapters.length}`);
     console.log('');
     console.log(`Output saved to: ${outputPath}`);
+    console.log(`Chapter files saved to: ${chaptersDir}`);
 
-    // Preview
-    if (ocrResult.combinedText.length > 0) {
+    // Preview first chapter
+    if (chapterResult.chapters.length > 0) {
+      const firstChapter = chapterResult.chapters[0];
       console.log('');
-      console.log('Preview (first 500 chars):');
+      console.log(`Preview of Chapter ${firstChapter.chapterNumber}: ${firstChapter.title}`);
       console.log('─'.repeat(60));
-      console.log(ocrResult.combinedText.substring(0, 500));
-      if (ocrResult.combinedText.length > 500) {
+      console.log(firstChapter.text.substring(0, 400));
+      if (firstChapter.text.length > 400) {
         console.log('...');
       }
     }
@@ -234,7 +273,7 @@ async function main() {
     console.log('');
     console.log('Cleaning up temporary frames...');
     fs.rmSync(allFramesDir, { recursive: true });
-    console.log('Done! Best frames and OCR output are in: ' + bestFramesDir);
+    console.log('Done! Best frames, chapters, and OCR output are in: ' + bestFramesDir);
 
   } catch (error) {
     console.error('Error:', error);
