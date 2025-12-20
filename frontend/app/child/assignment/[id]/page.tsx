@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { assignments } from '@/lib/api';
 import { fireConfetti } from '@/components/ui/Confetti';
 import { SpeakButton } from '@/components/ui/SpeakButton';
 import { useTranslation } from '@/lib/LanguageContext';
+import type { SketchPadHandle } from '@/components/ui/SketchPad';
+
+const SketchPad = dynamic(() => import('@/components/ui/SketchPad'), {
+  ssr: false,
+  loading: () => <div className="h-[400px] bg-gray-100 rounded-xl animate-pulse" />
+});
 
 interface Question {
   id: string;
@@ -55,6 +62,7 @@ export default function AssignmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [totalCoins, setTotalCoins] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const sketchPadRef = useRef<SketchPadHandle>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('childToken');
@@ -135,6 +143,7 @@ export default function AssignmentPage() {
 
     setFeedback(null);
     setAnswer('');
+    sketchPadRef.current?.clear();
 
     if (currentIndex < assignment.questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -209,8 +218,15 @@ export default function AssignmentPage() {
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
       <header className="bg-white shadow-sm p-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/child')}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title={t('common.back')}
+            >
+              ←
+            </button>
             <span className="text-2xl">
               {assignment.assignment_type === 'math' ? '📐' : '📖'}
             </span>
@@ -228,7 +244,7 @@ export default function AssignmentPage() {
       </header>
 
       {/* Progress bar */}
-      <div className="max-w-2xl mx-auto px-4 pt-4">
+      <div className="max-w-5xl mx-auto px-4 pt-4">
         <div className="h-2 bg-gray-200 rounded-full">
           <div
             className="h-full bg-blue-500 rounded-full transition-all"
@@ -238,8 +254,9 @@ export default function AssignmentPage() {
       </div>
 
       {/* Question */}
-      <div className="max-w-2xl mx-auto p-8">
-        <div className={`bg-white p-8 rounded-2xl shadow-sm ${feedback?.show && !feedback.isCorrect ? 'animate-shake' : ''}`}>
+      <div className="max-w-5xl mx-auto p-8">
+        <div className="flex flex-col lg:flex-row gap-6">
+        <div className={`bg-white p-8 rounded-2xl shadow-sm flex-1 lg:max-w-[60%] ${feedback?.show && !feedback.isCorrect ? 'animate-shake' : ''}`}>
           <div className="flex items-start gap-3 mb-8">
             <p className="text-xl flex-1">{question.question_text}</p>
             <SpeakButton
@@ -331,6 +348,18 @@ export default function AssignmentPage() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Sketch Pad - only for math assignments */}
+        {assignment.assignment_type === 'math' && (
+          <div className="lg:w-[40%]">
+            <SketchPad
+              ref={sketchPadRef}
+              height="400px"
+              className="sticky top-4"
+            />
+          </div>
+        )}
         </div>
       </div>
     </main>

@@ -56,7 +56,11 @@
     "tasksCount": "{count} task to do",
     "tasksCountPlural": "{count} tasks to do",
     "startButton": "Start!",
+    "continueButton": "Continue",
     "doneForToday": "Done for today!",
+    "inProgress": "In Progress",
+    "inProgressCount": "{count} in progress",
+    "inProgressCountPlural": "{count} in progress",
     "myCollections": "My Collections",
     "questions": "{count} questions",
     "newItemAlert": {
@@ -124,6 +128,7 @@
       "assignments": "Assignments",
       "noAssignments": "No assignments created yet",
       "pending": "Pending",
+      "inProgress": "In Progress",
       "completed": "Completed",
       "created": "Created",
       "quickActions": "Quick Actions",
@@ -171,5 +176,11 @@
     "switch": "Change language",
     "swedish": "Svenska",
     "english": "English"
+  },
+  "sketchPad": {
+    "title": "Sketch Pad",
+    "clear": "Clear",
+    "eraser": "Eraser",
+    "pen": "Pen"
   }
 }

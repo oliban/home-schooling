@@ -56,7 +56,11 @@
     "tasksCount": "{count} uppgift att göra",
     "tasksCountPlural": "{count} uppgifter att göra",
     "startButton": "Börja!",
+    "continueButton": "Fortsätt",
     "doneForToday": "Klart för idag!",
+    "inProgress": "Pågående",
+    "inProgressCount": "{count} pågående",
+    "inProgressCountPlural": "{count} pågående",
     "myCollections": "Mina samlingar",
     "questions": "{count} frågor",
     "newItemAlert": {
@@ -124,6 +128,7 @@
       "assignments": "Uppgifter",
       "noAssignments": "Inga uppgifter skapade än",
       "pending": "Väntande",
+      "inProgress": "Pågående",
       "completed": "Klara",
       "created": "Skapad",
       "quickActions": "Snabbåtgärder",
@@ -171,5 +176,11 @@
     "switch": "Byt språk",
     "swedish": "Svenska",
     "english": "English"
+  },
+  "sketchPad": {
+    "title": "Ritblock",
+    "clear": "Rensa",
+    "eraser": "Suddgummi",
+    "pen": "Penna"
   }
 }

@@ -75,8 +75,12 @@ export default function ChildDashboard() {
 
   const loadAssignments = async (token: string) => {
     try {
-      const list = await assignments.list(token, { status: 'pending' });
-      setAssignmentList(list);
+      // Load both pending and in_progress assignments
+      const [pending, inProgress] = await Promise.all([
+        assignments.list(token, { status: 'pending' }),
+        assignments.list(token, { status: 'in_progress' }),
+      ]);
+      setAssignmentList([...inProgress, ...pending]);
     } catch (err) {
       console.error('Failed to load assignments:', err);
     } finally {
@@ -121,8 +125,11 @@ export default function ChildDashboard() {
     );
   }
 
-  const mathAssignments = assignmentList.filter((a) => a.assignment_type === 'math');
-  const readingAssignments = assignmentList.filter((a) => a.assignment_type === 'reading');
+  // Separate in_progress and pending assignments
+  const mathInProgress = assignmentList.filter((a) => a.assignment_type === 'math' && a.status === 'in_progress');
+  const mathPending = assignmentList.filter((a) => a.assignment_type === 'math' && a.status === 'pending');
+  const readingInProgress = assignmentList.filter((a) => a.assignment_type === 'reading' && a.status === 'in_progress');
+  const readingPending = assignmentList.filter((a) => a.assignment_type === 'reading' && a.status === 'pending');
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -200,15 +207,37 @@ export default function ChildDashboard() {
               <span className="text-3xl">📐</span>
               <h3 className="text-xl font-bold">{t('childDashboard.math')}</h3>
             </div>
-            {mathAssignments.length > 0 ? (
+            {mathInProgress.length > 0 ? (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                    {t('childDashboard.inProgress')}
+                  </span>
+                </div>
+                <p className="text-gray-600 mb-4">{mathInProgress[0].title}</p>
+                <Link
+                  href={`/child/assignment/${mathInProgress[0].id}`}
+                  className="block w-full py-3 bg-orange-500 text-white text-center rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+                >
+                  {t('childDashboard.continueButton')} →
+                </Link>
+                {mathPending.length > 0 && (
+                  <p className="text-gray-500 text-sm mt-3 text-center">
+                    + {mathPending.length > 1
+                      ? t('childDashboard.tasksCountPlural', { count: mathPending.length })
+                      : t('childDashboard.tasksCount', { count: mathPending.length })}
+                  </p>
+                )}
+              </>
+            ) : mathPending.length > 0 ? (
               <>
                 <p className="text-gray-600 mb-4">
-                  {mathAssignments.length > 1
-                    ? t('childDashboard.tasksCountPlural', { count: mathAssignments.length })
-                    : t('childDashboard.tasksCount', { count: mathAssignments.length })}
+                  {mathPending.length > 1
+                    ? t('childDashboard.tasksCountPlural', { count: mathPending.length })
+                    : t('childDashboard.tasksCount', { count: mathPending.length })}
                 </p>
                 <Link
-                  href={`/child/assignment/${mathAssignments[0].id}`}
+                  href={`/child/assignment/${mathPending[0].id}`}
                   className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                 >
                   {t('childDashboard.startButton')}
@@ -225,12 +254,34 @@ export default function ChildDashboard() {
               <span className="text-3xl">📖</span>
               <h3 className="text-xl font-bold">{t('childDashboard.reading')}</h3>
             </div>
-            {readingAssignments.length > 0 ? (
+            {readingInProgress.length > 0 ? (
               <>
-                <p className="text-gray-600 mb-2">{readingAssignments[0].title}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                    {t('childDashboard.inProgress')}
+                  </span>
+                </div>
+                <p className="text-gray-600 mb-4">{readingInProgress[0].title}</p>
+                <Link
+                  href={`/child/assignment/${readingInProgress[0].id}`}
+                  className="block w-full py-3 bg-orange-500 text-white text-center rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+                >
+                  {t('childDashboard.continueButton')} →
+                </Link>
+                {readingPending.length > 0 && (
+                  <p className="text-gray-500 text-sm mt-3 text-center">
+                    + {readingPending.length > 1
+                      ? t('childDashboard.tasksCountPlural', { count: readingPending.length })
+                      : t('childDashboard.tasksCount', { count: readingPending.length })}
+                  </p>
+                )}
+              </>
+            ) : readingPending.length > 0 ? (
+              <>
+                <p className="text-gray-600 mb-2">{readingPending[0].title}</p>
                 <p className="text-gray-500 text-sm mb-4">{t('childDashboard.questions', { count: 5 })}</p>
                 <Link
-                  href={`/child/assignment/${readingAssignments[0].id}`}
+                  href={`/child/assignment/${readingPending[0].id}`}
                   className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                 >
                   {t('childDashboard.startButton')}

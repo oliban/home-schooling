@@ -307,6 +307,7 @@ export default function ParentDashboard() {
   }
 
   const pendingAssignments = assignmentsList.filter(a => a.status === 'pending');
+  const inProgressAssignments = assignmentsList.filter(a => a.status === 'in_progress');
   const completedAssignments = assignmentsList.filter(a => a.status === 'completed');
 
   return (
@@ -440,6 +441,37 @@ export default function ParentDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* In Progress */}
+              {inProgressAssignments.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.inProgress')} ({inProgressAssignments.length})</h3>
+                  <div className="space-y-2">
+                    {inProgressAssignments.map((assignment) => (
+                        <Link
+                          key={assignment.id}
+                          href={`/parent/assignments/${assignment.id}`}
+                          className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block border-l-4 border-orange-400"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">
+                              {assignment.assignment_type === 'math' ? '📐' : '📖'}
+                            </span>
+                            <div>
+                              <p className="font-medium">{assignment.title}</p>
+                              <p className="text-sm text-gray-600">
+                                {assignment.child_name} • {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                            {t('parent.dashboard.inProgress')}
+                          </span>
+                        </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Pending */}
               {pendingAssignments.length > 0 && (
                 <div>
