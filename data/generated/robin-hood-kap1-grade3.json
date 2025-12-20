@@ -1,0 +1,72 @@
+{
+  "package": {
+    "name": "Robin Hood - Kapitel 1",
+    "grade_level": 3,
+    "category_id": null,
+    "assignment_type": "reading",
+    "description": "Läsförståelsefrågor om de fredlösa i Sherwood-skogen och hur Robin Hood blev fredlös",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "Vad var Robin Hood bäst på?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Att rida häst",
+        "B: Att skjuta med pil och båge",
+        "C: Att sjunga",
+        "D: Att simma"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "question_text": "Vad hette kvinnan som Robin var kär i?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Anna",
+        "B: Marion",
+        "C: Emma",
+        "D: Lisa"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "question_text": "Varför blev skogvaktarna arga på Robin?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Han stal deras pengar",
+        "B: Han sköt en av kungens hjortar",
+        "C: Han slog dem",
+        "D: Han drack deras öl"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_text": "Varför missade skogvaktarens pil Robin?",
+      "correct_answer": "C",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Robin gömde sig bakom ett träd",
+        "B: Pilen var trasig",
+        "C: Skogvaktaren hade druckit för mycket öl",
+        "D: Det blåste för mycket"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "question_text": "Varför ångrade Robin att han hade skjutit mannen?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Han var rädd för att bli straffad",
+        "B: Han tänkte på hur ledsen mannens familj skulle bli",
+        "C: Han tappade sin bästa pil",
+        "D: Skogvaktarna blev ännu argare"
+      ],
+      "difficulty": "hard"
+    }
+  ]
+}

@@ -11,12 +11,25 @@ Questions are MULTIPLE CHOICE ONLY. Do NOT include text extracts in the output.
 
 ## Output Format (JSON)
 
+### Package Format (for import)
+
+Use this format when generating reading questions for a book chapter:
+
 ```json
 {
-  "questions": [
+  "package": {
+    "name": "Pippi Långstrump - Kapitel 1",
+    "grade_level": 3,
+    "category_id": null,
+    "assignment_type": "reading",
+    "description": "Läsförståelsefrågor om när Pippi flyttar in i Villa Villekulla",
+    "global": true
+  },
+  "problems": [
     {
       "question_text": "Varför kunde Pippi bära in hästen i köket?",
       "correct_answer": "B",
+      "answer_type": "multiple_choice",
       "options": [
         "A: Hon hade hjälp av Tommy och Annika",
         "B: Hon är väldigt stark",
@@ -28,6 +41,23 @@ Questions are MULTIPLE CHOICE ONLY. Do NOT include text extracts in the output.
   ]
 }
 ```
+
+**Package fields:**
+- `name`: Descriptive name (book + chapter)
+- `grade_level`: 1-9 (årskurs)
+- `category_id`: null (for reading)
+- `assignment_type`: "reading" (REQUIRED - ensures it appears in reading category, not math)
+- `description`: Brief description of the chapter content
+- `global`: true = visible to all parents
+
+**Problem fields:**
+- `question_text`: The question in Swedish
+- `correct_answer`: Letter (A, B, C, or D)
+- `answer_type`: Always "multiple_choice" for reading
+- `options`: Array of 4 options with "A:", "B:", "C:", "D:" prefixes
+- `difficulty`: "easy", "medium", or "hard"
+
+**Output location:** Save generated JSON files to `data/generated/`
 
 ## Always Generate Exactly 5 Questions
 

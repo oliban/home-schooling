@@ -105,6 +105,7 @@ export interface MathPackage {
   name: string;
   grade_level: number;
   category_id: string | null;
+  assignment_type: 'math' | 'reading';
   problem_count: number;
   difficulty_summary: string | null;
   description: string | null;
@@ -141,6 +142,7 @@ export interface ImportPackageRequest {
     name: string;
     grade_level: number;
     category_id?: string;
+    assignment_type?: 'math' | 'reading';
     description?: string;
     global?: boolean;
   };

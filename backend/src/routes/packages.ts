@@ -33,16 +33,20 @@ router.post('/import', authenticateParent, (req, res) => {
     // Determine global flag: explicit isGlobal parameter takes precedence, then pkg.global
     const globalFlag = isGlobal !== undefined ? isGlobal : (pkg.global ?? false);
 
+    // Determine assignment type: reading if category_id is null and answer_type is multiple_choice, or explicitly set
+    const assignmentType = pkg.assignment_type || (pkg.category_id === null && problems.every(p => p.answer_type === 'multiple_choice') ? 'reading' : 'math');
+
     db.transaction(() => {
       db.run(
-        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, difficulty_summary, description, is_global)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, difficulty_summary, description, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           packageId,
           req.user!.id,
           pkg.name,
           pkg.grade_level,
           pkg.category_id || null,
+          assignmentType,
           problems.length,
           JSON.stringify(difficultySummary),
           pkg.description || null,
@@ -211,8 +215,8 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
 
     db.run(
       `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
-       VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?)`,
-      [assignmentId, req.user!.id, childId, title || pkg.name, pkg.grade_level, req.params.id]
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      [assignmentId, req.user!.id, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id]
     );
 
     res.status(201).json({ id: assignmentId });

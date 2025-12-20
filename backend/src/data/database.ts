@@ -99,6 +99,12 @@ class HomeSchoolingDatabase {
     if (!assignmentColumns.some(c => c.name === 'package_id')) {
       this.db.exec('ALTER TABLE assignments ADD COLUMN package_id TEXT REFERENCES math_packages(id)');
     }
+
+    // Migration: Add assignment_type to math_packages table for reading/math distinction
+    const packageColumns = this.db.prepare("PRAGMA table_info(math_packages)").all() as { name: string }[];
+    if (!packageColumns.some(c => c.name === 'assignment_type')) {
+      this.db.exec("ALTER TABLE math_packages ADD COLUMN assignment_type TEXT DEFAULT 'math'");
+    }
   }
 
   get connection(): Database.Database {

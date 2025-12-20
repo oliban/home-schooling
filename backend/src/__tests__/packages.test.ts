@@ -256,6 +256,87 @@ describe('Math Package System', () => {
     });
   });
 
+  describe('Package Assignment Type', () => {
+    it('should store assignment_type for reading packages', () => {
+      const db = getDb();
+      const readingPackageId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [readingPackageId, parent1Id, 'Robin Hood - Kapitel 1', 3, null, 'reading', 5, 1]
+      );
+
+      const pkg = db.get<{ assignment_type: string }>(
+        'SELECT assignment_type FROM math_packages WHERE id = ?',
+        [readingPackageId]
+      );
+
+      expect(pkg?.assignment_type).toBe('reading');
+
+      // Cleanup
+      db.run('DELETE FROM math_packages WHERE id = ?', [readingPackageId]);
+    });
+
+    it('should default assignment_type to math when not specified', () => {
+      const db = getDb();
+      const mathPackageId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count)
+         VALUES (?, ?, ?, ?, ?)`,
+        [mathPackageId, parent1Id, 'Math Test', 3, 5]
+      );
+
+      const pkg = db.get<{ assignment_type: string }>(
+        'SELECT assignment_type FROM math_packages WHERE id = ?',
+        [mathPackageId]
+      );
+
+      expect(pkg?.assignment_type).toBe('math');
+
+      // Cleanup
+      db.run('DELETE FROM math_packages WHERE id = ?', [mathPackageId]);
+    });
+
+    it('should create assignment with correct type from reading package', () => {
+      const db = getDb();
+      const readingPackageId = uuidv4();
+      const assignmentId = uuidv4();
+
+      // Create reading package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, assignment_type, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [readingPackageId, parent1Id, 'Läsförståelse Test', 3, 'reading', 5, 1]
+      );
+
+      // Get package assignment_type
+      const pkg = db.get<{ assignment_type: string }>(
+        'SELECT assignment_type FROM math_packages WHERE id = ?',
+        [readingPackageId]
+      );
+
+      // Create assignment using package's assignment_type
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+        [assignmentId, parent1Id, child1Id, pkg?.assignment_type || 'math', 'Reading Assignment', 3, readingPackageId]
+      );
+
+      const assignment = db.get<{ assignment_type: string }>(
+        'SELECT assignment_type FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+
+      expect(assignment?.assignment_type).toBe('reading');
+
+      // Cleanup
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [readingPackageId]);
+    });
+  });
+
   describe('Package Soft Delete', () => {
     it('should soft delete a package', () => {
       const db = getDb();

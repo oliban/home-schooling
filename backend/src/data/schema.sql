@@ -147,13 +147,14 @@ CREATE TABLE IF NOT EXISTS progress_logs (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Math packages (reusable problem sets)
+-- Packages (reusable problem sets for math and reading)
 CREATE TABLE IF NOT EXISTS math_packages (
     id TEXT PRIMARY KEY,
     parent_id TEXT REFERENCES parents(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     grade_level INTEGER NOT NULL CHECK (grade_level >= 1 AND grade_level <= 9),
     category_id TEXT REFERENCES math_categories(id),
+    assignment_type TEXT CHECK (assignment_type IN ('math', 'reading')) DEFAULT 'math',
     problem_count INTEGER NOT NULL,
     difficulty_summary TEXT,
     description TEXT,
