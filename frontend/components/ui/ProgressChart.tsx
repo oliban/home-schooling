@@ -94,44 +94,62 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
     );
   }
 
-  // Transform data for Recharts - two bars per child (Math and Reading side by side)
-  const chartData = data.map(child => ({
-    name: child.childName,
-    mathCorrect: child.math.correct,
-    mathIncorrect: child.math.incorrect,
-    readingCorrect: child.reading.correct,
-    readingIncorrect: child.reading.incorrect,
-  }));
+  // Transform data for Recharts - flatten to one bar per subject per child
+  // Each entry is: "ChildName\nSubject" with correct/incorrect values
+  const chartData = data.flatMap(child => [
+    {
+      name: child.childName,
+      subject: t('parent.stats.math'),
+      label: `${child.childName}\n${t('parent.stats.math')}`,
+      correct: child.math.correct,
+      incorrect: child.math.incorrect,
+    },
+    {
+      name: child.childName,
+      subject: t('parent.stats.reading'),
+      label: `${child.childName}\n${t('parent.stats.reading')}`,
+      correct: child.reading.correct,
+      incorrect: child.reading.incorrect,
+    },
+  ]);
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: {
     active?: boolean;
-    payload?: Array<{ value: number; dataKey: string }>;
+    payload?: Array<{ value: number; dataKey: string; payload: { name: string; subject: string } }>;
     label?: string
   }) => {
     if (active && payload && payload.length) {
-      const mathCorrect = payload.find(p => p.dataKey === 'mathCorrect')?.value || 0;
-      const mathIncorrect = payload.find(p => p.dataKey === 'mathIncorrect')?.value || 0;
-      const readingCorrect = payload.find(p => p.dataKey === 'readingCorrect')?.value || 0;
-      const readingIncorrect = payload.find(p => p.dataKey === 'readingIncorrect')?.value || 0;
+      const correct = payload.find(p => p.dataKey === 'correct')?.value || 0;
+      const incorrect = payload.find(p => p.dataKey === 'incorrect')?.value || 0;
+      const childName = payload[0]?.payload?.name || label;
+      const subject = payload[0]?.payload?.subject || '';
 
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border">
-          <p className="font-semibold mb-2">{label}</p>
-          <div className="mb-2">
-            <p className="text-sm font-medium">{t('parent.stats.math')}</p>
-            <p className="text-xs text-green-600">{t('parent.stats.correct')}: {mathCorrect}</p>
-            <p className="text-xs text-red-600">{t('parent.stats.incorrect')}: {mathIncorrect}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">{t('parent.stats.reading')}</p>
-            <p className="text-xs text-green-600">{t('parent.stats.correct')}: {readingCorrect}</p>
-            <p className="text-xs text-red-600">{t('parent.stats.incorrect')}: {readingIncorrect}</p>
-          </div>
+          <p className="font-semibold">{childName}</p>
+          <p className="text-sm text-gray-600 mb-2">{subject}</p>
+          <p className="text-sm text-green-600">{t('parent.stats.correct')}: {correct}</p>
+          <p className="text-sm text-red-600">{t('parent.stats.incorrect')}: {incorrect}</p>
         </div>
       );
     }
     return null;
+  };
+
+  // Custom x-axis tick to render two lines (name + subject)
+  const CustomTick = ({ x, y, payload }: { x: number; y: number; payload: { value: string } }) => {
+    const lines = payload.value.split('\n');
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text x={0} y={0} dy={16} textAnchor="middle" fill="#374151" fontSize={13} fontWeight={500}>
+          {lines[0]}
+        </text>
+        <text x={0} y={0} dy={32} textAnchor="middle" fill="#6b7280" fontSize={11}>
+          {lines[1]}
+        </text>
+      </g>
+    );
   };
 
   return (
@@ -152,18 +170,19 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
         </select>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={320}>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          barGap={0}
-          barCategoryGap="20%"
+          margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+          barCategoryGap="15%"
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
-            dataKey="name"
-            tick={{ fill: '#374151', fontSize: 14, fontWeight: 500 }}
+            dataKey="label"
+            tick={CustomTick}
             axisLine={{ stroke: '#d1d5db' }}
+            interval={0}
+            height={50}
           />
           <YAxis
             tick={{ fill: '#6b7280', fontSize: 12 }}
@@ -171,53 +190,31 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
             allowDecimals={false}
           />
           <Tooltip content={<CustomTooltip />} />
-          {/* Math bar - stacked green/red */}
           <Bar
-            dataKey="mathCorrect"
-            stackId="math"
+            dataKey="correct"
+            stackId="bar"
             fill="#22c55e"
-            name="mathCorrect"
+            name="correct"
           />
           <Bar
-            dataKey="mathIncorrect"
-            stackId="math"
+            dataKey="incorrect"
+            stackId="bar"
             fill="#ef4444"
-            name="mathIncorrect"
-            radius={[4, 4, 0, 0]}
-          />
-          {/* Reading bar - stacked green/red (separate bar, not stacked with math) */}
-          <Bar
-            dataKey="readingCorrect"
-            stackId="reading"
-            fill="#22c55e"
-            name="readingCorrect"
-          />
-          <Bar
-            dataKey="readingIncorrect"
-            stackId="reading"
-            fill="#ef4444"
-            name="readingIncorrect"
+            name="incorrect"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Legend explaining bars and colors */}
-      <div className="flex justify-center gap-8 mt-4 text-sm">
-        <div className="flex items-center gap-4">
-          <span className="text-gray-600">{t('parent.stats.math')}</span>
-          <span className="text-gray-400">|</span>
-          <span className="text-gray-600">{t('parent.stats.reading')}</span>
+      {/* Legend explaining colors */}
+      <div className="flex justify-center gap-6 mt-2 text-sm">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded bg-green-500" />
+          <span className="text-gray-600">{t('parent.stats.correct')}</span>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500" />
-            <span className="text-gray-600">{t('parent.stats.correct')}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-500" />
-            <span className="text-gray-600">{t('parent.stats.incorrect')}</span>
-          </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded bg-red-500" />
+          <span className="text-gray-600">{t('parent.stats.incorrect')}</span>
         </div>
       </div>
     </div>

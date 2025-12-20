@@ -134,8 +134,21 @@ router.get('/stats', authenticateParent, (req, res) => {
           ${dateFilter.replace('answered_at', 'mp.answered_at')}
       `, [child.id]) || { correct: 0, incorrect: 0 };
 
-      // Reading stats
-      const reading = db.get<{ correct: number; incorrect: number }>(`
+      // Reading stats - package-based assignments
+      const readingPackage = db.get<{ correct: number; incorrect: number }>(`
+        SELECT
+          COALESCE(SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
+          COALESCE(SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
+        FROM assignments a
+        JOIN assignment_answers aa ON a.id = aa.assignment_id
+        WHERE a.child_id = ?
+          AND a.assignment_type = 'reading'
+          AND a.package_id IS NOT NULL
+          ${dateFilter.replace('answered_at', 'aa.answered_at')}
+      `, [child.id]) || { correct: 0, incorrect: 0 };
+
+      // Reading stats - legacy embedded questions
+      const readingLegacy = db.get<{ correct: number; incorrect: number }>(`
         SELECT
           COALESCE(SUM(CASE WHEN rq.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
           COALESCE(SUM(CASE WHEN rq.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
@@ -143,6 +156,7 @@ router.get('/stats', authenticateParent, (req, res) => {
         JOIN reading_questions rq ON a.id = rq.assignment_id
         WHERE a.child_id = ?
           AND a.assignment_type = 'reading'
+          AND a.package_id IS NULL
           ${dateFilter.replace('answered_at', 'rq.answered_at')}
       `, [child.id]) || { correct: 0, incorrect: 0 };
 
@@ -154,8 +168,8 @@ router.get('/stats', authenticateParent, (req, res) => {
           incorrect: mathPackage.incorrect + mathLegacy.incorrect
         },
         reading: {
-          correct: reading.correct,
-          incorrect: reading.incorrect
+          correct: readingPackage.correct + readingLegacy.correct,
+          incorrect: readingPackage.incorrect + readingLegacy.incorrect
         }
       };
     });

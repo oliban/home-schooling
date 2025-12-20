@@ -198,6 +198,62 @@ describe('GET /children/stats', () => {
     expect(stats?.reading_incorrect).toBe(2);
   });
 
+  it('should aggregate reading stats from package-based assignments', () => {
+    const db = getDb();
+    const readingPackageId = uuidv4();
+    const readingAssignmentId = uuidv4();
+
+    // Create a reading package with questions
+    db.run(
+      `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, difficulty_summary, is_global)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [readingPackageId, parentId, 'Reading Package', 3, null, 4, '{"easy":2,"medium":2}', 0]
+    );
+
+    // Insert reading questions as package problems
+    const readingProblemIds: string[] = [];
+    for (let i = 1; i <= 4; i++) {
+      const problemId = uuidv4();
+      readingProblemIds.push(problemId);
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [problemId, readingPackageId, i, `Reading Q${i}?`, 'A', 'multiple_choice', 'medium']
+      );
+    }
+
+    // Create a reading assignment using the package
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+       VALUES (?, ?, ?, 'reading', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+      [readingAssignmentId, parentId, childId2, 'Package Reading Test', 5, readingPackageId]
+    );
+
+    // Add answers: 3 correct, 1 incorrect
+    readingProblemIds.forEach((problemId, i) => {
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), readingAssignmentId, problemId, i < 3 ? 'A' : 'B', i < 3 ? 1 : 0]
+      );
+    });
+
+    // Query aggregated stats for package-based reading
+    const stats = db.get<{ reading_correct: number; reading_incorrect: number }>(`
+      SELECT
+        COALESCE(SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END), 0) as reading_correct,
+        COALESCE(SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END), 0) as reading_incorrect
+      FROM assignments a
+      JOIN assignment_answers aa ON a.id = aa.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'reading'
+        AND a.package_id IS NOT NULL
+    `, [childId2]);
+
+    expect(stats?.reading_correct).toBe(3);
+    expect(stats?.reading_incorrect).toBe(1);
+  });
+
   it('should filter by 7d period using answered_at timestamp', () => {
     const db = getDb();
     const recentAssignmentId = uuidv4();
