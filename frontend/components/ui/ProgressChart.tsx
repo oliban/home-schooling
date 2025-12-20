@@ -24,8 +24,29 @@ interface ProgressChartProps {
   onPeriodChange: (period: '7d' | '30d' | 'all') => void;
 }
 
+// Get date range string based on period
+function getDateRangeString(period: '7d' | '30d' | 'all', locale: string): string {
+  const now = new Date();
+  const formatDate = (date: Date) => date.toLocaleDateString(locale === 'sv' ? 'sv-SE' : 'en-US', {
+    day: 'numeric',
+    month: 'short'
+  });
+
+  if (period === '7d') {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 7);
+    return `${formatDate(start)} - ${formatDate(now)}`;
+  } else if (period === '30d') {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 30);
+    return `${formatDate(start)} - ${formatDate(now)}`;
+  }
+  return '';
+}
+
 export default function ProgressChart({ data, period, onPeriodChange }: ProgressChartProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateRange = getDateRangeString(period, locale);
 
   if (!data || data.length === 0) {
     return (
@@ -67,7 +88,7 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
     );
   }
 
-  // Transform data for Recharts - child names on x-axis, stacked bars for math and reading
+  // Transform data for Recharts - two bars per child (Math and Reading side by side)
   const chartData = data.map(child => ({
     name: child.childName,
     mathCorrect: child.math.correct,
@@ -109,8 +130,11 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-lg">{t('parent.stats.title')}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h3 className="font-bold text-lg">{t('parent.stats.title')}</h3>
+          {dateRange && <p className="text-sm text-gray-500">{dateRange}</p>}
+        </div>
         <select
           value={period}
           onChange={(e) => onPeriodChange(e.target.value as '7d' | '30d' | 'all')}
@@ -126,6 +150,8 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
         <BarChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          barGap={0}
+          barCategoryGap="20%"
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -139,46 +165,53 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
             allowDecimals={false}
           />
           <Tooltip content={<CustomTooltip />} />
-          {/* Math bars - stacked green/red */}
+          {/* Math bar - stacked green/red */}
           <Bar
             dataKey="mathCorrect"
             stackId="math"
             fill="#22c55e"
-            name="Math Correct"
+            name="mathCorrect"
           />
           <Bar
             dataKey="mathIncorrect"
             stackId="math"
             fill="#ef4444"
-            name="Math Incorrect"
+            name="mathIncorrect"
             radius={[4, 4, 0, 0]}
           />
-          {/* Reading bars - stacked green/red */}
+          {/* Reading bar - stacked green/red (separate bar, not stacked with math) */}
           <Bar
             dataKey="readingCorrect"
             stackId="reading"
-            fill="#16a34a"
-            name="Reading Correct"
+            fill="#22c55e"
+            name="readingCorrect"
           />
           <Bar
             dataKey="readingIncorrect"
             stackId="reading"
-            fill="#dc2626"
-            name="Reading Incorrect"
+            fill="#ef4444"
+            name="readingIncorrect"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Simple legend */}
-      <div className="flex justify-center gap-6 mt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500" />
-          <span className="text-sm">{t('parent.stats.math')}</span>
+      {/* Legend explaining bars and colors */}
+      <div className="flex justify-center gap-8 mt-4 text-sm">
+        <div className="flex items-center gap-4">
+          <span className="text-gray-600">{t('parent.stats.math')}</span>
+          <span className="text-gray-400">|</span>
+          <span className="text-gray-600">{t('parent.stats.reading')}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-600" />
-          <span className="text-sm">{t('parent.stats.reading')}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-green-500" />
+            <span className="text-gray-600">{t('parent.stats.correct')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-red-500" />
+            <span className="text-gray-600">{t('parent.stats.incorrect')}</span>
+          </div>
         </div>
       </div>
     </div>

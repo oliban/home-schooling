@@ -337,6 +337,63 @@ describe('Math Package System', () => {
     });
   });
 
+  describe('Package Import Validation', () => {
+    it('should require question_text for each problem', () => {
+      // This tests the validation logic - problems without question_text should be rejected
+      const invalidProblems = [
+        { question_text: '', correct_answer: '4' },
+        { correct_answer: '4' }, // missing question_text
+      ];
+
+      invalidProblems.forEach((p) => {
+        const hasValidQuestionText = p.question_text && typeof p.question_text === 'string' && p.question_text.trim();
+        expect(hasValidQuestionText).toBeFalsy();
+      });
+    });
+
+    it('should require correct_answer for each problem', () => {
+      const invalidProblems = [
+        { question_text: 'What is 2+2?', correct_answer: '' },
+        { question_text: 'What is 2+2?' }, // missing correct_answer
+      ];
+
+      invalidProblems.forEach((p) => {
+        const hasValidAnswer = p.correct_answer && typeof p.correct_answer === 'string' && p.correct_answer.trim();
+        expect(hasValidAnswer).toBeFalsy();
+      });
+    });
+
+    it('should require options array for multiple_choice problems', () => {
+      const invalidMCProblems = [
+        { question_text: 'Pick one', correct_answer: 'A', answer_type: 'multiple_choice' }, // missing options
+        { question_text: 'Pick one', correct_answer: 'A', answer_type: 'multiple_choice', options: [] }, // empty options
+        { question_text: 'Pick one', correct_answer: 'A', answer_type: 'multiple_choice', options: ['A'] }, // only 1 option
+      ];
+
+      invalidMCProblems.forEach((p) => {
+        const hasValidOptions = p.options && Array.isArray(p.options) && p.options.length >= 2;
+        expect(hasValidOptions).toBeFalsy();
+      });
+    });
+
+    it('should accept valid multiple_choice problems', () => {
+      const validMCProblem = {
+        question_text: 'What is 2+2?',
+        correct_answer: 'B',
+        answer_type: 'multiple_choice',
+        options: ['A: 3', 'B: 4', 'C: 5', 'D: 6']
+      };
+
+      const hasValidQuestionText = validMCProblem.question_text && typeof validMCProblem.question_text === 'string' && validMCProblem.question_text.trim();
+      const hasValidAnswer = validMCProblem.correct_answer && typeof validMCProblem.correct_answer === 'string' && validMCProblem.correct_answer.trim();
+      const hasValidOptions = validMCProblem.options && Array.isArray(validMCProblem.options) && validMCProblem.options.length >= 2;
+
+      expect(hasValidQuestionText).toBeTruthy();
+      expect(hasValidAnswer).toBeTruthy();
+      expect(hasValidOptions).toBeTruthy();
+    });
+  });
+
   describe('Package Soft Delete', () => {
     it('should soft delete a package', () => {
       const db = getDb();

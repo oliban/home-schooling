@@ -20,6 +20,27 @@ router.post('/import', authenticateParent, (req, res) => {
       return res.status(400).json({ error: 'Package must contain at least one problem' });
     }
 
+    // Validate each problem has required fields
+    const validationErrors: string[] = [];
+    problems.forEach((p, i) => {
+      const num = i + 1;
+      if (!p.question_text || typeof p.question_text !== 'string' || !p.question_text.trim()) {
+        validationErrors.push(`Problem ${num}: missing question_text`);
+      }
+      if (!p.correct_answer || typeof p.correct_answer !== 'string' || !p.correct_answer.trim()) {
+        validationErrors.push(`Problem ${num}: missing correct_answer`);
+      }
+      if (p.answer_type === 'multiple_choice') {
+        if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+          validationErrors.push(`Problem ${num}: multiple_choice requires options array with at least 2 items`);
+        }
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: 'Invalid problems', details: validationErrors });
+    }
+
     const db = getDb();
     const packageId = uuidv4();
 
