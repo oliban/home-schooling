@@ -181,13 +181,17 @@ export const assignments = {
 export const collectibles = {
   list: (token: string) =>
     fetchApi<{
-      id: string;
-      name: string;
-      ascii_art: string;
-      price: number;
-      rarity: string;
-      owned: boolean;
-    }[]>('/collectibles', { token }),
+      collectibles: {
+        id: string;
+        name: string;
+        ascii_art: string;
+        price: number;
+        rarity: 'common' | 'rare' | 'epic' | 'legendary';
+        owned: boolean;
+      }[];
+      unlockedCount: number;
+      totalCount: number;
+    }>('/collectibles', { token }),
 
   owned: (token: string) =>
     fetchApi<{

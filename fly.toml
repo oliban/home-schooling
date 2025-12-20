@@ -1,4 +1,4 @@
-app = "teacher-portal"
+app = "home-schooling"
 primary_region = "arn"
 
 [build]

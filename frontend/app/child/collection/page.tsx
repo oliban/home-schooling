@@ -74,15 +74,9 @@ export default function CollectionPage() {
   const loadCollectibles = async (token: string) => {
     try {
       const response = await collectibles.list(token);
-      // Handle new API response format with collectibles, unlockedCount, totalCount
-      if (response.collectibles) {
-        setItems(response.collectibles);
-        setTotalCount(response.totalCount);
-        setUnlockedCount(response.unlockedCount);
-      } else {
-        // Fallback for old format (array directly)
-        setItems(response);
-      }
+      setItems(response.collectibles);
+      setTotalCount(response.totalCount);
+      setUnlockedCount(response.unlockedCount);
     } catch (err) {
       console.error('Failed to load collectibles:', err);
     } finally {
