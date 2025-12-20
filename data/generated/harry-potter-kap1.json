@@ -3,6 +3,7 @@
     "name": "Harry Potter - Kapitel 1: Pojken som överlevde",
     "grade_level": 5,
     "category_id": null,
+    "assignment_type": "reading",
     "description": "Läsförståelsefrågor för kapitel 1 där vi möter familjen Dursley och får hints om Harry Potters värld",
     "global": true
   },
