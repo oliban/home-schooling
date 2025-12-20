@@ -31,7 +31,7 @@ WORKDIR /app/backend
 COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/node_modules ./node_modules
 COPY --from=backend-builder /app/backend/package.json ./
-COPY backend/src/data/schema.sql ./src/data/schema.sql
+COPY backend/src/data/schema.sql ./dist/data/schema.sql
 
 # Copy frontend
 WORKDIR /app/frontend
