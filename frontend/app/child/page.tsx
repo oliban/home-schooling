@@ -53,7 +53,7 @@ export default function ChildDashboard() {
 
   const refreshCoins = async (token: string, childId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6001/api'}/children/${childId}/coins`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/children/${childId}/coins`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -103,7 +103,7 @@ export default function ChildDashboard() {
     const token = localStorage.getItem('childToken');
     if (token) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6001/api'}/collectibles/clear-alert`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/collectibles/clear-alert`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }
         });

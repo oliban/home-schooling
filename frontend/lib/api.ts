@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 type FetchOptions = {
   method?: string;
@@ -123,17 +123,29 @@ export const assignments = {
   get: (token: string, id: string) =>
     fetchApi<{
       id: string;
+      parent_id: string;
+      child_id: string;
       assignment_type: 'math' | 'reading';
       title: string;
       grade_level: number;
       status: string;
+      package_id: string | null;
+      created_at: string;
+      completed_at: string | null;
       questions: Array<{
         id: string;
+        problem_number?: number;
+        question_number?: number;
         question_text: string;
-        answer_type?: string;
-        options?: string;
+        correct_answer: string;
+        answer_type: string;
+        options: string | null;
+        explanation: string | null;
+        hint: string | null;
+        difficulty?: string;
         child_answer: string | null;
         is_correct: number | null;
+        answered_at?: string | null;
       }>;
     }>(`/assignments/${id}`, { token }),
 
