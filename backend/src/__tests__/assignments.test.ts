@@ -239,4 +239,132 @@ describe('Assignment Scores', () => {
       expect(assignment?.total_count).toBe(5);
     });
   });
+
+  describe('In-Progress Assignment Status', () => {
+    it('should support in_progress status for assignments', () => {
+      const db = getDb();
+      const assignmentId = uuidv4();
+
+      // Create an in_progress assignment (child started but not finished)
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [assignmentId, parentId, childId, 'In Progress Test', 3, packageId]
+      );
+
+      // Add a partial answer (only 2 of 5 answered)
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[0], '2', 1]
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[1], '5', 0]
+      );
+
+      // Query the assignment
+      const assignment = db.get<{ id: string; status: string; correct_count: number; total_count: number }>(
+        `SELECT a.id, a.status,
+         (SELECT COUNT(*) FROM assignment_answers aa WHERE aa.assignment_id = a.id AND aa.is_correct = 1) as correct_count,
+         (SELECT COUNT(*) FROM package_problems pp WHERE pp.package_id = a.package_id) as total_count
+         FROM assignments a
+         WHERE a.id = ?`,
+        [assignmentId]
+      );
+
+      expect(assignment).toBeDefined();
+      expect(assignment?.status).toBe('in_progress');
+      expect(assignment?.correct_count).toBe(1); // 1 correct answer so far
+      expect(assignment?.total_count).toBe(5);   // 5 total problems
+    });
+
+    it('should be able to filter assignments by in_progress status', () => {
+      const db = getDb();
+      const inProgressId = uuidv4();
+      const pendingId = uuidv4();
+
+      // Create one in_progress assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [inProgressId, parentId, childId, 'Filter In Progress', 3, packageId]
+      );
+
+      // Create one pending assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?)`,
+        [pendingId, parentId, childId, 'Filter Pending', 3, packageId]
+      );
+
+      // Query only in_progress assignments
+      const inProgressAssignments = db.all<{ id: string; status: string }>(
+        `SELECT id, status FROM assignments WHERE parent_id = ? AND status = ?`,
+        [parentId, 'in_progress']
+      );
+
+      expect(inProgressAssignments.length).toBeGreaterThanOrEqual(1);
+      expect(inProgressAssignments.every(a => a.status === 'in_progress')).toBe(true);
+
+      // Query only pending assignments
+      const pendingAssignments = db.all<{ id: string; status: string }>(
+        `SELECT id, status FROM assignments WHERE parent_id = ? AND status = ?`,
+        [parentId, 'pending']
+      );
+
+      expect(pendingAssignments.length).toBeGreaterThanOrEqual(1);
+      expect(pendingAssignments.every(a => a.status === 'pending')).toBe(true);
+    });
+
+    it('should track partial progress in in_progress assignments', () => {
+      const db = getDb();
+      const assignmentId = uuidv4();
+
+      // Create an in_progress assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [assignmentId, parentId, childId, 'Partial Progress Test', 3, packageId]
+      );
+
+      // Add 3 answers out of 5
+      const answersToAdd = [
+        { problemId: problemIds[0], answer: '2', correct: 1 },
+        { problemId: problemIds[1], answer: '4', correct: 1 },
+        { problemId: problemIds[2], answer: '15', correct: 0 },
+      ];
+
+      for (const ans of answersToAdd) {
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          [uuidv4(), assignmentId, ans.problemId, ans.answer, ans.correct]
+        );
+      }
+
+      // Count answered questions
+      const answeredCount = db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?`,
+        [assignmentId]
+      );
+
+      // Count total questions
+      const totalCount = db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?`,
+        [packageId]
+      );
+
+      expect(answeredCount?.count).toBe(3);
+      expect(totalCount?.count).toBe(5);
+
+      // Verify assignment is still in_progress
+      const assignment = db.get<{ status: string }>(
+        `SELECT status FROM assignments WHERE id = ?`,
+        [assignmentId]
+      );
+      expect(assignment?.status).toBe('in_progress');
+    });
+  });
 });

@@ -41,6 +41,7 @@ SQLite database at `/data/homeschooling.db`. Schema in `/backend/src/data/schema
 
 - **TDD (Test-Driven Development)**: Always write tests first before implementing new features or fixing bugs.
 - **Pre-commit hook**: A git hook enforces TDD by rejecting commits with source code changes but no tests. Install with: `./scripts/install-hooks.sh`
+- **NEVER bypass hooks**: Never use `--no-verify` or similar flags to bypass git hooks without explicit user permission. If the hook fails, write the required tests.
 - **Codebase analysis before writing code**: Before implementing any new function, utility, or component:
   1. Search the codebase for existing similar functionality (use Grep/Glob)
   2. Check for utility functions that already solve the problem
