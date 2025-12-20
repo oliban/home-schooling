@@ -170,6 +170,28 @@
       "completed": "Completed",
       "mathAccuracy": "Math - correct answers",
       "readingAccuracy": "Reading - correct answers"
+    },
+    "assignmentPreview": {
+      "notFound": "Assignment not found",
+      "backToDashboard": "Back to dashboard",
+      "questionCount": "{count} questions",
+      "results": "Results",
+      "totalQuestions": "Total Questions",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "score": "Score",
+      "questions": "Questions",
+      "question": "Question {number}",
+      "answer": "Answer",
+      "childAnswered": "Child answered",
+      "type": "Type",
+      "hint": "Hint",
+      "explanation": "Explanation",
+      "difficulty": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      }
     }
   },
   "language": {

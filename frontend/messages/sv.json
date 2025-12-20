@@ -170,6 +170,28 @@
       "completed": "Avklarade",
       "mathAccuracy": "Matte - korrekta svar",
       "readingAccuracy": "Läsning - korrekta svar"
+    },
+    "assignmentPreview": {
+      "notFound": "Uppgiften hittades inte",
+      "backToDashboard": "Tillbaka till panelen",
+      "questionCount": "{count} frågor",
+      "results": "Resultat",
+      "totalQuestions": "Totalt antal frågor",
+      "correct": "Rätt",
+      "incorrect": "Fel",
+      "score": "Poäng",
+      "questions": "Frågor",
+      "question": "Fråga {number}",
+      "answer": "Svar",
+      "childAnswered": "Barnet svarade",
+      "type": "Typ",
+      "hint": "Tips",
+      "explanation": "Förklaring",
+      "difficulty": {
+        "easy": "Lätt",
+        "medium": "Medel",
+        "hard": "Svår"
+      }
     }
   },
   "language": {
