@@ -90,6 +90,9 @@ export default function ParentDashboard() {
   const [statsData, setStatsData] = useState<DailyStatsData[]>([]);
   const [statsPeriod, setStatsPeriod] = useState<'7d' | '30d' | 'all'>('7d');
 
+  // Delete assignment state
+  const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null);
+
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
     const parentData = localStorage.getItem('parentData');
@@ -321,6 +324,29 @@ export default function ParentDashboard() {
     setHintsAllowed(true);
   };
 
+  const handleDeleteAssignment = async (assignmentId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm(t('parent.dashboard.confirmDeleteAssignment'))) {
+      return;
+    }
+
+    const token = localStorage.getItem('parentToken');
+    if (!token) return;
+
+    setDeletingAssignmentId(assignmentId);
+    try {
+      await assignments.delete(token, assignmentId);
+      setAssignmentsList(prev => prev.filter(a => a.id !== assignmentId));
+    } catch (err) {
+      console.error('Failed to delete assignment:', err);
+      alert(t('parent.dashboard.deleteAssignmentError'));
+    } finally {
+      setDeletingAssignmentId(null);
+    }
+  };
+
   if (loading || !parent) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -506,9 +532,19 @@ export default function ParentDashboard() {
                               </p>
                             </div>
                           </div>
-                          <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
-                            {t('parent.dashboard.inProgress')}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                              {t('parent.dashboard.inProgress')}
+                            </span>
+                            <button
+                              onClick={(e) => handleDeleteAssignment(assignment.id, e)}
+                              disabled={deletingAssignmentId === assignment.id}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                              title={t('parent.dashboard.deleteAssignment')}
+                            >
+                              {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
+                            </button>
+                          </div>
                         </Link>
                     ))}
                   </div>
@@ -537,9 +573,19 @@ export default function ParentDashboard() {
                             </p>
                           </div>
                         </div>
-                        <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
-                          {t('parent.dashboard.pending')}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                            {t('parent.dashboard.pending')}
+                          </span>
+                          <button
+                            onClick={(e) => handleDeleteAssignment(assignment.id, e)}
+                            disabled={deletingAssignmentId === assignment.id}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title={t('parent.dashboard.deleteAssignment')}
+                          >
+                            {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
+                          </button>
+                        </div>
                       </Link>
                     ))}
                   </div>

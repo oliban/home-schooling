@@ -141,7 +141,10 @@
       "quickActions": "Snabbåtgärder",
       "childLogin": "Barninloggning",
       "setupChildLogin": "Sätt upp barninloggning",
-      "setupComplete": "Förälder-ID sparat: {id}\n\nBarn kan nu logga in på /login"
+      "setupComplete": "Förälder-ID sparat: {id}\n\nBarn kan nu logga in på /login",
+      "deleteAssignment": "Ta bort uppgift",
+      "confirmDeleteAssignment": "Är du säker på att du vill ta bort denna uppgift?",
+      "deleteAssignmentError": "Kunde inte ta bort uppgiften"
     },
     "child": {
       "addTitle": "Lägg till barn",

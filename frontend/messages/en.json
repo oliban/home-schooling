@@ -141,7 +141,10 @@
       "quickActions": "Quick Actions",
       "childLogin": "Child Login",
       "setupChildLogin": "Setup Child Login",
-      "setupComplete": "Parent ID saved: {id}\n\nChildren can now log in at /login"
+      "setupComplete": "Parent ID saved: {id}\n\nChildren can now log in at /login",
+      "deleteAssignment": "Delete assignment",
+      "confirmDeleteAssignment": "Are you sure you want to delete this assignment?",
+      "deleteAssignmentError": "Failed to delete assignment"
     },
     "child": {
       "addTitle": "Add Child",

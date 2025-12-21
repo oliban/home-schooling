@@ -115,6 +115,30 @@ describe('Translation files', () => {
     });
   });
 
+  describe('Delete assignment translations', () => {
+    const deleteAssignmentKeys = [
+      'parent.dashboard.deleteAssignment',
+      'parent.dashboard.confirmDeleteAssignment',
+      'parent.dashboard.deleteAssignmentError',
+    ];
+
+    it('should have all delete assignment translations in Swedish', () => {
+      for (const key of deleteAssignmentKeys) {
+        const value = getNestedValue(svMessages, key);
+        expect(value, `Missing Swedish translation for: ${key}`).toBeDefined();
+        expect(typeof value, `Swedish translation for ${key} should be a string`).toBe('string');
+      }
+    });
+
+    it('should have all delete assignment translations in English', () => {
+      for (const key of deleteAssignmentKeys) {
+        const value = getNestedValue(enMessages, key);
+        expect(value, `Missing English translation for: ${key}`).toBeDefined();
+        expect(typeof value, `English translation for ${key} should be a string`).toBe('string');
+      }
+    });
+  });
+
   describe('Translation parity', () => {
     it('should have the same top-level keys in both languages', () => {
       const svKeys = Object.keys(svMessages).sort();
