@@ -93,6 +93,9 @@ export default function ParentDashboard() {
   // Delete assignment state
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null);
 
+  // Completed section collapsed state (hidden by default)
+  const [completedExpanded, setCompletedExpanded] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
     const parentData = localStorage.getItem('parentData');
@@ -359,6 +362,25 @@ export default function ParentDashboard() {
   const inProgressAssignments = assignmentsList.filter(a => a.status === 'in_progress');
   const completedAssignments = assignmentsList.filter(a => a.status === 'completed');
 
+  // Group assignments by child
+  const groupByChild = (assignments: AssignmentData[]) => {
+    const grouped: Record<string, { childName: string; assignments: AssignmentData[] }> = {};
+    for (const assignment of assignments) {
+      if (!grouped[assignment.child_id]) {
+        grouped[assignment.child_id] = {
+          childName: assignment.child_name,
+          assignments: [],
+        };
+      }
+      grouped[assignment.child_id].assignments.push(assignment);
+    }
+    return Object.entries(grouped).sort((a, b) => a[1].childName.localeCompare(b[1].childName));
+  };
+
+  const pendingByChild = groupByChild(pendingAssignments);
+  const inProgressByChild = groupByChild(inProgressAssignments);
+  const completedByChild = groupByChild(completedAssignments);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* Header */}
@@ -514,38 +536,45 @@ export default function ParentDashboard() {
               {inProgressAssignments.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.inProgress')} ({inProgressAssignments.length})</h3>
-                  <div className="space-y-2">
-                    {inProgressAssignments.map((assignment) => (
-                        <Link
-                          key={assignment.id}
-                          href={`/parent/assignments/${assignment.id}`}
-                          className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block border-l-4 border-orange-400"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">
-                              {assignment.assignment_type === 'math' ? '📐' : '📖'}
-                            </span>
-                            <div>
-                              <p className="font-medium">{assignment.title}</p>
-                              <p className="text-sm text-gray-600">
-                                {assignment.child_name} • {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
-                              {t('parent.dashboard.inProgress')}
-                            </span>
-                            <button
-                              onClick={(e) => handleDeleteAssignment(assignment.id, e)}
-                              disabled={deletingAssignmentId === assignment.id}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                              title={t('parent.dashboard.deleteAssignment')}
+                  <div className="space-y-4">
+                    {inProgressByChild.map(([childId, { childName, assignments }]) => (
+                      <div key={childId}>
+                        <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
+                        <div className="space-y-2">
+                          {assignments.map((assignment) => (
+                            <Link
+                              key={assignment.id}
+                              href={`/parent/assignments/${assignment.id}`}
+                              className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block border-l-4 border-orange-400"
                             >
-                              {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
-                            </button>
-                          </div>
-                        </Link>
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">
+                                  {assignment.assignment_type === 'math' ? '📐' : '📖'}
+                                </span>
+                                <div>
+                                  <p className="font-medium">{assignment.title}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                                  {t('parent.dashboard.inProgress')}
+                                </span>
+                                <button
+                                  onClick={(e) => handleDeleteAssignment(assignment.id, e)}
+                                  disabled={deletingAssignmentId === assignment.id}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                  title={t('parent.dashboard.deleteAssignment')}
+                                >
+                                  {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
+                                </button>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -555,81 +584,104 @@ export default function ParentDashboard() {
               {pendingAssignments.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.pending')} ({pendingAssignments.length})</h3>
-                  <div className="space-y-2">
-                    {pendingAssignments.map((assignment) => (
-                      <Link
-                        key={assignment.id}
-                        href={`/parent/assignments/${assignment.id}`}
-                        className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">
-                            {assignment.assignment_type === 'math' ? '📐' : '📖'}
-                          </span>
-                          <div>
-                            <p className="font-medium">{assignment.title}</p>
-                            <p className="text-sm text-gray-600">
-                              {assignment.child_name} • {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
+                  <div className="space-y-4">
+                    {pendingByChild.map(([childId, { childName, assignments }]) => (
+                      <div key={childId}>
+                        <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
+                        <div className="space-y-2">
+                          {assignments.map((assignment) => (
+                            <Link
+                              key={assignment.id}
+                              href={`/parent/assignments/${assignment.id}`}
+                              className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">
+                                  {assignment.assignment_type === 'math' ? '📐' : '📖'}
+                                </span>
+                                <div>
+                                  <p className="font-medium">{assignment.title}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                                  {t('parent.dashboard.pending')}
+                                </span>
+                                <button
+                                  onClick={(e) => handleDeleteAssignment(assignment.id, e)}
+                                  disabled={deletingAssignmentId === assignment.id}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                  title={t('parent.dashboard.deleteAssignment')}
+                                >
+                                  {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
+                                </button>
+                              </div>
+                            </Link>
+                          ))}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
-                            {t('parent.dashboard.pending')}
-                          </span>
-                          <button
-                            onClick={(e) => handleDeleteAssignment(assignment.id, e)}
-                            disabled={deletingAssignmentId === assignment.id}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                            title={t('parent.dashboard.deleteAssignment')}
-                          >
-                            {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
-                          </button>
-                        </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Completed */}
+              {/* Completed - Collapsible */}
               {completedAssignments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.completed')} ({completedAssignments.length})</h3>
-                  <div className="space-y-2">
-                    {completedAssignments.slice(0, 5).map((assignment) => {
-                      const percentage = assignment.total_count > 0
-                        ? Math.round((assignment.correct_count / assignment.total_count) * 100)
-                        : 0;
-                      const scoreColor = percentage >= 80 ? 'text-green-600' : percentage >= 60 ? 'text-yellow-600' : 'text-red-600';
+                  <button
+                    onClick={() => setCompletedExpanded(!completedExpanded)}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2 hover:text-gray-800 transition-colors"
+                  >
+                    <span className={`transform transition-transform ${completedExpanded ? 'rotate-90' : ''}`}>
+                      ▶
+                    </span>
+                    {t('parent.dashboard.completed')} ({completedAssignments.length})
+                  </button>
+                  {completedExpanded && (
+                    <div className="space-y-4">
+                      {completedByChild.map(([childId, { childName, assignments }]) => (
+                        <div key={childId}>
+                          <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
+                          <div className="space-y-2">
+                            {assignments.map((assignment) => {
+                              const percentage = assignment.total_count > 0
+                                ? Math.round((assignment.correct_count / assignment.total_count) * 100)
+                                : 0;
+                              const scoreColor = percentage >= 80 ? 'text-green-600' : percentage >= 60 ? 'text-yellow-600' : 'text-red-600';
 
-                      return (
-                        <Link
-                          key={assignment.id}
-                          href={`/parent/assignments/${assignment.id}`}
-                          className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between opacity-75 hover:opacity-100 hover:shadow-md transition-all block"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">
-                              {assignment.assignment_type === 'math' ? '📐' : '📖'}
-                            </span>
-                            <div>
-                              <p className="font-medium">{assignment.title}</p>
-                              <p className="text-sm text-gray-600">{assignment.child_name}</p>
-                            </div>
+                              return (
+                                <Link
+                                  key={assignment.id}
+                                  href={`/parent/assignments/${assignment.id}`}
+                                  className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between opacity-75 hover:opacity-100 hover:shadow-md transition-all block"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-2xl">
+                                      {assignment.assignment_type === 'math' ? '📐' : '📖'}
+                                    </span>
+                                    <div>
+                                      <p className="font-medium">{assignment.title}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className={`font-semibold ${scoreColor}`}>
+                                      {assignment.correct_count}/{assignment.total_count} ({percentage}%)
+                                    </span>
+                                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                                      {t('parent.dashboard.completed')}
+                                    </span>
+                                  </div>
+                                </Link>
+                              );
+                            })}
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`font-semibold ${scoreColor}`}>
-                              {assignment.correct_count}/{assignment.total_count} ({percentage}%)
-                            </span>
-                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                              {t('parent.dashboard.completed')}
-                            </span>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
