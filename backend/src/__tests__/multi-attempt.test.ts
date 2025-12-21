@@ -404,6 +404,71 @@ describe('Multi-Attempt Answer System', () => {
       // Reading should only have 1 attempt
       expect(answer?.attempts_count).toBe(1);
     });
+
+    it('should complete reading assignment when all questions answered, even if wrong', () => {
+      const db = getDb();
+
+      // Create a reading package with multiple questions
+      const multiPackageId = uuidv4();
+      const problem1Id = uuidv4();
+      const problem2Id = uuidv4();
+      const multiAssignmentId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global, assignment_type)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [multiPackageId, parentId, 'Reading Completion Test', 3, 2, 0, 'reading']
+      );
+
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [problem1Id, multiPackageId, 1, 'Question 1?', 'A', 'multiple_choice', '["A: Correct", "B: Wrong"]']
+      );
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [problem2Id, multiPackageId, 2, 'Question 2?', 'A', 'multiple_choice', '["A: Correct", "B: Wrong"]']
+      );
+
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'reading', ?, ?, 'in_progress', ?)`,
+        [multiAssignmentId, parentId, childId, 'Reading Completion Test', 3, multiPackageId]
+      );
+
+      // Answer both questions WRONG (is_correct = 0)
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at, attempts_count)
+         VALUES (?, ?, ?, 'B', 0, CURRENT_TIMESTAMP, 1)`,
+        [uuidv4(), multiAssignmentId, problem1Id]
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at, attempts_count)
+         VALUES (?, ?, ?, 'B', 0, CURRENT_TIMESTAMP, 1)`,
+        [uuidv4(), multiAssignmentId, problem2Id]
+      );
+
+      // Simulate the completion check logic (reading: count all answered questions)
+      const totalProblems = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
+        [multiPackageId]
+      );
+      const completedProblems = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?',
+        [multiAssignmentId]
+      );
+
+      // Both questions answered (even wrongly) should count as complete
+      expect(completedProblems?.count).toBe(totalProblems?.count);
+      expect(completedProblems?.count).toBe(2);
+
+      // Cleanup
+      db.run('DELETE FROM assignment_answers WHERE assignment_id = ?', [multiAssignmentId]);
+      db.run('DELETE FROM assignments WHERE id = ?', [multiAssignmentId]);
+      db.run('DELETE FROM package_problems WHERE package_id = ?', [multiPackageId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [multiPackageId]);
+    });
   });
 
   describe('hints_allowed Flag', () => {

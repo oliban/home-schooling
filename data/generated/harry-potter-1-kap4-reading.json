@@ -1,0 +1,80 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter och De Vises Sten - Kapitel 4: Nyckelväktaren",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om när Hagrid kommer för att hämta Harry",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad hade Hagrid med sig till Harry som födelsedagspresent?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: En levande uggla som kunde leverera brev till Hogwarts",
+            "B: En stor chokladtårta med 'Har den äran Harry' i grön glasyr",
+            "C: Ett brev från Dumbledore med instruktioner för resan",
+            "D: En trollstav som hans föräldrar hade lämnat efter sig"
+          ],
+          "difficulty": "easy"
+        },
+        {
+          "question_text": "Vad berättar Hagrid att han arbetar som på Hogwarts?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han är lärare i försvar mot svartkonster och trollformler",
+            "B: Han är rektor och ansvarar för alla elever på skolan",
+            "C: Han är nyckelväktare och egendomsförvaltare på skolan",
+            "D: Han är vaktmästare och tar hand om slottets underhåll"
+          ],
+          "difficulty": "easy"
+        },
+        {
+          "question_text": "Varför blev moster Petunia så arg när hon pratade om sin syster Lily?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon var avundsjuk för att föräldrarna var stolta över att ha en häxa",
+            "B: Hon var ledsen för att Lily aldrig kom hem och hälsade på familjen",
+            "C: Hon var orolig för att Harry skulle bli lika farlig som sin mamma",
+            "D: Hon var rädd för att trollkarlarna skulle komma och hämta henne också"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Vad hände med Voldemort efter att han försökte döda Harry?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han blev fångad av Dumbledore och sattes i trollkarlsfängelse",
+            "B: Han dog direkt av sin egen förbannelse som studsade tillbaka",
+            "C: Han flydde till ett annat land för att gömma sig från aurorer",
+            "D: Han försvann och förlorade sin kraft men ingen vet om han dog"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Varför gav Hagrid Dudley en grissvans i slutet av kapitlet?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Dudley hade försökt stjäla Harrys födelsedagstårta från honom",
+            "B: Morbror Vernon hade förolämpat Dumbledore och kallat honom tok",
+            "C: Dudley hade kastat saker på Hagrid när han kom in genom dörren",
+            "D: Familjen Dursley vägrade ge Hagrid mat och dryck som han bad om"
+          ],
+          "difficulty": "hard"
+        }
+      ]
+    }
+  ]
+}

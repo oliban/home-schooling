@@ -178,6 +178,19 @@ router.get('/:id', authenticateAny, (req, res) => {
       );
     }
 
+    // Auto-complete reading assignments if all questions answered but status not updated
+    // This fixes assignments that were affected by the completion bug
+    if (assignment.status !== 'completed' && assignment.assignment_type === 'reading') {
+      const allAnswered = questions.every(q => 'child_answer' in q && q.child_answer !== null);
+      if (allAnswered && questions.length > 0) {
+        db.run(
+          "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+          [req.params.id]
+        );
+        assignment.status = 'completed';
+      }
+    }
+
     res.json({
       ...assignment,
       questions
@@ -507,12 +520,22 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
           'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
           [assignment.package_id]
         );
-        // Count questions that are either correct OR have 3 attempts
-        const completedProblems = db.get<{ count: number }>(
-          `SELECT COUNT(*) as count FROM assignment_answers
-           WHERE assignment_id = ? AND (is_correct = 1 OR attempts_count >= ?)`,
-          [req.params.id, MAX_ATTEMPTS]
-        );
+
+        let completedProblems: { count: number } | undefined;
+        if (isReadingAssignment) {
+          // Reading: any answered question is complete (single attempt only)
+          completedProblems = db.get<{ count: number }>(
+            `SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?`,
+            [req.params.id]
+          );
+        } else {
+          // Math: questions are complete if correct OR have 3 attempts
+          completedProblems = db.get<{ count: number }>(
+            `SELECT COUNT(*) as count FROM assignment_answers
+             WHERE assignment_id = ? AND (is_correct = 1 OR attempts_count >= ?)`,
+            [req.params.id, MAX_ATTEMPTS]
+          );
+        }
         allComplete = (completedProblems?.count || 0) >= (totalProblems?.count || 0);
       } else if (assignment.assignment_type === 'math') {
         const incomplete = db.get<{ count: number }>(

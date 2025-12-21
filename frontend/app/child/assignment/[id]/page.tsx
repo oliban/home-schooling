@@ -93,11 +93,13 @@ export default function AssignmentPage() {
 
       // Find first incomplete question:
       // - Unanswered (child_answer === null), OR
-      // - Wrong answer but can still retry (is_correct !== 1 AND attempts < 3)
+      // - For MATH only: Wrong answer but can still retry (is_correct !== 1 AND attempts < 3)
+      // Reading assignments are single-attempt, so wrong answers are NOT incomplete
       const MAX_ATTEMPTS = 3;
+      const isReading = data.assignment_type === 'reading';
       const incompleteIndex = data.questions.findIndex(q =>
         q.child_answer === null ||
-        (q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+        (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
       );
       if (incompleteIndex >= 0) {
         setCurrentIndex(incompleteIndex);
@@ -219,12 +221,14 @@ export default function AssignmentPage() {
     setPurchasedHint(null);
     sketchPadRef.current?.clear();
 
-    // Find next incomplete question (unanswered OR wrong with retries left)
+    // Find next incomplete question (unanswered OR wrong with retries left for MATH only)
+    // Reading assignments are single-attempt, so wrong answers are NOT incomplete
     const MAX_ATTEMPTS = 3;
+    const isReading = assignment.assignment_type === 'reading';
     const nextIncompleteIndex = assignment.questions.findIndex((q, i) =>
       i > currentIndex && (
         q.child_answer === null ||
-        (q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+        (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
       )
     );
 
