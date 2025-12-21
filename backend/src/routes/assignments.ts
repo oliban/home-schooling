@@ -44,6 +44,25 @@ function saveScratchPadImage(assignmentId: string, questionId: string, dataUrl: 
 
 const router = Router();
 
+// Helper to validate that a multiple choice question is answerable
+function validateMultipleChoiceQuestion(correctAnswer: string, options: string[] | null): { valid: boolean; error?: string } {
+  if (!options || options.length < 2) {
+    return { valid: false, error: 'Question has no options configured' };
+  }
+
+  const normalizedAnswer = correctAnswer.trim().toUpperCase();
+  const optionLetters = options.map(opt => opt.charAt(0).toUpperCase());
+
+  if (!optionLetters.includes(normalizedAnswer)) {
+    return {
+      valid: false,
+      error: `Question misconfigured: correct_answer "${correctAnswer}" does not match any option (${optionLetters.join(', ')})`
+    };
+  }
+
+  return { valid: true };
+}
+
 // List assignments (for parent or child)
 router.get('/', authenticateAny, (req, res) => {
   try {
@@ -344,6 +363,12 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
 
         // Check answer
         if (problem.answer_type === 'multiple_choice') {
+          // Validate that the question is answerable (correct_answer matches an option)
+          const options = problem.options ? JSON.parse(problem.options) : null;
+          const validation = validateMultipleChoiceQuestion(correctAnswer, options);
+          if (!validation.valid) {
+            throw new Error(validation.error || 'Question is misconfigured');
+          }
           isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
         } else {
           isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
@@ -412,6 +437,14 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         }
 
         correctAnswer = question.correct_answer;
+
+        // Validate that the question is answerable (correct_answer matches an option)
+        const options = question.options ? JSON.parse(question.options) : null;
+        const validation = validateMultipleChoiceQuestion(correctAnswer, options);
+        if (!validation.valid) {
+          throw new Error(validation.error || 'Question is misconfigured');
+        }
+
         isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
         questionComplete = true; // Reading is always single-attempt
 
@@ -557,6 +590,14 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
     const message = error instanceof Error ? error.message : 'Failed to submit answer';
     if (message === 'Question already completed' || message === 'Question already answered') {
       return res.status(400).json({ error: message, questionComplete: true });
+    }
+    if (message.includes('misconfigured') || message.includes('does not match any option')) {
+      console.error('Question validation error:', message);
+      return res.status(422).json({
+        error: message,
+        questionMisconfigured: true,
+        helpText: 'This question has an invalid answer configuration. Please contact the parent to fix or remove this assignment.'
+      });
     }
     console.error('Submit answer error:', error);
     res.status(500).json({ error: 'Failed to submit answer' });

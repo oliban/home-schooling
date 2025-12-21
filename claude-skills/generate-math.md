@@ -119,7 +119,10 @@ For backward compatibility with direct assignment creation:
 - `multiple_choice`: Child picks from options array
 - `text`: Child types text answer
 
-For multiple choice, include options array:
+### Multiple Choice Format (CRITICAL)
+
+For multiple choice questions, you MUST follow this exact format:
+
 ```json
 {
   "answer_type": "multiple_choice",
@@ -127,6 +130,25 @@ For multiple choice, include options array:
   "correct_answer": "B"
 }
 ```
+
+**VALIDATION RULES for `multiple_choice`:**
+
+1. **`correct_answer` must be ONLY the letter** (A, B, C, or D), NOT the full text
+   - ✅ CORRECT: `"correct_answer": "C"`
+   - ❌ WRONG: `"correct_answer": "C: en fjärdedel"`
+   - ❌ WRONG: `"correct_answer": "en fjärdedel"`
+
+2. **The letter in `correct_answer` must exist in the options**
+   - If options are A, B, C, D → correct_answer must be one of A, B, C, D
+   - The import will reject problems where the answer doesn't match any option
+
+3. **Options must start with the letter followed by colon and space**
+   - ✅ CORRECT: `"A: sju"`, `"B: åtta"`
+   - ❌ WRONG: `"7"`, `"åtta"`, `"A) sju"`
+
+4. **Self-check before generating**: For each multiple choice problem, verify:
+   - The correct answer letter matches the option with the correct content
+   - Example: If the answer is "en fjärdedel" and it's option C, then `correct_answer: "C"`
 
 ## LGR 22 Curriculum Guidelines
 

@@ -392,6 +392,71 @@ describe('Math Package System', () => {
       expect(hasValidAnswer).toBeTruthy();
       expect(hasValidOptions).toBeTruthy();
     });
+
+    it('should reject multiple_choice problems where correct_answer does not match any option', () => {
+      // This validation ensures questions are answerable
+      const invalidMCProblems = [
+        {
+          question_text: 'Hur stor del av pizzan är en bit?',
+          correct_answer: 'en fjärdedel', // Wrong! Should be just 'C'
+          answer_type: 'multiple_choice',
+          options: ['A: en halv', 'B: en tredjedel', 'C: en fjärdedel', 'D: en femtedel']
+        },
+        {
+          question_text: 'What is 2+2?',
+          correct_answer: 'E', // Wrong! Option E doesn't exist
+          answer_type: 'multiple_choice',
+          options: ['A: 3', 'B: 4', 'C: 5', 'D: 6']
+        },
+        {
+          question_text: 'Pick one',
+          correct_answer: 'C: correct answer', // Wrong! Should be just 'C'
+          answer_type: 'multiple_choice',
+          options: ['A: wrong', 'B: wrong', 'C: correct answer', 'D: wrong']
+        }
+      ];
+
+      // Helper function to validate (mirrors the backend logic)
+      const validateMultipleChoiceAnswer = (correctAnswer: string, options: string[]) => {
+        const normalizedAnswer = correctAnswer.trim().toUpperCase();
+        const optionLetters = options.map(opt => opt.charAt(0).toUpperCase());
+        return optionLetters.includes(normalizedAnswer);
+      };
+
+      invalidMCProblems.forEach((p) => {
+        const isValid = validateMultipleChoiceAnswer(p.correct_answer, p.options);
+        expect(isValid).toBeFalsy();
+      });
+    });
+
+    it('should accept multiple_choice problems where correct_answer matches an option letter', () => {
+      const validMCProblems = [
+        {
+          question_text: 'Hur stor del av pizzan är en bit?',
+          correct_answer: 'C', // Correct! Matches option C
+          answer_type: 'multiple_choice',
+          options: ['A: en halv', 'B: en tredjedel', 'C: en fjärdedel', 'D: en femtedel']
+        },
+        {
+          question_text: 'What is 2+2?',
+          correct_answer: 'b', // Correct! Case insensitive
+          answer_type: 'multiple_choice',
+          options: ['A: 3', 'B: 4', 'C: 5', 'D: 6']
+        }
+      ];
+
+      // Helper function to validate (mirrors the backend logic)
+      const validateMultipleChoiceAnswer = (correctAnswer: string, options: string[]) => {
+        const normalizedAnswer = correctAnswer.trim().toUpperCase();
+        const optionLetters = options.map(opt => opt.charAt(0).toUpperCase());
+        return optionLetters.includes(normalizedAnswer);
+      };
+
+      validMCProblems.forEach((p) => {
+        const isValid = validateMultipleChoiceAnswer(p.correct_answer, p.options);
+        expect(isValid).toBeTruthy();
+      });
+    });
   });
 
   describe('Package Soft Delete', () => {

@@ -47,6 +47,17 @@ router.post('/import', authenticateParent, (req, res) => {
         if (p.answer_type === 'multiple_choice') {
           if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
             validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: multiple_choice requires options array`);
+          } else {
+            // Validate that correct_answer matches one of the options
+            const correctAnswer = p.correct_answer.trim().toUpperCase();
+            const optionLetters = p.options.map((opt: string) => opt.charAt(0).toUpperCase());
+
+            if (!optionLetters.includes(correctAnswer)) {
+              validationErrors.push(
+                `${pkgNum} (${pkg.name}), Problem ${num}: correct_answer "${p.correct_answer}" does not match any option (available: ${optionLetters.join(', ')}). ` +
+                `correct_answer must be just the letter (e.g., "A", "B", "C", "D")`
+              );
+            }
           }
         }
       });
