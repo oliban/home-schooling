@@ -107,6 +107,16 @@ export const children = {
       math: { correct: number; incorrect: number };
       reading: { correct: number; incorrect: number };
     }[]>(`/children/stats${period ? `?period=${period}` : ''}`, { token }),
+
+  getStatsByDate: (token: string, period?: '7d' | '30d' | 'all') =>
+    fetchApi<{
+      date: string;
+      childId: string;
+      childName: string;
+      subject: 'math' | 'reading';
+      correct: number;
+      incorrect: number;
+    }[]>(`/children/stats-by-date${period ? `?period=${period}` : ''}`, { token }),
 };
 
 // Assignments

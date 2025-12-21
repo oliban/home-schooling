@@ -7,7 +7,7 @@ import { children, assignments, packages } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import FileDropZone from '@/components/ui/FileDropZone';
-import ProgressChart, { ChildStatsData } from '@/components/ui/ProgressChart';
+import ProgressChart, { DailyStatsData } from '@/components/ui/ProgressChart';
 
 interface ChildData {
   id: string;
@@ -85,7 +85,7 @@ export default function ParentDashboard() {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
   // Stats chart state
-  const [statsData, setStatsData] = useState<ChildStatsData[]>([]);
+  const [statsData, setStatsData] = useState<DailyStatsData[]>([]);
   const [statsPeriod, setStatsPeriod] = useState<'7d' | '30d' | 'all'>('7d');
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function ParentDashboard() {
       const [childrenData, assignmentsData, statsResponse] = await Promise.all([
         children.list(token),
         assignments.list(token),
-        children.getStats(token, statsPeriod),
+        children.getStatsByDate(token, statsPeriod),
       ]);
       setChildrenList(childrenData);
       setAssignmentsList(assignmentsData);
@@ -122,7 +122,7 @@ export default function ParentDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
     if (token && !loading) {
-      children.getStats(token, statsPeriod)
+      children.getStatsByDate(token, statsPeriod)
         .then(setStatsData)
         .catch(err => console.error('Failed to load stats:', err));
     }

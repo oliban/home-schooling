@@ -346,3 +346,282 @@ describe('GET /children/stats', () => {
     expect(stats.some(s => s.child_name === 'Erik')).toBe(true);
   });
 });
+
+describe('GET /children/stats-by-date', () => {
+  let parentId: string;
+  let childId1: string;
+  let childId2: string;
+  let packageId: string;
+  let problemIds: string[] = [];
+  const testEmail = `test-stats-by-date-${Date.now()}@example.com`;
+
+  beforeAll(async () => {
+    parentId = uuidv4();
+    childId1 = uuidv4();
+    childId2 = uuidv4();
+    packageId = uuidv4();
+
+    const db = getDb();
+    const passwordHash = await bcrypt.hash('test1234', 10);
+    const pinHash = await bcrypt.hash('1234', 10);
+
+    // Create parent
+    db.run(
+      'INSERT INTO parents (id, email, password_hash, name) VALUES (?, ?, ?, ?)',
+      [parentId, testEmail, passwordHash, 'Test Parent']
+    );
+
+    // Create two children
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+      [childId1, parentId, 'Anna', 3, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id) VALUES (?)', [childId1]);
+
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+      [childId2, parentId, 'Erik', 5, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id) VALUES (?)', [childId2]);
+
+    // Create a package with problems
+    db.run(
+      `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, difficulty_summary, is_global)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [packageId, parentId, 'Date Stats Package', 3, 'taluppfattning', 3, '{"easy":1,"medium":1,"hard":1}', 0]
+    );
+
+    const problems = [
+      { text: 'What is 1+1?', answer: '2', difficulty: 'easy' },
+      { text: 'What is 5+7?', answer: '12', difficulty: 'medium' },
+      { text: 'What is 15+27?', answer: '42', difficulty: 'hard' }
+    ];
+
+    problems.forEach((p, i) => {
+      const problemId = uuidv4();
+      problemIds.push(problemId);
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [problemId, packageId, i + 1, p.text, p.answer, 'number', p.difficulty]
+      );
+    });
+  });
+
+  afterAll(() => {
+    const db = getDb();
+    db.run('DELETE FROM assignment_answers WHERE assignment_id IN (SELECT id FROM assignments WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM reading_questions WHERE assignment_id IN (SELECT id FROM assignments WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM math_problems WHERE assignment_id IN (SELECT id FROM assignments WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM assignments WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM package_problems WHERE package_id = ?', [packageId]);
+    db.run('DELETE FROM math_packages WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM child_coins WHERE child_id IN (?, ?)', [childId1, childId2]);
+    db.run('DELETE FROM children WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM parents WHERE id = ?', [parentId]);
+  });
+
+  it('should return stats grouped by date for math assignments', () => {
+    const db = getDb();
+    const assignmentId = uuidv4();
+
+    // Create a math assignment for child1
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+       VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+      [assignmentId, parentId, childId1, 'Math Test', 3, packageId]
+    );
+
+    // Add answers with today's date
+    db.run(
+      `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [uuidv4(), assignmentId, problemIds[0], '2', 1]
+    );
+    db.run(
+      `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [uuidv4(), assignmentId, problemIds[1], '10', 0]
+    );
+
+    // Query stats by date
+    const stats = db.all<{ date: string; correct: number; incorrect: number }>(`
+      SELECT
+        date(aa.answered_at) as date,
+        SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) as correct,
+        SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END) as incorrect
+      FROM assignments a
+      JOIN assignment_answers aa ON a.id = aa.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'math'
+        AND a.package_id IS NOT NULL
+        AND aa.answered_at IS NOT NULL
+      GROUP BY date(aa.answered_at)
+    `, [childId1]);
+
+    expect(stats.length).toBe(1);
+    expect(stats[0].correct).toBe(1);
+    expect(stats[0].incorrect).toBe(1);
+  });
+
+  it('should return separate entries for different dates', () => {
+    const db = getDb();
+    const todayAssignmentId = uuidv4();
+    const yesterdayAssignmentId = uuidv4();
+
+    // Create assignment for today
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+       VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+      [todayAssignmentId, parentId, childId2, 'Math Today', 5, packageId]
+    );
+
+    // Add today's answer
+    db.run(
+      `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [uuidv4(), todayAssignmentId, problemIds[0], '2', 1]
+    );
+
+    // Create assignment for yesterday
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+       VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, datetime('now', '-1 day'))`,
+      [yesterdayAssignmentId, parentId, childId2, 'Math Yesterday', 5, packageId]
+    );
+
+    // Add yesterday's answer
+    db.run(
+      `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now', '-1 day'))`,
+      [uuidv4(), yesterdayAssignmentId, problemIds[1], '12', 1]
+    );
+
+    // Query stats by date for child2
+    const stats = db.all<{ date: string; correct: number }>(`
+      SELECT
+        date(aa.answered_at) as date,
+        SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) as correct
+      FROM assignments a
+      JOIN assignment_answers aa ON a.id = aa.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'math'
+        AND a.package_id IS NOT NULL
+        AND aa.answered_at IS NOT NULL
+      GROUP BY date(aa.answered_at)
+      ORDER BY date
+    `, [childId2]);
+
+    expect(stats.length).toBe(2);
+    // Both dates should have 1 correct answer each
+    expect(stats[0].correct).toBe(1);
+    expect(stats[1].correct).toBe(1);
+  });
+
+  it('should return separate entries for math and reading on the same date', () => {
+    const db = getDb();
+    const mathAssignmentId = uuidv4();
+    const readingAssignmentId = uuidv4();
+
+    // Create math assignment
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+       VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+      [mathAssignmentId, parentId, childId1, 'Math Same Day', 3, packageId]
+    );
+
+    db.run(
+      `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [uuidv4(), mathAssignmentId, problemIds[2], '42', 1]
+    );
+
+    // Create reading assignment (legacy format)
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, completed_at)
+       VALUES (?, ?, ?, 'reading', ?, ?, 'completed', CURRENT_TIMESTAMP)`,
+      [readingAssignmentId, parentId, childId1, 'Reading Same Day', 3]
+    );
+
+    db.run(
+      `INSERT INTO reading_questions (id, assignment_id, question_number, question_text, correct_answer, options, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [uuidv4(), readingAssignmentId, 1, 'Test question?', 'A', '["A","B","C"]', 'A', 1]
+    );
+
+    // Query math stats
+    const mathStats = db.all<{ date: string; correct: number }>(`
+      SELECT
+        date(aa.answered_at) as date,
+        SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) as correct
+      FROM assignments a
+      JOIN assignment_answers aa ON a.id = aa.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'math'
+        AND a.package_id IS NOT NULL
+        AND aa.answered_at IS NOT NULL
+      GROUP BY date(aa.answered_at)
+    `, [childId1]);
+
+    // Query reading stats (legacy)
+    const readingStats = db.all<{ date: string; correct: number }>(`
+      SELECT
+        date(rq.answered_at) as date,
+        SUM(CASE WHEN rq.is_correct = 1 THEN 1 ELSE 0 END) as correct
+      FROM assignments a
+      JOIN reading_questions rq ON a.id = rq.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'reading'
+        AND a.package_id IS NULL
+        AND rq.answered_at IS NOT NULL
+      GROUP BY date(rq.answered_at)
+    `, [childId1]);
+
+    // Both should have entries for today
+    expect(mathStats.length).toBeGreaterThan(0);
+    expect(readingStats.length).toBeGreaterThan(0);
+  });
+
+  it('should filter by 7d period correctly', () => {
+    const db = getDb();
+    const oldAssignmentId = uuidv4();
+
+    // Create an old assignment (10 days ago)
+    db.run(
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+       VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, datetime('now', '-10 days'))`,
+      [oldAssignmentId, parentId, childId1, 'Old Math', 3, packageId]
+    );
+
+    db.run(
+      `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now', '-10 days'))`,
+      [uuidv4(), oldAssignmentId, problemIds[0], '2', 1]
+    );
+
+    // Query with 7d filter - should not include the old answer
+    const stats7d = db.all<{ date: string }>(`
+      SELECT date(aa.answered_at) as date
+      FROM assignments a
+      JOIN assignment_answers aa ON a.id = aa.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'math'
+        AND aa.answered_at >= datetime('now', '-7 days')
+      GROUP BY date(aa.answered_at)
+    `, [childId1]);
+
+    // Query with 30d filter - should include all
+    const stats30d = db.all<{ date: string }>(`
+      SELECT date(aa.answered_at) as date
+      FROM assignments a
+      JOIN assignment_answers aa ON a.id = aa.assignment_id
+      WHERE a.child_id = ?
+        AND a.assignment_type = 'math'
+        AND aa.answered_at >= datetime('now', '-30 days')
+      GROUP BY date(aa.answered_at)
+    `, [childId1]);
+
+    // 30d should have more dates than 7d due to the old assignment
+    expect(stats30d.length).toBeGreaterThan(stats7d.length);
+  });
+});
