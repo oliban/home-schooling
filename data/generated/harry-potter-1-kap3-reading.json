@@ -1,0 +1,80 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter och de Vises Sten - Kapitel 3: Breven från ingen",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om de mystiska breven och familjen Dursleys desperata flykt",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför var Harry glad över att sommarlovet snart var slut?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han saknade sina vänner och lärarna på skolan",
+            "B: Han skulle för första gången gå på en annan skola än Dudley",
+            "C: Han ville slippa bo hos mrs Figg varje dag",
+            "D: Han längade efter att få äta skolmaten igen"
+          ],
+          "difficulty": "easy"
+        },
+        {
+          "question_text": "Vad var speciellt med adressen på Harrys brev som gjorde familjen Dursley så upprörda?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Brevet hade ett konstigt sigill av rött vax",
+            "B: Adressen var skriven med ett ovanligt grönt bläck",
+            "C: Adressen visade exakt var Harry sov i huset",
+            "D: Brevet var adresserat till Harrys riktiga föräldrar"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Hur reagerar morbror Vernon när breven fortsätter att komma trots att han spikar igen brevlådan?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han ringer polisen och ber om hjälp med stalkningen",
+            "B: Han bestämmer sig för att låta Harry läsa breven",
+            "C: Han anställer vakter som ska bevaka brevlådan",
+            "D: Han flyr med familjen till en öde klippa ute i havet"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Varför flyttar familjen Dursley Harry från skrubben till Dudleys andra sovrum?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De hoppas att breven ska sluta komma om adressen ändras",
+            "B: De vill äntligen ge Harry ett ordentligt rum att bo i",
+            "C: Dudley behöver skrubben som förvaringsutrymme",
+            "D: Skrubben har blivit för liten för att Harry ska få plats"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Vad säger familjen Dursleys desperata beteende om deras känslor kring Harrys brev?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De är mest irriterade över allt praktiskt besvär breven orsakar",
+            "B: De är livrädda för brevens avsändare och vad kontakt skulle innebära",
+            "C: De är oroliga för att Harry ska bli besviken på brevens innehåll",
+            "D: De vill skydda Harry från människor som kan vara farliga för honom"
+          ],
+          "difficulty": "hard"
+        }
+      ]
+    }
+  ]
+}

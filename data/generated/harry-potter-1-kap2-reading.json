@@ -1,0 +1,80 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter och de Vises Sten - Kapitel 2: Det försvinnande glaset",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om Harrys liv hos familjen Dursley och besöket på zoo",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför var Dudleys födelsedag ett problem för Harry?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Harry var aldrig inbjuden till festen",
+            "B: Harry fick alltid göra alla sysslor själv den dagen",
+            "C: Harry kunde inte lämnas ensam hemma och Mrs Figg kunde inte ta hand om honom",
+            "D: Harry var allergisk mot Dudleys födelsedagstårta"
+          ],
+          "difficulty": "easy"
+        },
+        {
+          "question_text": "Vad händer när Harry pratar med ormen på zoo?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Ormen bits och Harry blir rädd",
+            "B: Glaset försvinner och ormen slingrar sig ut",
+            "C: Ormen svarar med ord som alla kan höra",
+            "D: Harry svimmar av skräck"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Varför tror du att konstiga saker alltid verkar hända runt Harry?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Harry har mycket otur",
+            "B: Dudley spelar spratt på honom",
+            "C: Harry ljuger om vad som händer",
+            "D: Harry har magiska krafter som han inte kan kontrollera"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Hur behandlar familjen Dursley Harry jämfört med Dudley?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Harry ignoreras och får gamla kläder medan Dudley blir bortskämd",
+            "B: De behandlas ungefär lika",
+            "C: Harry får mer uppmärksamhet för att han är föräldralös",
+            "D: Dudley måste dela allt med Harry"
+          ],
+          "difficulty": "medium"
+        },
+        {
+          "question_text": "Vad säger familjens behandling av Harry om deras karaktär och värderingar?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De är rättvisa men stränga föräldrar",
+            "B: De värdesätter normalitet och är rädda för det annorlunda",
+            "C: De försöker uppfostra Harry till en bättre person",
+            "D: De är fattiga och kan inte ge Harry mer"
+          ],
+          "difficulty": "hard"
+        }
+      ]
+    }
+  ]
+}

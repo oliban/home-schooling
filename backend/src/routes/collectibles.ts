@@ -32,19 +32,13 @@ router.get('/', authenticateChild, (req, res) => {
       ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
     `, [req.child!.id]);
 
-    // For shop items (not owned), only show up to unlockedCount
-    // Owned items are always visible
-    let shopItemsShown = 0;
+    // Show items based on their position in the random order (row_num)
+    // This ensures buying an item doesn't cause new items to appear
+    // Items are visible if:
+    // 1. They were unlocked (row_num <= unlockedCount), OR
+    // 2. They are owned (bought before they were naturally unlocked, or still owned)
     const filteredCollectibles = collectibles.filter(c => {
-      if (c.owned === 1) {
-        return true; // Always show owned items
-      }
-      // For shop items, limit to unlockedCount
-      if (shopItemsShown < unlockedCount) {
-        shopItemsShown++;
-        return true;
-      }
-      return false;
+      return c.row_num <= unlockedCount || c.owned === 1;
     });
 
     res.json({

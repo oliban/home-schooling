@@ -16,8 +16,25 @@ This pipeline automatically:
 2. Scores each frame for sharpness and readability
 3. Selects only the clearest frame from each 2-second window
 4. Runs OCR only on the best frames (typically 70-80% reduction)
+5. **Detects page numbers** and identifies gaps (missing pages)
+6. **Identifies chapters** and flags uncertain ones for confirmation
 
 Output is saved to `backend/best-frames/ocr_output.txt`.
+Chapter files are saved to `backend/best-frames/chapters/`.
+Metadata (including page info) is in `backend/best-frames/chapters/chapters.json`.
+
+### Understanding the Output
+
+The pipeline will display:
+- **Page range**: Which pages were detected (e.g., "Pages 1-45")
+- **Missing pages warning**: Gaps in the page sequence that may indicate skipped pages
+- **Confirmed chapters**: Chapters with clearly readable titles
+- **Uncertain chapters**: Chapter markers found but titles corrupted by OCR noise
+
+**When uncertain chapters are found**, ask the user to confirm:
+1. What the chapter title should be
+2. Whether the chapter number is correct
+3. If any chapters are missing entirely from the video
 
 **Rotation options:** If the video was recorded on a phone held sideways:
 - `90` - Rotate 90° clockwise
@@ -57,28 +74,42 @@ Save generated reading question JSON files to `data/generated/`
 
 ## Output Format (JSON)
 
+The `chapters.json` metadata file includes:
+
 ```json
 {
-  "book_title": "Pippi Långstrump",
-  "author": "Astrid Lindgren",
+  "totalChapters": 8,
+  "hasChapters": true,
+  "pageRange": { "start": 5, "end": 48 },
+  "pageGaps": [
+    { "afterPage": 12, "beforePage": 16, "missingCount": 3 }
+  ],
+  "uncertainChapters": [
+    {
+      "chapterNumber": 3,
+      "possibleTitle": "DEN GYL...",
+      "confidence": "medium",
+      "reason": "Title partially readable but may be incomplete",
+      "nearPage": 15
+    }
+  ],
   "chapters": [
     {
-      "chapter_number": 1,
+      "chapterNumber": 1,
       "title": "Pippi flyttar in i Villa Villekulla",
-      "cleaned_text": "Det låg en gammal förfallen trädgård...",
-      "page_start": 5,
-      "page_end": 18
-    },
-    {
-      "chapter_number": 2,
-      "title": "Pippi är sakletare och råkar i slagsmål",
-      "cleaned_text": "Nästa morgon vaknade Tommy och Annika...",
-      "page_start": 19,
-      "page_end": 32
+      "textLength": 2500,
+      "pageStart": 5,
+      "pageEnd": 18,
+      "file": "chapter_01.txt"
     }
   ]
 }
 ```
+
+**Key fields:**
+- `pageRange`: First and last page numbers detected
+- `pageGaps`: Sequences of missing pages (may indicate skipped content)
+- `uncertainChapters`: Chapters found but needing user confirmation
 
 ## OCR Cleanup Tasks
 

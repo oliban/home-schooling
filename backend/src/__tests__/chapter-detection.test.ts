@@ -149,7 +149,7 @@ describe('Chapter Detection', () => {
 
       const summary = formatChapterSummary(result);
 
-      expect(summary).toContain('Detected 1 chapter');
+      expect(summary).toContain('Detected 1 confirmed chapter');
       expect(summary).toContain('TEST KAPITEL');
     });
 
@@ -159,6 +159,51 @@ describe('Chapter Detection', () => {
       const summary = formatChapterSummary(result);
 
       expect(summary).toContain('No chapters detected');
+    });
+
+    it('should show page information when available', () => {
+      const result = detectChapters(`
+        ---PAGE---
+        10
+        1. FÖRSTA KAPITLET
+
+        Text on page 10.
+
+        ---PAGE---
+        11
+        More text on page 11.
+
+        ---PAGE---
+        12
+        2. ANDRA KAPITLET
+
+        Text on page 12.
+      `);
+
+      const summary = formatChapterSummary(result);
+
+      expect(summary).toContain('Pages detected');
+      expect(summary).toContain('Detected 2 confirmed chapter');
+    });
+
+    it('should warn about missing pages', () => {
+      const result = detectChapters(`
+        ---PAGE---
+        10
+        1. FÖRSTA KAPITLET
+
+        Text on page 10.
+
+        ---PAGE---
+        20
+        2. ANDRA KAPITLET
+
+        Text on page 20.
+      `);
+
+      const summary = formatChapterSummary(result);
+
+      expect(summary).toContain('MISSING PAGES');
     });
   });
 });

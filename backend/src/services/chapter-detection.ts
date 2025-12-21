@@ -2,7 +2,8 @@
  * Chapter detection service for OCR text
  *
  * Detects chapter boundaries in Swedish/English book text and splits
- * the content into separate chapters.
+ * the content into separate chapters. Also tracks page numbers and
+ * detects missing pages.
  */
 
 export interface Chapter {
@@ -11,12 +12,38 @@ export interface Chapter {
   text: string;
   startIndex: number;
   endIndex: number;
+  pageStart?: number;
+  pageEnd?: number;
+}
+
+export interface PageInfo {
+  pageNumber: number;
+  frameIndex: number;
+  textPreview: string;
+}
+
+export interface PageGap {
+  afterPage: number;
+  beforePage: number;
+  missingCount: number;
+}
+
+export interface UncertainChapter {
+  chapterNumber: number;
+  possibleTitle: string;
+  confidence: 'low' | 'medium';
+  reason: string;
+  nearPage?: number;
 }
 
 export interface ChapterDetectionResult {
   chapters: Chapter[];
   hasChapters: boolean;
   rawText: string;
+  pages: PageInfo[];
+  pageGaps: PageGap[];
+  uncertainChapters: UncertainChapter[];
+  pageRange?: { start: number; end: number };
 }
 
 // Patterns for detecting chapter headings in Swedish and English
@@ -37,6 +64,233 @@ const CHAPTER_PATTERNS = [
 
 // Pattern to detect page markers from OCR (---PAGE---)
 const PAGE_MARKER = /---PAGE---/g;
+
+/**
+ * Extract page numbers from OCR text
+ * Page numbers typically appear as isolated numbers on their own line
+ * or near the edges of pages (first/last few lines of a frame)
+ */
+function extractPageNumbers(ocrText: string): PageInfo[] {
+  const pages: PageInfo[] = [];
+  const frames = ocrText.split('---PAGE---');
+
+  for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
+    const frame = frames[frameIndex];
+    const lines = frame.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // Look for page numbers in first 5 and last 5 lines of each frame
+    const candidateLines = [
+      ...lines.slice(0, 5).map((l, i) => ({ line: l, pos: i })),
+      ...lines.slice(-5).map((l, i) => ({ line: l, pos: lines.length - 5 + i }))
+    ];
+
+    for (const { line, pos } of candidateLines) {
+      // Page number patterns:
+      // - Standalone number: "42"
+      // - Number with noise: "42 |" or "| 42"
+      // - Number at start/end: "42 Some text" (less reliable)
+      const pageMatch = line.match(/^[\s|,.\-]*(\d{1,3})[\s|,.\-]*$/);
+      if (pageMatch) {
+        const pageNum = parseInt(pageMatch[1]);
+        // Reasonable page number range (1-500)
+        if (pageNum >= 1 && pageNum <= 500) {
+          // Get text preview from middle of frame
+          const previewLines = lines.slice(
+            Math.max(0, Math.floor(lines.length / 2) - 2),
+            Math.min(lines.length, Math.floor(lines.length / 2) + 2)
+          );
+          const preview = previewLines.join(' ').substring(0, 80);
+
+          // Avoid duplicates within same frame
+          if (!pages.some(p => p.frameIndex === frameIndex && p.pageNumber === pageNum)) {
+            pages.push({
+              pageNumber: pageNum,
+              frameIndex,
+              textPreview: preview
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Sort by page number and deduplicate
+  pages.sort((a, b) => a.pageNumber - b.pageNumber);
+
+  // Remove duplicate page numbers (keep first occurrence)
+  const seen = new Set<number>();
+  return pages.filter(p => {
+    if (seen.has(p.pageNumber)) return false;
+    seen.add(p.pageNumber);
+    return true;
+  });
+}
+
+/**
+ * Detect gaps in the page sequence (missing pages)
+ */
+function detectPageGaps(pages: PageInfo[]): PageGap[] {
+  const gaps: PageGap[] = [];
+
+  for (let i = 0; i < pages.length - 1; i++) {
+    const current = pages[i].pageNumber;
+    const next = pages[i + 1].pageNumber;
+
+    // Allow for double-page spreads (skip of 2 is normal)
+    // But flag gaps larger than 2
+    if (next - current > 2) {
+      gaps.push({
+        afterPage: current,
+        beforePage: next,
+        missingCount: next - current - 1
+      });
+    }
+  }
+
+  return gaps;
+}
+
+/**
+ * Find chapters that were detected but have uncertain/corrupted titles
+ */
+function findUncertainChapters(
+  text: string,
+  confirmedChapters: number[],
+  pages: PageInfo[]
+): UncertainChapter[] {
+  const uncertain: UncertainChapter[] = [];
+  const lines = text.split('\n');
+
+  // Look for chapter number patterns that weren't confirmed
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // Match "X. " where X is a number at start of line
+    let match = line.match(/^(\d+)\.\s*(.*)$/);
+
+    // Also look for chapter numbers embedded in noisy text like "text 3 D 3 N TITLE"
+    if (!match) {
+      const embeddedMatch = line.match(/\s(\d)\s+D\s*\d*\s*N\s+([A-ZÅÄÖ]+)/);
+      if (embeddedMatch) {
+        match = [line, embeddedMatch[1], embeddedMatch[2]];
+      }
+    }
+
+    if (match) {
+      const chapterNum = parseInt(match[1]);
+
+      // Skip if already confirmed or out of reasonable range
+      if (confirmedChapters.includes(chapterNum) || chapterNum > 20 || chapterNum < 1) {
+        continue;
+      }
+
+      let titlePart = match[2].trim();
+
+      // Try to reconstruct title from next few lines if current line has caps
+      if (titlePart.length < 10) {
+        const nextLines = lines.slice(i, Math.min(i + 3, lines.length));
+        const capsWords: string[] = [];
+        for (const nextLine of nextLines) {
+          // Extract capital letter sequences that might be title words
+          const caps = nextLine.match(/[A-ZÅÄÖ]{3,}/g);
+          if (caps) {
+            capsWords.push(...caps);
+          }
+        }
+        if (capsWords.length > 0) {
+          titlePart = capsWords.slice(0, 4).join(' ');
+        }
+      }
+
+      // Check if this looks like a corrupted chapter title
+      const hasSomeCaps = /[A-ZÅÄÖ]{2,}/.test(titlePart);
+      const isFragmented = titlePart.split(/\s+/).length > 3 &&
+                           titlePart.replace(/[a-zåäöA-ZÅÄÖ\s]/g, '').length > 3;
+
+      if (hasSomeCaps || titlePart.length > 0) {
+        // Try to find nearby page number by looking at surrounding context
+        let nearPage: number | undefined;
+        const contextStart = Math.max(0, i - 20);
+        const contextEnd = Math.min(lines.length, i + 20);
+
+        for (let j = contextStart; j < contextEnd; j++) {
+          const pageMatch = lines[j].match(/^[\s|,.\-]*(\d{1,3})[\s|,.\-]*$/);
+          if (pageMatch) {
+            const pageNum = parseInt(pageMatch[1]);
+            if (pageNum >= 1 && pageNum <= 500) {
+              nearPage = pageNum;
+              break;
+            }
+          }
+        }
+
+        // Determine confidence
+        let confidence: 'low' | 'medium' = 'low';
+        let reason = 'Title appears corrupted by OCR noise';
+
+        if (hasSomeCaps && titlePart.length >= 5) {
+          confidence = 'medium';
+          reason = 'Title partially readable but may be incomplete';
+        }
+
+        if (isFragmented) {
+          reason = 'Title fragmented - may contain OCR artifacts';
+        }
+
+        // Skip obvious false positives (page numbers misread as chapter numbers)
+        if (chapterNum > 10 && !hasSomeCaps && titlePart.length < 5) {
+          continue;
+        }
+
+        uncertain.push({
+          chapterNumber: chapterNum,
+          possibleTitle: titlePart.substring(0, 50) + (titlePart.length > 50 ? '...' : ''),
+          confidence,
+          reason,
+          nearPage
+        });
+      }
+    }
+  }
+
+  // Deduplicate by chapter number (keep first occurrence)
+  const seen = new Set<number>();
+  return uncertain.filter(u => {
+    if (seen.has(u.chapterNumber)) return false;
+    seen.add(u.chapterNumber);
+    return true;
+  });
+}
+
+/**
+ * Associate page numbers with chapters
+ */
+function assignPagesToChapters(
+  chapters: Chapter[],
+  pages: PageInfo[],
+  rawText: string
+): void {
+  if (pages.length === 0) return;
+
+  // For each chapter, find the page range
+  for (let i = 0; i < chapters.length; i++) {
+    const chapter = chapters[i];
+    const nextChapter = chapters[i + 1];
+
+    // Find pages that fall within this chapter's text range
+    const chapterPages = pages.filter(p => {
+      // Estimate frame position from text
+      const frameStart = rawText.indexOf('---PAGE---'.repeat(p.frameIndex) || '');
+      return frameStart >= chapter.startIndex &&
+             (!nextChapter || frameStart < nextChapter.startIndex);
+    });
+
+    if (chapterPages.length > 0) {
+      chapter.pageStart = Math.min(...chapterPages.map(p => p.pageNumber));
+      chapter.pageEnd = Math.max(...chapterPages.map(p => p.pageNumber));
+    }
+  }
+}
 
 /**
  * Clean OCR text by removing noise and normalizing whitespace
@@ -232,6 +486,15 @@ function findChapterHeadings(text: string): Array<{ index: number; number: numbe
 export function detectChapters(ocrText: string): ChapterDetectionResult {
   const cleanedText = cleanOcrText(ocrText);
 
+  // Extract page numbers first
+  const pages = extractPageNumbers(ocrText);
+  const pageGaps = detectPageGaps(pages);
+
+  // Calculate page range
+  const pageRange = pages.length > 0
+    ? { start: pages[0].pageNumber, end: pages[pages.length - 1].pageNumber }
+    : undefined;
+
   // Try multiple strategies to find chapters
   let headings = findChapterHeadings(cleanedText);
 
@@ -254,18 +517,47 @@ export function detectChapters(ocrText: string): ChapterDetectionResult {
     }
   }
 
-  // Filter out suspicious false positives (like "7. " followed by noise)
-  headings = headings.filter(h => {
+  // Keep all headings but track which ones are uncertain
+  const confirmedHeadings: typeof headings = [];
+  const uncertainFromFilter: UncertainChapter[] = [];
+
+  for (const h of headings) {
     // Title should have real Swedish/English words (at least 3 chars each)
     const words = h.title.match(/[A-ZÅÄÖa-zåäö]{3,}/g) || [];
     // Need at least 2 words of 3+ chars, OR one long word (8+ chars)
     const hasRealWords = words.length >= 2 || words.some(w => w.length >= 8);
     // Title should be at least 8 chars total
     const longEnough = h.title.replace(/\s/g, '').length >= 8;
-    return hasRealWords && longEnough;
-  });
 
-  if (headings.length === 0) {
+    if (hasRealWords && longEnough) {
+      confirmedHeadings.push(h);
+    } else {
+      // This is an uncertain chapter
+      uncertainFromFilter.push({
+        chapterNumber: h.number,
+        possibleTitle: h.title,
+        confidence: hasRealWords ? 'medium' : 'low',
+        reason: !longEnough
+          ? 'Title too short - may be corrupted'
+          : 'Title lacks recognizable words'
+      });
+    }
+  }
+
+  // Find additional uncertain chapters not in headings
+  const confirmedNumbers = confirmedHeadings.map(h => h.number);
+  const additionalUncertain = findUncertainChapters(cleanedText, confirmedNumbers, pages);
+
+  // Merge uncertain chapters, avoiding duplicates
+  const allUncertain = [...uncertainFromFilter];
+  for (const u of additionalUncertain) {
+    if (!allUncertain.some(existing => existing.chapterNumber === u.chapterNumber)) {
+      allUncertain.push(u);
+    }
+  }
+  allUncertain.sort((a, b) => a.chapterNumber - b.chapterNumber);
+
+  if (confirmedHeadings.length === 0) {
     // No chapters found - use the aggressively cleaned text as single chapter
     const cleanText = aggressiveClean(cleanedText);
     return {
@@ -277,7 +569,11 @@ export function detectChapters(ocrText: string): ChapterDetectionResult {
         endIndex: cleanText.length
       }],
       hasChapters: false,
-      rawText: cleanedText
+      rawText: cleanedText,
+      pages,
+      pageGaps,
+      uncertainChapters: allUncertain,
+      pageRange
     };
   }
 
@@ -286,9 +582,9 @@ export function detectChapters(ocrText: string): ChapterDetectionResult {
   // Use aggressively cleaned text for chapter content
   const textForContent = aggressiveClean(cleanedText);
 
-  for (let i = 0; i < headings.length; i++) {
-    const heading = headings[i];
-    const nextHeading = headings[i + 1];
+  for (let i = 0; i < confirmedHeadings.length; i++) {
+    const heading = confirmedHeadings[i];
+    const nextHeading = confirmedHeadings[i + 1];
 
     const startIndex = heading.index;
     const endIndex = nextHeading ? nextHeading.index : textForContent.length;
@@ -317,10 +613,17 @@ export function detectChapters(ocrText: string): ChapterDetectionResult {
     });
   }
 
+  // Assign page ranges to chapters
+  assignPagesToChapters(chapters, pages, ocrText);
+
   return {
     chapters,
     hasChapters: true,
-    rawText: cleanedText
+    rawText: cleanedText,
+    pages,
+    pageGaps,
+    uncertainChapters: allUncertain,
+    pageRange
   };
 }
 
@@ -328,16 +631,51 @@ export function detectChapters(ocrText: string): ChapterDetectionResult {
  * Format chapters for display/logging
  */
 export function formatChapterSummary(result: ChapterDetectionResult): string {
-  if (!result.hasChapters) {
-    return 'No chapters detected - treating as single chapter';
+  const lines: string[] = [];
+
+  // Page range summary
+  if (result.pageRange) {
+    lines.push(`Pages detected: ${result.pageRange.start} - ${result.pageRange.end} (${result.pages.length} unique pages)`);
+  } else {
+    lines.push('No page numbers detected');
   }
 
-  const lines = [`Detected ${result.chapters.length} chapter(s):`];
+  // Page gaps warning
+  if (result.pageGaps.length > 0) {
+    lines.push('');
+    lines.push('⚠️  MISSING PAGES DETECTED:');
+    for (const gap of result.pageGaps) {
+      lines.push(`   Pages ${gap.afterPage + 1}-${gap.beforePage - 1} missing (${gap.missingCount} pages)`);
+    }
+  }
+
+  lines.push('');
+
+  if (!result.hasChapters) {
+    lines.push('No chapters detected - treating as single chapter');
+    return lines.join('\n');
+  }
+
+  lines.push(`Detected ${result.chapters.length} confirmed chapter(s):`);
 
   for (const chapter of result.chapters) {
     const preview = chapter.text.substring(0, 100).replace(/\n/g, ' ');
-    lines.push(`  ${chapter.chapterNumber}. ${chapter.title} (${chapter.text.length} chars)`);
+    const pageInfo = chapter.pageStart
+      ? ` [pages ${chapter.pageStart}-${chapter.pageEnd}]`
+      : '';
+    lines.push(`  ${chapter.chapterNumber}. ${chapter.title} (${chapter.text.length} chars)${pageInfo}`);
     lines.push(`     Preview: "${preview}..."`);
+  }
+
+  // Uncertain chapters
+  if (result.uncertainChapters.length > 0) {
+    lines.push('');
+    lines.push('❓ UNCERTAIN CHAPTERS (need confirmation):');
+    for (const uc of result.uncertainChapters) {
+      const pageHint = uc.nearPage ? ` [near page ${uc.nearPage}]` : '';
+      lines.push(`  ${uc.chapterNumber}. "${uc.possibleTitle}"${pageHint}`);
+      lines.push(`     Confidence: ${uc.confidence} - ${uc.reason}`);
+    }
   }
 
   return lines.join('\n');

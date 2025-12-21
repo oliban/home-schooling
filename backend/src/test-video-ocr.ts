@@ -230,15 +230,20 @@ async function main() {
       fs.writeFileSync(chapterPath, chapterContent);
     }
 
-    // Save chapter metadata as JSON
+    // Save chapter metadata as JSON (including page info)
     const metadataPath = path.join(chaptersDir, 'chapters.json');
     fs.writeFileSync(metadataPath, JSON.stringify({
       totalChapters: chapterResult.chapters.length,
       hasChapters: chapterResult.hasChapters,
+      pageRange: chapterResult.pageRange,
+      pageGaps: chapterResult.pageGaps,
+      uncertainChapters: chapterResult.uncertainChapters,
       chapters: chapterResult.chapters.map(c => ({
         chapterNumber: c.chapterNumber,
         title: c.title,
         textLength: c.text.length,
+        pageStart: c.pageStart,
+        pageEnd: c.pageEnd,
         file: `chapter_${String(c.chapterNumber).padStart(2, '0')}.txt`
       }))
     }, null, 2));
@@ -252,7 +257,33 @@ async function main() {
     console.log(`Best frames selected: ${bestFrames.length} (reduction: ${((1 - bestFrames.length / result.frameCount) * 100).toFixed(0)}%)`);
     console.log(`OCR confidence: ${ocrResult.averageConfidence.toFixed(1)}%`);
     console.log(`Text extracted: ${ocrResult.combinedText.length} characters`);
+
+    // Page information
+    if (chapterResult.pageRange) {
+      console.log(`Pages detected: ${chapterResult.pageRange.start} - ${chapterResult.pageRange.end} (${chapterResult.pages.length} unique)`);
+    }
+
     console.log(`Chapters detected: ${chapterResult.chapters.length}`);
+
+    // Warnings about missing pages
+    if (chapterResult.pageGaps.length > 0) {
+      console.log('');
+      console.log('⚠️  MISSING PAGES:');
+      for (const gap of chapterResult.pageGaps) {
+        console.log(`   Pages ${gap.afterPage + 1}-${gap.beforePage - 1} not found (${gap.missingCount} pages)`);
+      }
+    }
+
+    // Uncertain chapters that need confirmation
+    if (chapterResult.uncertainChapters.length > 0) {
+      console.log('');
+      console.log('❓ UNCERTAIN CHAPTERS (may need confirmation):');
+      for (const uc of chapterResult.uncertainChapters) {
+        const pageHint = uc.nearPage ? ` [near page ${uc.nearPage}]` : '';
+        console.log(`   ${uc.chapterNumber}. "${uc.possibleTitle}"${pageHint} - ${uc.reason}`);
+      }
+    }
+
     console.log('');
     console.log(`Output saved to: ${outputPath}`);
     console.log(`Chapter files saved to: ${chaptersDir}`);

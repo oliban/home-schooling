@@ -4,43 +4,80 @@ You are creating reading comprehension questions for Swedish children.
 Questions are MULTIPLE CHOICE ONLY. Do NOT include text extracts in the output.
 
 ## Input Required
-- **chapter_text**: The OCR-extracted chapter text (for your reference only)
+- **chapters_dir**: Path to chapters (e.g., `backend/best-frames/chapters/`)
 - **book_title**: Name of the book
-- **chapter_number**: Which chapter
 - **grade_level**: 1-9 (årskurs)
 
 ## Output Format (JSON)
 
-### Package Format (for import)
+### Batch Format (all chapters in one file)
 
-Use this format when generating reading questions for a book chapter:
+Use this format when generating reading questions for an entire book:
 
 ```json
 {
-  "package": {
-    "name": "Pippi Långstrump - Kapitel 1",
+  "batch": {
     "grade_level": 3,
-    "category_id": null,
-    "assignment_type": "reading",
-    "description": "Läsförståelsefrågor om när Pippi flyttar in i Villa Villekulla",
     "global": true
   },
-  "problems": [
+  "packages": [
     {
-      "question_text": "Varför kunde Pippi bära in hästen i köket?",
-      "correct_answer": "B",
-      "answer_type": "multiple_choice",
-      "options": [
-        "A: Hon hade hjälp av Tommy och Annika",
-        "B: Hon är väldigt stark",
-        "C: Hästen var väldigt liten",
-        "D: Hon använde en kärra"
-      ],
-      "difficulty": "easy"
+      "package": {
+        "name": "Robin Hood - Kapitel 1: De Fredlösa",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om hur Robin Hood blev fredlös",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför blev Robin Hood fredlös?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han stal pengar från kungen",
+            "B: Han dödade en av kungens hjortar",
+            "C: Han vägrade betala skatt",
+            "D: Han hjälpte en fånge att fly"
+          ],
+          "difficulty": "easy"
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Robin Hood - Kapitel 2: Lille John",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om när Robin möter Lille John",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Hur träffade Robin Hood Lille John?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De möttes på ett värdshus",
+            "B: Lille John var en av kungens soldater",
+            "C: De slogs på en bro över en bäck",
+            "D: Lille John kom till skogen för att gömma sig"
+          ],
+          "difficulty": "medium"
+        }
+      ]
     }
   ]
 }
 ```
+
+**IMPORTANT**: The `batch` wrapper is required by the frontend. It contains:
+- `grade_level`: The default grade level for all packages
+- `global`: Whether packages should be visible to all parents (true for book content)
+
+**Save to:** `data/generated/{book-name}-reading.json`
 
 **Package fields:**
 - `name`: Descriptive name (book + chapter)
@@ -164,3 +201,28 @@ Avoid:
 - Obviously silly answers
 - Completely unrelated options
 - Multiple correct answers
+
+## Option Balance (IMPORTANT)
+
+**All options must be similar in length and detail level.** The correct answer should NOT stand out by being:
+- Noticeably longer or more detailed than other options
+- The only option with specific details
+- More "complete" sounding than the others
+
+**BAD example (correct answer B is obviously longer):**
+```
+A: Han var arg
+B: Han var rädd för vad breven representerade och ville hindra Harry från att få kontakt med avsändaren
+C: Han var trött
+D: Han var förvirrad
+```
+
+**GOOD example (all options similar length):**
+```
+A: Han var mest irriterad över allt praktiskt besvär breven orsakade
+B: Han var livrädd för brevens avsändare och vad kontakt skulle innebära
+C: Han var orolig för att Harry skulle bli besviken på brevens innehåll
+D: Han ville skydda Harry från människor som kunde vara farliga för honom
+```
+
+**Rule of thumb:** If you can identify the correct answer just by looking at option lengths, rewrite the options.

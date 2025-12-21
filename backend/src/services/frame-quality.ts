@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import Tesseract from 'tesseract.js';
 
 interface FrameScore {
   framePath: string;
@@ -9,6 +10,11 @@ interface FrameScore {
   contrast: number;
   overallScore: number;
   timestamp: number; // seconds into video
+  // OCR-based scores (populated after text analysis)
+  textLength?: number;
+  ocrConfidence?: number;
+  pageNumber?: number;
+  textCoverageScore?: number;
 }
 
 interface BestFramesResult {
@@ -104,6 +110,96 @@ async function calculateContrast(imagePath: string): Promise<number> {
 }
 
 /**
+ * Extract page number from OCR text
+ * Page numbers are in the BOTTOM RIGHT corner of pages
+ * So we look at the last lines and the end/right side of those lines
+ */
+function extractPageNumber(text: string): number | undefined {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // Focus on the BOTTOM of the page (last 15 lines to account for OCR noise)
+  const bottomLines = lines.slice(-15);
+
+  // Pattern 1: Number at the END of a line (bottom right)
+  // This is the primary pattern for bottom-right page numbers
+  for (const line of bottomLines) {
+    // Number at end of line, possibly with trailing noise chars
+    const endMatch = line.match(/(\d{1,3})\s*[|\]\)}\s]*$/);
+    if (endMatch) {
+      const num = parseInt(endMatch[1]);
+      if (num >= 1 && num <= 200) {
+        return num;
+      }
+    }
+  }
+
+  // Pattern 2: Standalone number on its own line at the bottom
+  // "42", "|42|", "  42  "
+  for (const line of bottomLines) {
+    const standaloneMatch = line.match(/^[|[\s\-—.]*(\d{1,3})[|\]\s\-—.]*$/);
+    if (standaloneMatch) {
+      const num = parseInt(standaloneMatch[1]);
+      if (num >= 1 && num <= 200) {
+        return num;
+      }
+    }
+  }
+
+  // Pattern 3: Short line (< 15 chars) containing just a number at the bottom
+  for (const line of bottomLines) {
+    if (line.length <= 15) {
+      const shortMatch = line.match(/(\d{1,3})/);
+      if (shortMatch) {
+        const num = parseInt(shortMatch[1]);
+        if (num >= 1 && num <= 200) {
+          return num;
+        }
+      }
+    }
+  }
+
+  // Pattern 4: Number at start of bottom line (sometimes OCR reverses order)
+  for (const line of bottomLines) {
+    if (line.length <= 30) {
+      const startMatch = line.match(/^(\d{1,3})(?:\s|$|[|\].])/);
+      if (startMatch) {
+        const num = parseInt(startMatch[1]);
+        if (num >= 1 && num <= 200) {
+          return num;
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Run quick OCR on a frame to get text coverage metrics
+ */
+async function getTextCoverage(
+  framePath: string,
+  language: string = 'swe'
+): Promise<{ textLength: number; confidence: number; pageNumber?: number }> {
+  try {
+    const result = await Tesseract.recognize(framePath, language, {
+      // No logger for speed
+    });
+
+    const text = result.data.text.trim();
+    const pageNumber = extractPageNumber(text);
+
+    return {
+      textLength: text.length,
+      confidence: result.data.confidence,
+      pageNumber,
+    };
+  } catch (error) {
+    return { textLength: 0, confidence: 0 };
+  }
+}
+
+/**
  * Score a single frame for quality
  */
 export async function scoreFrame(framePath: string, fps: number = 0.5): Promise<FrameScore> {
@@ -171,8 +267,8 @@ export async function scoreAllFrames(
 }
 
 /**
- * Select best frames from each time window
- * This ensures we get the clearest frame for each "page" being shown
+ * Select best frames from each time window using OCR-based text coverage
+ * This ensures we get frames with the most visible text (not covered by hands)
  */
 export async function selectBestFrames(
   frameDir: string,
@@ -180,9 +276,17 @@ export async function selectBestFrames(
     fps?: number;
     windowSeconds?: number; // Time window to select best frame from
     minScore?: number; // Minimum score threshold
+    useOcr?: boolean; // Use OCR to validate text coverage (slower but more accurate)
+    candidatesPerWindow?: number; // How many top candidates to OCR per window
   } = {}
 ): Promise<BestFramesResult> {
-  const { fps = 0.5, windowSeconds = 3, minScore = 0.5 } = options;
+  const {
+    fps = 0.5,
+    windowSeconds = 3,
+    minScore = 0.5,
+    useOcr = true,
+    candidatesPerWindow = 3
+  } = options;
 
   const allScores = await scoreAllFrames(frameDir, fps);
 
@@ -207,31 +311,150 @@ export async function selectBestFrames(
     windows.push(currentWindow);
   }
 
-  // Select best frame from each window
-  const bestFrames: FrameScore[] = [];
-
-  for (const window of windows) {
-    const best = window.reduce((a, b) => a.overallScore > b.overallScore ? a : b);
-    if (best.overallScore >= minScore) {
-      bestFrames.push(best);
-    }
-  }
-
   console.log(`\nFrame quality analysis:`);
   console.log(`  Total frames: ${allScores.length}`);
   console.log(`  Time windows: ${windows.length} (${windowSeconds}s each)`);
+
+  // Select best frame from each window
+  const bestFrames: FrameScore[] = [];
+
+  if (useOcr) {
+    console.log(`\nAnalyzing text coverage with OCR (top ${candidatesPerWindow} candidates per window)...`);
+
+    for (let w = 0; w < windows.length; w++) {
+      const window = windows[w];
+
+      // Sort by visual quality and take top candidates
+      const candidates = [...window]
+        .filter(f => f.overallScore >= minScore)
+        .sort((a, b) => b.overallScore - a.overallScore)
+        .slice(0, candidatesPerWindow);
+
+      if (candidates.length === 0) continue;
+
+      // Run OCR on each candidate to find the one with most text
+      let bestCandidate = candidates[0];
+      let bestTextScore = 0;
+
+      for (const candidate of candidates) {
+        const coverage = await getTextCoverage(candidate.framePath);
+        candidate.textLength = coverage.textLength;
+        candidate.ocrConfidence = coverage.confidence;
+        candidate.pageNumber = coverage.pageNumber;
+
+        // Text coverage score: prioritize text length, boost with confidence
+        const textScore = coverage.textLength * (1 + coverage.confidence / 200);
+        candidate.textCoverageScore = textScore;
+
+        if (textScore > bestTextScore) {
+          bestTextScore = textScore;
+          bestCandidate = candidate;
+        }
+      }
+
+      bestFrames.push(bestCandidate);
+
+      // Progress indicator
+      const bar = '█'.repeat(Math.floor((w + 1) / windows.length * 20));
+      const empty = '░'.repeat(20 - bar.length);
+      const pageInfo = bestCandidate.pageNumber ? ` [page ${bestCandidate.pageNumber}]` : '';
+      process.stdout.write(`\r  [${bar}${empty}] ${w + 1}/${windows.length} windows${pageInfo}`);
+    }
+    console.log(''); // New line
+  } else {
+    // Original behavior: just use visual quality
+    for (const window of windows) {
+      const best = window.reduce((a, b) => a.overallScore > b.overallScore ? a : b);
+      if (best.overallScore >= minScore) {
+        bestFrames.push(best);
+      }
+    }
+  }
+
   console.log(`  Best frames selected: ${bestFrames.length}`);
 
   if (bestFrames.length > 0) {
     const avgScore = bestFrames.reduce((sum, f) => sum + f.overallScore, 0) / bestFrames.length;
-    console.log(`  Average quality score: ${avgScore.toFixed(2)}`);
+    console.log(`  Average visual quality: ${avgScore.toFixed(2)}`);
+
+    if (useOcr) {
+      const framesWithText = bestFrames.filter(f => f.textLength && f.textLength > 0);
+      if (framesWithText.length > 0) {
+        const avgText = framesWithText.reduce((sum, f) => sum + (f.textLength || 0), 0) / framesWithText.length;
+        console.log(`  Average text length: ${avgText.toFixed(0)} chars`);
+
+        const pagesDetected = bestFrames.filter(f => f.pageNumber !== undefined).length;
+        console.log(`  Pages detected in: ${pagesDetected}/${bestFrames.length} frames`);
+      }
+    }
+  }
+
+  // Deduplicate by page number - keep only the best frame for each page
+  const deduplicatedFrames = deduplicateByPage(bestFrames);
+
+  if (deduplicatedFrames.length < bestFrames.length) {
+    console.log(`  After page deduplication: ${deduplicatedFrames.length} frames (removed ${bestFrames.length - deduplicatedFrames.length} duplicates)`);
   }
 
   return {
     allScores,
-    bestFrames,
-    selectedPaths: bestFrames.map(f => f.framePath),
+    bestFrames: deduplicatedFrames,
+    selectedPaths: deduplicatedFrames.map(f => f.framePath),
   };
+}
+
+/**
+ * Deduplicate frames by page number
+ * When multiple frames have the same page number, keep only the one with highest text coverage
+ */
+function deduplicateByPage(frames: FrameScore[]): FrameScore[] {
+  const pageMap = new Map<number, FrameScore>();
+  const noPageFrames: FrameScore[] = [];
+
+  for (const frame of frames) {
+    if (frame.pageNumber === undefined) {
+      // Keep frames without detected page numbers (might be title pages, etc.)
+      noPageFrames.push(frame);
+    } else {
+      const existing = pageMap.get(frame.pageNumber);
+      if (!existing) {
+        pageMap.set(frame.pageNumber, frame);
+      } else {
+        // Keep the one with higher text coverage score
+        const existingScore = existing.textCoverageScore || 0;
+        const newScore = frame.textCoverageScore || 0;
+        if (newScore > existingScore) {
+          pageMap.set(frame.pageNumber, frame);
+        }
+      }
+    }
+  }
+
+  // Combine: sorted page frames + no-page frames
+  const pageFrames = Array.from(pageMap.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([, frame]) => frame);
+
+  // Interleave no-page frames based on timestamp
+  const result: FrameScore[] = [];
+  let noPageIdx = 0;
+
+  for (const pageFrame of pageFrames) {
+    // Add any no-page frames that come before this page frame
+    while (noPageIdx < noPageFrames.length && noPageFrames[noPageIdx].timestamp < pageFrame.timestamp) {
+      result.push(noPageFrames[noPageIdx]);
+      noPageIdx++;
+    }
+    result.push(pageFrame);
+  }
+
+  // Add remaining no-page frames
+  while (noPageIdx < noPageFrames.length) {
+    result.push(noPageFrames[noPageIdx]);
+    noPageIdx++;
+  }
+
+  return result;
 }
 
 /**
