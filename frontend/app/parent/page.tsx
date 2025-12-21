@@ -559,6 +559,9 @@ export default function ParentDashboard() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
+                                <span className="font-medium text-orange-700">
+                                  {assignment.correct_count}/{assignment.total_count}
+                                </span>
                                 <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
                                   {t('parent.dashboard.inProgress')}
                                 </span>

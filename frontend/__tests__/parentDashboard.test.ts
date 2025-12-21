@@ -1,7 +1,9 @@
 /**
- * Tests for parent dashboard assignment grouping logic
+ * Tests for parent dashboard assignment grouping and display logic
  *
- * These tests verify the logic for grouping assignments by child
+ * These tests verify:
+ * - Grouping assignments by child
+ * - Progress display formatting for in-progress assignments
  */
 
 import { describe, it, expect } from 'vitest';
@@ -117,6 +119,42 @@ describe('Parent Dashboard - Assignment Grouping', () => {
       expect(result).toHaveLength(3);
       // localeCompare should handle Swedish characters
       expect(result[0][1].childName).toBe('Anders');
+    });
+  });
+
+  describe('Progress Display', () => {
+    /**
+     * Format progress as "correct/total" for in-progress assignments
+     */
+    function formatProgress(correctCount: number, totalCount: number): string {
+      return `${correctCount}/${totalCount}`;
+    }
+
+    it('should format progress as correct/total', () => {
+      expect(formatProgress(2, 8)).toBe('2/8');
+      expect(formatProgress(0, 10)).toBe('0/10');
+      expect(formatProgress(5, 5)).toBe('5/5');
+    });
+
+    it('should handle zero total gracefully', () => {
+      expect(formatProgress(0, 0)).toBe('0/0');
+    });
+
+    it('should display progress for in-progress assignments', () => {
+      const inProgressAssignment: AssignmentData = {
+        id: '1',
+        child_id: 'c1',
+        child_name: 'Alice',
+        assignment_type: 'math',
+        title: 'Math Quiz',
+        status: 'in_progress',
+        created_at: '2024-01-01',
+        correct_count: 3,
+        total_count: 10,
+      };
+
+      const progress = formatProgress(inProgressAssignment.correct_count, inProgressAssignment.total_count);
+      expect(progress).toBe('3/10');
     });
   });
 });
