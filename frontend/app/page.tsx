@@ -1,61 +1,75 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8">
-      <div className="text-center max-w-2xl">
-        <h1 className="text-5xl font-bold text-gray-800 mb-4">
-          Välkommen till Skolan!
-        </h1>
-        <p className="text-xl text-gray-600 mb-12">
-          Matte och läsförståelse för barn baserat på LGR 22
-        </p>
+    <main className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col lg:flex-row items-center gap-8">
+          {/* Text Content */}
+          <div className="flex-1 text-center lg:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold text-amber-900 mb-4">
+              Dags för ett äventyr!
+            </h1>
+            <p className="text-xl text-amber-700 mb-8">
+              Utforska matte-mysterier och dyk ner i spännande berättelser
+            </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/login"
-            className="px-8 py-4 bg-blue-600 text-white rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Barn - Logga in
-          </Link>
-          <Link
-            href="/parent/login"
-            className="px-8 py-4 bg-gray-200 text-gray-800 rounded-xl text-lg font-semibold hover:bg-gray-300 transition-colors"
-          >
-            Förälder - Logga in
-          </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Link
+                href="/login"
+                className="px-8 py-4 bg-amber-600 text-white rounded-2xl text-lg font-bold hover:bg-amber-700 hover:scale-105 transition-all shadow-lg"
+              >
+                Starta äventyret!
+              </Link>
+              <Link
+                href="/parent/login"
+                className="px-8 py-4 bg-white/80 text-amber-800 rounded-2xl text-lg font-semibold hover:bg-white transition-all border-2 border-amber-200"
+              >
+                Förälder
+              </Link>
+            </div>
+          </div>
+
+          {/* Hero Image */}
+          <div className="flex-1 max-w-md">
+            <Image
+              src="/school-adventure.png"
+              alt="Magisk skolvärld"
+              width={600}
+              height={400}
+              className="rounded-3xl shadow-2xl border-4 border-amber-200"
+              priority
+            />
+          </div>
         </div>
+      </div>
 
-        <div className="mt-16 grid grid-cols-2 gap-8 text-left">
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">📐</div>
-            <h3 className="font-semibold text-lg mb-2">Matte</h3>
-            <p className="text-gray-600 text-sm">
-              Träna matematik anpassat efter din årskurs. Taluppfattning, algebra, geometri och mer.
-            </p>
+      {/* Features */}
+      <div className="max-w-4xl mx-auto px-4 pb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-5 bg-white/70 backdrop-blur rounded-2xl shadow-md hover:shadow-lg transition-shadow text-center">
+            <div className="text-4xl mb-2">🧮</div>
+            <h3 className="font-bold text-amber-900">Matte</h3>
+            <p className="text-amber-700 text-sm mt-1">Knäck koden!</p>
           </div>
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">📖</div>
-            <h3 className="font-semibold text-lg mb-2">Läsförståelse</h3>
-            <p className="text-gray-600 text-sm">
-              Svara på frågor om böcker du läser. 5 frågor per kapitel.
-            </p>
+          <div className="p-5 bg-white/70 backdrop-blur rounded-2xl shadow-md hover:shadow-lg transition-shadow text-center">
+            <div className="text-4xl mb-2">📚</div>
+            <h3 className="font-bold text-amber-900">Läsning</h3>
+            <p className="text-amber-700 text-sm mt-1">Upptäck världar</p>
           </div>
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">💰</div>
-            <h3 className="font-semibold text-lg mb-2">Tjäna coins</h3>
-            <p className="text-gray-600 text-sm">
-              Få coins för rätta svar och bygg upp streaks för bonuspoäng!
-            </p>
+          <div className="p-5 bg-white/70 backdrop-blur rounded-2xl shadow-md hover:shadow-lg transition-shadow text-center">
+            <div className="text-4xl mb-2">🪙</div>
+            <h3 className="font-bold text-amber-900">Coins</h3>
+            <p className="text-amber-700 text-sm mt-1">Samla skatter</p>
           </div>
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">🎁</div>
-            <h3 className="font-semibold text-lg mb-2">Samla karaktärer</h3>
-            <p className="text-gray-600 text-sm">
-              Köp roliga ASCII-karaktärer med dina coins. Från Meatballo till Championo!
-            </p>
+          <div className="p-5 bg-white/70 backdrop-blur rounded-2xl shadow-md hover:shadow-lg transition-shadow text-center">
+            <div className="text-4xl mb-2">🦄</div>
+            <h3 className="font-bold text-amber-900">Karaktärer</h3>
+            <p className="text-amber-700 text-sm mt-1">Bygg din samling</p>
           </div>
         </div>
       </div>
