@@ -105,6 +105,33 @@ class HomeSchoolingDatabase {
     if (!packageColumns.some(c => c.name === 'assignment_type')) {
       this.db.exec("ALTER TABLE math_packages ADD COLUMN assignment_type TEXT DEFAULT 'math'");
     }
+
+    // Migration: Add hints_allowed to assignments table for multi-attempt feature
+    const assignmentColsForHints = this.db.prepare("PRAGMA table_info(assignments)").all() as { name: string }[];
+    if (!assignmentColsForHints.some(c => c.name === 'hints_allowed')) {
+      this.db.exec('ALTER TABLE assignments ADD COLUMN hints_allowed INTEGER DEFAULT 1');
+    }
+
+    // Migration: Add multi-attempt columns to assignment_answers table
+    const answerColumns = this.db.prepare("PRAGMA table_info(assignment_answers)").all() as { name: string }[];
+    if (!answerColumns.some(c => c.name === 'attempts_count')) {
+      this.db.exec('ALTER TABLE assignment_answers ADD COLUMN attempts_count INTEGER DEFAULT 1');
+    }
+    if (!answerColumns.some(c => c.name === 'hint_purchased')) {
+      this.db.exec('ALTER TABLE assignment_answers ADD COLUMN hint_purchased INTEGER DEFAULT 0');
+    }
+    if (!answerColumns.some(c => c.name === 'coins_spent_on_hint')) {
+      this.db.exec('ALTER TABLE assignment_answers ADD COLUMN coins_spent_on_hint INTEGER DEFAULT 0');
+    }
+
+    // Migration: Add multi-attempt columns to math_problems table (legacy assignments)
+    const mathProblemColumns = this.db.prepare("PRAGMA table_info(math_problems)").all() as { name: string }[];
+    if (!mathProblemColumns.some(c => c.name === 'attempts_count')) {
+      this.db.exec('ALTER TABLE math_problems ADD COLUMN attempts_count INTEGER DEFAULT 1');
+    }
+    if (!mathProblemColumns.some(c => c.name === 'hint_purchased')) {
+      this.db.exec('ALTER TABLE math_problems ADD COLUMN hint_purchased INTEGER DEFAULT 0');
+    }
   }
 
   get connection(): Database.Database {

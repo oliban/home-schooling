@@ -134,6 +134,9 @@ export interface AssignmentAnswer {
   child_answer: string | null;
   is_correct: number | null;
   answered_at: string | null;
+  attempts_count?: number;
+  hint_purchased?: number;
+  coins_spent_on_hint?: number;
 }
 
 // Import package request types
@@ -156,6 +159,13 @@ export interface ImportPackageRequest {
     difficulty?: 'easy' | 'medium' | 'hard';
   }>;
   isGlobal?: boolean;
+}
+
+// Batch import for multiple chapters/packages at once
+export interface BatchImportRequest {
+  book_title: string;
+  grade_level: number;
+  packages: ImportPackageRequest[];
 }
 
 // API request/response types

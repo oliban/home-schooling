@@ -50,6 +50,7 @@ export default function PackagePreview() {
   // Assign state
   const [selectedChild, setSelectedChild] = useState<string>('');
   const [customTitle, setCustomTitle] = useState('');
+  const [hintsAllowed, setHintsAllowed] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [assignSuccess, setAssignSuccess] = useState(false);
 
@@ -95,6 +96,7 @@ export default function PackagePreview() {
       await packages.assign(token, packageId, {
         childId: selectedChild,
         title: customTitle || pkg.name,
+        hintsAllowed,
       });
       setAssignSuccess(true);
     } catch (err) {
@@ -251,6 +253,30 @@ export default function PackagePreview() {
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder={pkg.name}
                     />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Allow Hints
+                      </label>
+                      <p className="text-xs text-gray-500">
+                        Child can buy hints after wrong answers
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHintsAllowed(!hintsAllowed)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        hintsAllowed ? 'bg-purple-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          hintsAllowed ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
 
                   <button

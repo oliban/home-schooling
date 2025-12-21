@@ -78,6 +78,7 @@ export default function ParentDashboard() {
   const [isGlobal, setIsGlobal] = useState(false);
   const [autoAssign, setAutoAssign] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string>('');
+  const [hintsAllowed, setHintsAllowed] = useState(true);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
@@ -253,6 +254,7 @@ export default function ParentDashboard() {
             await packages.assign(token, result.id, {
               childId: selectedChildId,
               title: pkg.package.name,
+              hintsAllowed,
             });
             assignmentsCreated++;
           }
@@ -285,6 +287,7 @@ export default function ParentDashboard() {
           await packages.assign(token, result.id, {
             childId: selectedChildId,
             title: importedData.package.name,
+            hintsAllowed,
           });
           assignmentsCreated = 1;
 
@@ -313,6 +316,7 @@ export default function ParentDashboard() {
     setImportProgress(0);
     setAutoAssign(false);
     setSelectedChildId('');
+    setHintsAllowed(true);
   };
 
   if (loading || !parent) {
@@ -654,7 +658,7 @@ export default function ParentDashboard() {
                     </label>
 
                     {autoAssign && (
-                      <div className="mt-3">
+                      <div className="mt-3 space-y-3">
                         <select
                           value={selectedChildId}
                           onChange={(e) => setSelectedChildId(e.target.value)}
@@ -668,6 +672,27 @@ export default function ParentDashboard() {
                             </option>
                           ))}
                         </select>
+
+                        {/* Allow Hints Toggle */}
+                        <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                          <div>
+                            <span className="font-medium text-sm">Allow Hints</span>
+                            <p className="text-xs text-gray-500">Child can buy hints after wrong answers</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setHintsAllowed(!hintsAllowed)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                              hintsAllowed ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                hintsAllowed ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -760,7 +785,7 @@ export default function ParentDashboard() {
                     </label>
 
                     {autoAssign && (
-                      <div className="mt-3">
+                      <div className="mt-3 space-y-3">
                         <select
                           value={selectedChildId}
                           onChange={(e) => setSelectedChildId(e.target.value)}
@@ -774,6 +799,27 @@ export default function ParentDashboard() {
                             </option>
                           ))}
                         </select>
+
+                        {/* Allow Hints Toggle */}
+                        <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                          <div>
+                            <span className="font-medium text-sm">Allow Hints</span>
+                            <p className="text-xs text-gray-500">Child can buy hints after wrong answers</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setHintsAllowed(!hintsAllowed)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                              hintsAllowed ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                hintsAllowed ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

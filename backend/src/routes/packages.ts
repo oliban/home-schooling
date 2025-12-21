@@ -2,104 +2,127 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../data/database.js';
 import { authenticateParent } from '../middleware/auth.js';
-import type { MathPackage, PackageProblem, ImportPackageRequest } from '../types/index.js';
+import type { MathPackage, PackageProblem, ImportPackageRequest, BatchImportRequest } from '../types/index.js';
 
 const router = Router();
 
-// Import package from JSON
+// Import package(s) from JSON - handles both single and batch
 router.post('/import', authenticateParent, (req, res) => {
   try {
-    const data = req.body as ImportPackageRequest;
-    const { package: pkg, problems, isGlobal } = data;
+    const data = req.body;
 
-    if (!pkg || !pkg.name || !pkg.grade_level || !problems || !Array.isArray(problems)) {
-      return res.status(400).json({ error: 'Invalid package format. Required: package.name, package.grade_level, problems array' });
+    // Detect if this is a batch import (has "packages" array) or single import (has "package" object)
+    const isBatch = Array.isArray(data.packages);
+    const packagesToImport: ImportPackageRequest[] = isBatch
+      ? data.packages
+      : [{ package: data.package, problems: data.problems, isGlobal: data.isGlobal }];
+
+    if (packagesToImport.length === 0) {
+      return res.status(400).json({ error: 'No packages to import' });
     }
 
-    if (problems.length === 0) {
-      return res.status(400).json({ error: 'Package must contain at least one problem' });
-    }
-
-    // Validate each problem has required fields
+    // Validate all packages
     const validationErrors: string[] = [];
-    problems.forEach((p, i) => {
-      const num = i + 1;
-      if (!p.question_text || typeof p.question_text !== 'string' || !p.question_text.trim()) {
-        validationErrors.push(`Problem ${num}: missing question_text`);
+    packagesToImport.forEach((item, pkgIndex) => {
+      const { package: pkg, problems } = item;
+      const pkgNum = isBatch ? `Package ${pkgIndex + 1}` : 'Package';
+
+      if (!pkg || !pkg.name || !pkg.grade_level) {
+        validationErrors.push(`${pkgNum}: missing package.name or package.grade_level`);
+        return;
       }
-      if (!p.correct_answer || typeof p.correct_answer !== 'string' || !p.correct_answer.trim()) {
-        validationErrors.push(`Problem ${num}: missing correct_answer`);
+      if (!problems || !Array.isArray(problems) || problems.length === 0) {
+        validationErrors.push(`${pkgNum} (${pkg.name}): missing or empty problems array`);
+        return;
       }
-      if (p.answer_type === 'multiple_choice') {
-        if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
-          validationErrors.push(`Problem ${num}: multiple_choice requires options array with at least 2 items`);
+
+      problems.forEach((p, i) => {
+        const num = i + 1;
+        if (!p.question_text || typeof p.question_text !== 'string' || !p.question_text.trim()) {
+          validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: missing question_text`);
         }
-      }
+        if (!p.correct_answer || typeof p.correct_answer !== 'string' || !p.correct_answer.trim()) {
+          validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: missing correct_answer`);
+        }
+        if (p.answer_type === 'multiple_choice') {
+          if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+            validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: multiple_choice requires options array`);
+          }
+        }
+      });
     });
 
     if (validationErrors.length > 0) {
-      return res.status(400).json({ error: 'Invalid problems', details: validationErrors });
+      return res.status(400).json({ error: 'Validation failed', details: validationErrors });
     }
 
     const db = getDb();
-    const packageId = uuidv4();
-
-    // Calculate difficulty summary
-    const difficultySummary = problems.reduce((acc, p) => {
-      const d = p.difficulty || 'medium';
-      acc[d] = (acc[d] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Determine global flag: explicit isGlobal parameter takes precedence, then pkg.global
-    const globalFlag = isGlobal !== undefined ? isGlobal : (pkg.global ?? false);
-
-    // Determine assignment type: reading if category_id is null and answer_type is multiple_choice, or explicitly set
-    const assignmentType = pkg.assignment_type || (pkg.category_id === null && problems.every(p => p.answer_type === 'multiple_choice') ? 'reading' : 'math');
+    const results: { id: string; name: string; problemCount: number }[] = [];
 
     db.transaction(() => {
-      db.run(
-        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, difficulty_summary, description, is_global)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          packageId,
-          req.user!.id,
-          pkg.name,
-          pkg.grade_level,
-          pkg.category_id || null,
-          assignmentType,
-          problems.length,
-          JSON.stringify(difficultySummary),
-          pkg.description || null,
-          globalFlag ? 1 : 0
-        ]
-      );
+      for (const item of packagesToImport) {
+        const { package: pkg, problems, isGlobal } = item;
+        const packageId = uuidv4();
 
-      for (let i = 0; i < problems.length; i++) {
-        const p = problems[i];
+        const difficultySummary = problems.reduce((acc, p) => {
+          const d = p.difficulty || 'medium';
+          acc[d] = (acc[d] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        const globalFlag = isGlobal !== undefined ? isGlobal : (pkg.global ?? false);
+        const assignmentType = pkg.assignment_type || (pkg.category_id === null && problems.every(p => p.answer_type === 'multiple_choice') ? 'reading' : 'math');
+
         db.run(
-          `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
+          `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, difficulty_summary, description, is_global)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            uuidv4(),
             packageId,
-            i + 1,
-            p.question_text,
-            p.correct_answer,
-            p.answer_type || 'number',
-            p.options ? JSON.stringify(p.options) : null,
-            p.explanation || null,
-            p.hint || null,
-            p.difficulty || 'medium'
+            req.user!.id,
+            pkg.name,
+            pkg.grade_level,
+            pkg.category_id || null,
+            assignmentType,
+            problems.length,
+            JSON.stringify(difficultySummary),
+            pkg.description || null,
+            globalFlag ? 1 : 0
           ]
         );
+
+        for (let i = 0; i < problems.length; i++) {
+          const p = problems[i];
+          db.run(
+            `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              uuidv4(),
+              packageId,
+              i + 1,
+              p.question_text,
+              p.correct_answer,
+              p.answer_type || 'number',
+              p.options ? JSON.stringify(p.options) : null,
+              p.explanation || null,
+              p.hint || null,
+              p.difficulty || 'medium'
+            ]
+          );
+        }
+
+        results.push({ id: packageId, name: pkg.name, problemCount: problems.length });
       }
     });
 
-    res.status(201).json({ id: packageId, problemCount: problems.length });
+    // Return format depends on single vs batch
+    if (isBatch) {
+      res.status(201).json({ imported: results.length, packages: results });
+    } else {
+      res.status(201).json({ id: results[0].id, problemCount: results[0].problemCount });
+    }
   } catch (error) {
     console.error('Import package error:', error);
-    res.status(500).json({ error: 'Failed to import package' });
+    res.status(500).json({ error: 'Failed to import package(s)' });
   }
 });
 
@@ -224,7 +247,7 @@ router.get('/:id', authenticateParent, (req, res) => {
 // Assign package to child (creates assignment)
 router.post('/:id/assign', authenticateParent, (req, res) => {
   try {
-    const { childId, title } = req.body;
+    const { childId, title, hintsAllowed = true } = req.body;
 
     if (!childId) {
       return res.status(400).json({ error: 'childId is required' });
@@ -264,9 +287,9 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
     const assignmentId = uuidv4();
 
     db.run(
-      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
-      [assignmentId, req.user!.id, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id]
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, hints_allowed)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+      [assignmentId, req.user!.id, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id, hintsAllowed ? 1 : 0]
     );
 
     res.status(201).json({ id: assignmentId });

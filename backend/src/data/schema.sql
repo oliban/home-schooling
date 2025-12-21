@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     title TEXT NOT NULL,
     grade_level INTEGER,
     status TEXT CHECK (status IN ('pending', 'in_progress', 'completed')) DEFAULT 'pending',
+    hints_allowed INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     completed_at DATETIME
 );
@@ -92,6 +93,8 @@ CREATE TABLE IF NOT EXISTS math_problems (
     child_answer TEXT,
     is_correct INTEGER,
     answered_at DATETIME,
+    attempts_count INTEGER DEFAULT 1,
+    hint_purchased INTEGER DEFAULT 0,
     UNIQUE(assignment_id, problem_number)
 );
 
@@ -186,6 +189,9 @@ CREATE TABLE IF NOT EXISTS assignment_answers (
     child_answer TEXT,
     is_correct INTEGER,
     answered_at DATETIME,
+    attempts_count INTEGER DEFAULT 1,
+    hint_purchased INTEGER DEFAULT 0,
+    coins_spent_on_hint INTEGER DEFAULT 0,
     UNIQUE(assignment_id, problem_id)
 );
 

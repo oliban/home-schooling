@@ -140,6 +140,7 @@ export const assignments = {
       grade_level: number;
       status: string;
       package_id: string | null;
+      hints_allowed?: number;
       created_at: string;
       completed_at: string | null;
       questions: Array<{
@@ -156,6 +157,8 @@ export const assignments = {
         child_answer: string | null;
         is_correct: number | null;
         answered_at?: string | null;
+        attempts_count?: number;
+        hint_purchased?: number;
       }>;
     }>(`/assignments/${id}`, { token }),
 
@@ -193,7 +196,24 @@ export const assignments = {
       coinsEarned: number;
       totalCoins: number;
       streak: number;
+      // Multi-attempt fields
+      attemptNumber: number;
+      canRetry: boolean;
+      maxAttempts: number;
+      potentialReward: number;
+      canBuyHint: boolean;
+      hintCost: number;
+      explanation?: string;
+      questionComplete: boolean;
     }>(`/assignments/${assignmentId}/submit`, { method: 'POST', body: data, token }),
+
+  buyHint: (token: string, assignmentId: string, questionId: string) =>
+    fetchApi<{
+      success: boolean;
+      hint: string;
+      coinsCost: number;
+      newBalance: number;
+    }>(`/assignments/${assignmentId}/questions/${questionId}/buy-hint`, { method: 'POST', token }),
 
   delete: (token: string, id: string) =>
     fetchApi<{ success: boolean }>(`/assignments/${id}`, { method: 'DELETE', token }),
@@ -308,7 +328,7 @@ export const packages = {
       }>;
     }>(`/packages/${id}`, { token }),
 
-  assign: (token: string, packageId: string, data: { childId: string; title?: string }) =>
+  assign: (token: string, packageId: string, data: { childId: string; title?: string; hintsAllowed?: boolean }) =>
     fetchApi<{ id: string }>(`/packages/${packageId}/assign`, { method: 'POST', body: data, token }),
 
   delete: (token: string, id: string) =>

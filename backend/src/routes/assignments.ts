@@ -100,7 +100,7 @@ router.get('/:id', authenticateAny, (req, res) => {
     // Package-based assignments (both math and reading) load from package_problems
     if (assignment.package_id) {
       questions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
-        `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at
+        `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at, aa.attempts_count, aa.hint_purchased
          FROM package_problems pp
          LEFT JOIN assignment_answers aa ON pp.id = aa.problem_id AND aa.assignment_id = ?
          WHERE pp.package_id = ?
@@ -108,7 +108,7 @@ router.get('/:id', authenticateAny, (req, res) => {
         [req.params.id, assignment.package_id]
       );
     } else if (assignment.assignment_type === 'math') {
-      // Legacy embedded math problems
+      // Legacy embedded math problems (includes attempts_count and hint_purchased)
       questions = db.all<MathProblem>(
         'SELECT * FROM math_problems WHERE assignment_id = ? ORDER BY problem_number',
         [req.params.id]
@@ -215,7 +215,7 @@ router.post('/', authenticateParent, (req, res) => {
   }
 });
 
-// Submit answer (child only)
+// Submit answer (child only) - with multi-attempt support for math
 router.post('/:id/submit', authenticateChild, (req, res) => {
   try {
     const { questionId, answer } = req.body;
@@ -225,9 +225,11 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
     }
 
     const db = getDb();
+    const MAX_ATTEMPTS = 3;
+    const ATTEMPT_MULTIPLIERS = [1.0, 0.66, 0.33]; // 100%, 66%, 33%
 
     // Get assignment and verify access
-    const assignment = db.get<Assignment>(
+    const assignment = db.get<Assignment & { hints_allowed: number }>(
       'SELECT * FROM assignments WHERE id = ? AND child_id = ?',
       [req.params.id, req.child!.id]
     );
@@ -236,13 +238,21 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
       return res.status(404).json({ error: 'Assignment not found' });
     }
 
-    let isCorrect = false;
-    let correctAnswer = '';
-    let coinsEarned = 0;
-
     // Helper to normalize number answers
     const normalizeNumber = (val: string) =>
       val.trim().toLowerCase().replace(',', '.').replace(/\s*%$/, '');
+
+    // Reading assignments use single-attempt logic (no retries)
+    const isReadingAssignment = assignment.assignment_type === 'reading';
+
+    let isCorrect = false;
+    let correctAnswer = '';
+    let coinsEarned = 0;
+    let attemptNumber = 1;
+    let questionComplete = false;
+    let explanation: string | null = null;
+    let hint: string | null = null;
+    let hintPurchased = false;
 
     db.transaction(() => {
       // Update assignment status to in_progress if pending
@@ -265,26 +275,52 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         }
 
         correctAnswer = problem.correct_answer;
-        // For multiple choice (reading), compare letters; for math, normalize numbers
+        explanation = problem.explanation;
+        hint = problem.hint;
+
+        // Check existing answer for attempt count
+        const existingAnswer = db.get<AssignmentAnswer>(
+          'SELECT * FROM assignment_answers WHERE assignment_id = ? AND problem_id = ?',
+          [req.params.id, questionId]
+        );
+
+        if (existingAnswer) {
+          // Check if already complete
+          if (existingAnswer.is_correct === 1 || (existingAnswer.attempts_count || 1) >= MAX_ATTEMPTS) {
+            throw new Error('Question already completed');
+          }
+          attemptNumber = (existingAnswer.attempts_count || 1) + 1;
+          hintPurchased = existingAnswer.hint_purchased === 1;
+        }
+
+        // For reading: single attempt (no multi-attempt)
+        if (isReadingAssignment && existingAnswer) {
+          throw new Error('Question already answered');
+        }
+
+        // Check answer
         if (problem.answer_type === 'multiple_choice') {
           isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
         } else {
           isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
         }
 
-        // Insert or update answer in assignment_answers
+        questionComplete = isCorrect || attemptNumber >= MAX_ATTEMPTS || isReadingAssignment;
+
+        // Insert or update answer
         db.run(
-          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
-           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at, attempts_count, hint_purchased)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
            ON CONFLICT(assignment_id, problem_id) DO UPDATE SET
              child_answer = excluded.child_answer,
              is_correct = excluded.is_correct,
-             answered_at = excluded.answered_at`,
-          [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0]
+             answered_at = excluded.answered_at,
+             attempts_count = excluded.attempts_count`,
+          [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0, attemptNumber, hintPurchased ? 1 : 0]
         );
       } else if (assignment.assignment_type === 'math') {
         // Legacy embedded math problems
-        const problem = db.get<MathProblem>(
+        const problem = db.get<MathProblem & { attempts_count?: number; hint_purchased?: number }>(
           'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
           [questionId, req.params.id]
         );
@@ -294,15 +330,29 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         }
 
         correctAnswer = problem.correct_answer;
+        explanation = problem.explanation || null;
+        hint = problem.hint || null;
+
+        // Check if already complete
+        if (problem.is_correct === 1 || (problem.attempts_count || 1) >= MAX_ATTEMPTS) {
+          throw new Error('Question already completed');
+        }
+
+        if (problem.child_answer !== null) {
+          attemptNumber = (problem.attempts_count || 1) + 1;
+        }
+        hintPurchased = problem.hint_purchased === 1;
+
         isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
+        questionComplete = isCorrect || attemptNumber >= MAX_ATTEMPTS;
 
         db.run(
-          `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+          `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP, attempts_count = ?
            WHERE id = ?`,
-          [answer, isCorrect ? 1 : 0, questionId]
+          [answer, isCorrect ? 1 : 0, attemptNumber, questionId]
         );
       } else {
-        // Legacy embedded reading questions
+        // Legacy embedded reading questions (single attempt only)
         const question = db.get<ReadingQuestion>(
           'SELECT * FROM reading_questions WHERE id = ? AND assignment_id = ?',
           [questionId, req.params.id]
@@ -312,8 +362,13 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
           throw new Error('Question not found');
         }
 
+        if (question.child_answer !== null) {
+          throw new Error('Question already answered');
+        }
+
         correctAnswer = question.correct_answer;
         isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
+        questionComplete = true; // Reading is always single-attempt
 
         db.run(
           `UPDATE reading_questions SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
@@ -322,7 +377,7 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         );
       }
 
-      // Award coins
+      // Calculate coins with attempt multiplier (math only)
       if (isCorrect) {
         const coins = db.get<{ current_streak: number }>(
           'SELECT current_streak FROM child_coins WHERE child_id = ?',
@@ -330,8 +385,16 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         );
 
         const streak = (coins?.current_streak || 0) + 1;
-        const streakBonus = Math.min(streak * 5, 25); // +5 per streak, max +25
-        coinsEarned = 10 + streakBonus;
+        const streakBonus = Math.min(streak * 5, 25);
+        const fullReward = 10 + streakBonus;
+
+        // Apply attempt multiplier for math assignments
+        if (!isReadingAssignment) {
+          const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || 0.33;
+          coinsEarned = Math.floor(fullReward * multiplier);
+        } else {
+          coinsEarned = fullReward;
+        }
 
         db.run(
           `UPDATE child_coins SET
@@ -342,56 +405,59 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
           [coinsEarned, coinsEarned, streak, req.child!.id]
         );
       } else {
-        // Reset streak on wrong answer
-        db.run(
-          'UPDATE child_coins SET current_streak = 0 WHERE child_id = ?',
-          [req.child!.id]
-        );
+        // Only reset streak on final attempt wrong (or reading wrong)
+        if (questionComplete) {
+          db.run(
+            'UPDATE child_coins SET current_streak = 0 WHERE child_id = ?',
+            [req.child!.id]
+          );
+        }
+        // For math attempts 1-2: keep streak intact for next question
       }
 
       // Log progress
       db.run(
         `INSERT INTO progress_logs (child_id, assignment_id, action, details, coins_earned)
          VALUES (?, ?, 'answered', ?, ?)`,
-        [req.child!.id, req.params.id, JSON.stringify({ questionId, isCorrect }), coinsEarned]
+        [req.child!.id, req.params.id, JSON.stringify({ questionId, isCorrect, attemptNumber }), coinsEarned]
       );
 
-      // Check if assignment is complete
-      let allAnswered = false;
+      // Check if assignment is complete (all questions are questionComplete)
+      let allComplete = false;
       if (assignment.package_id) {
-        // Package-based (both math and reading): count problems vs answers
         const totalProblems = db.get<{ count: number }>(
           'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
           [assignment.package_id]
         );
-        const answeredProblems = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?',
-          [req.params.id]
+        // Count questions that are either correct OR have 3 attempts
+        const completedProblems = db.get<{ count: number }>(
+          `SELECT COUNT(*) as count FROM assignment_answers
+           WHERE assignment_id = ? AND (is_correct = 1 OR attempts_count >= ?)`,
+          [req.params.id, MAX_ATTEMPTS]
         );
-        allAnswered = (answeredProblems?.count || 0) >= (totalProblems?.count || 0);
+        allComplete = (completedProblems?.count || 0) >= (totalProblems?.count || 0);
       } else if (assignment.assignment_type === 'math') {
-        // Legacy: check math_problems
-        const unanswered = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND child_answer IS NULL',
-          [req.params.id]
+        const incomplete = db.get<{ count: number }>(
+          `SELECT COUNT(*) as count FROM math_problems
+           WHERE assignment_id = ? AND is_correct != 1 AND (attempts_count IS NULL OR attempts_count < ?)`,
+          [req.params.id, MAX_ATTEMPTS]
         );
-        allAnswered = (unanswered?.count || 0) === 0;
+        allComplete = (incomplete?.count || 0) === 0;
       } else {
-        // Legacy: check reading_questions
         const unanswered = db.get<{ count: number }>(
           'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ? AND child_answer IS NULL',
           [req.params.id]
         );
-        allAnswered = (unanswered?.count || 0) === 0;
+        allComplete = (unanswered?.count || 0) === 0;
       }
 
-      if (allAnswered) {
+      if (allComplete) {
         db.run(
           "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
           [req.params.id]
         );
 
-        // Daily completion bonus
+        // Completion bonus
         db.run(
           'UPDATE child_coins SET balance = balance + 50, total_earned = total_earned + 50 WHERE child_id = ?',
           [req.child!.id]
@@ -400,22 +466,225 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
       }
     });
 
-    // Get updated coin balance
+    // Get updated coin balance and streak
     const coins = db.get<{ balance: number; current_streak: number }>(
       'SELECT balance, current_streak FROM child_coins WHERE child_id = ?',
       [req.child!.id]
     );
 
+    const currentStreak = coins?.current_streak || 0;
+    const canRetry = !questionComplete && !isReadingAssignment;
+
+    // Calculate potential reward for next attempt (for UI display)
+    let potentialReward = 0;
+    if (canRetry) {
+      const nextMultiplier = ATTEMPT_MULTIPLIERS[attemptNumber] || 0.33;
+      const baseReward = 10 + Math.min(currentStreak * 5, 25);
+      potentialReward = Math.floor(baseReward * nextMultiplier);
+    }
+
+    // Calculate hint availability
+    const canBuyHint = !isReadingAssignment
+      && assignment.hints_allowed === 1
+      && attemptNumber >= 1
+      && !hintPurchased
+      && !questionComplete
+      && hint !== null;
+    const hintCost = canBuyHint ? Math.floor(potentialReward / 2) : 0;
+
     res.json({
       isCorrect,
-      correctAnswer: isCorrect ? undefined : correctAnswer,
+      correctAnswer: questionComplete && !isCorrect ? correctAnswer : undefined,
       coinsEarned,
       totalCoins: coins?.balance || 0,
-      streak: coins?.current_streak || 0
+      streak: currentStreak,
+      // Multi-attempt fields
+      attemptNumber,
+      canRetry,
+      maxAttempts: isReadingAssignment ? 1 : MAX_ATTEMPTS,
+      potentialReward,
+      canBuyHint,
+      hintCost,
+      explanation: questionComplete ? explanation : undefined,
+      questionComplete
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to submit answer';
+    if (message === 'Question already completed' || message === 'Question already answered') {
+      return res.status(400).json({ error: message, questionComplete: true });
+    }
     console.error('Submit answer error:', error);
     res.status(500).json({ error: 'Failed to submit answer' });
+  }
+});
+
+// Buy hint for a question (child only)
+router.post('/:id/questions/:questionId/buy-hint', authenticateChild, (req, res) => {
+  try {
+    const { id: assignmentId, questionId } = req.params;
+    const db = getDb();
+
+    // Get assignment and verify access
+    const assignment = db.get<Assignment & { hints_allowed: number }>(
+      'SELECT * FROM assignments WHERE id = ? AND child_id = ?',
+      [assignmentId, req.child!.id]
+    );
+
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    // Check hints are allowed for this assignment
+    if (!assignment.hints_allowed) {
+      return res.status(403).json({ error: 'Hints not allowed for this assignment' });
+    }
+
+    // Only math assignments support hints
+    if (assignment.assignment_type !== 'math') {
+      return res.status(400).json({ error: 'Hints only available for math assignments' });
+    }
+
+    let hintText: string | null = null;
+    let hintCost = 0;
+
+    db.transaction(() => {
+      // Get problem and existing answer based on assignment type
+      if (assignment.package_id) {
+        const problem = db.get<PackageProblem>(
+          'SELECT * FROM package_problems WHERE id = ? AND package_id = ?',
+          [questionId, assignment.package_id]
+        );
+
+        if (!problem) {
+          throw new Error('Problem not found');
+        }
+
+        hintText = problem.hint;
+
+        const existingAnswer = db.get<AssignmentAnswer>(
+          'SELECT * FROM assignment_answers WHERE assignment_id = ? AND problem_id = ?',
+          [assignmentId, questionId]
+        );
+
+        // Validate hint purchase conditions
+        if (!existingAnswer || (existingAnswer.attempts_count || 0) < 1) {
+          throw new Error('Must attempt question first');
+        }
+        if (existingAnswer.hint_purchased) {
+          throw new Error('Hint already purchased');
+        }
+        if (existingAnswer.is_correct === 1 || (existingAnswer.attempts_count || 1) >= 3) {
+          throw new Error('Question already complete');
+        }
+
+        // Calculate hint cost (half of next attempt reward)
+        const nextAttemptMultiplier = existingAnswer.attempts_count === 1 ? 0.66 : 0.33;
+        const coins = db.get<{ current_streak: number }>(
+          'SELECT current_streak FROM child_coins WHERE child_id = ?',
+          [req.child!.id]
+        );
+        const streak = coins?.current_streak || 0;
+        const baseReward = 10 + Math.min(streak * 5, 25);
+        const potentialReward = Math.floor(baseReward * nextAttemptMultiplier);
+        hintCost = Math.floor(potentialReward / 2);
+
+        // Check balance
+        const balance = db.get<{ balance: number }>(
+          'SELECT balance FROM child_coins WHERE child_id = ?',
+          [req.child!.id]
+        );
+        if ((balance?.balance || 0) < hintCost) {
+          throw new Error('Not enough coins');
+        }
+
+        // Deduct coins
+        db.run(
+          'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
+          [hintCost, req.child!.id]
+        );
+
+        // Mark hint as purchased
+        db.run(
+          'UPDATE assignment_answers SET hint_purchased = 1, coins_spent_on_hint = ? WHERE assignment_id = ? AND problem_id = ?',
+          [hintCost, assignmentId, questionId]
+        );
+      } else {
+        // Legacy embedded math problems
+        const problem = db.get<MathProblem & { attempts_count?: number; hint_purchased?: number }>(
+          'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
+          [questionId, assignmentId]
+        );
+
+        if (!problem) {
+          throw new Error('Problem not found');
+        }
+
+        hintText = problem.hint || null;
+
+        // Validate hint purchase conditions
+        if (problem.child_answer === null || (problem.attempts_count || 0) < 1) {
+          throw new Error('Must attempt question first');
+        }
+        if (problem.hint_purchased) {
+          throw new Error('Hint already purchased');
+        }
+        if (problem.is_correct === 1 || (problem.attempts_count || 1) >= 3) {
+          throw new Error('Question already complete');
+        }
+
+        // Calculate hint cost
+        const nextAttemptMultiplier = (problem.attempts_count || 1) === 1 ? 0.66 : 0.33;
+        const coins = db.get<{ current_streak: number }>(
+          'SELECT current_streak FROM child_coins WHERE child_id = ?',
+          [req.child!.id]
+        );
+        const streak = coins?.current_streak || 0;
+        const baseReward = 10 + Math.min(streak * 5, 25);
+        const potentialReward = Math.floor(baseReward * nextAttemptMultiplier);
+        hintCost = Math.floor(potentialReward / 2);
+
+        // Check balance
+        const balance = db.get<{ balance: number }>(
+          'SELECT balance FROM child_coins WHERE child_id = ?',
+          [req.child!.id]
+        );
+        if ((balance?.balance || 0) < hintCost) {
+          throw new Error('Not enough coins');
+        }
+
+        // Deduct coins
+        db.run(
+          'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
+          [hintCost, req.child!.id]
+        );
+
+        // Mark hint as purchased
+        db.run(
+          'UPDATE math_problems SET hint_purchased = 1 WHERE id = ?',
+          [questionId]
+        );
+      }
+    });
+
+    // Get updated balance
+    const updatedCoins = db.get<{ balance: number }>(
+      'SELECT balance FROM child_coins WHERE child_id = ?',
+      [req.child!.id]
+    );
+
+    res.json({
+      success: true,
+      hint: hintText || 'No hint available',
+      coinsCost: hintCost,
+      newBalance: updatedCoins?.balance || 0
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to buy hint';
+    if (['Must attempt question first', 'Hint already purchased', 'Question already complete', 'Not enough coins'].includes(message)) {
+      return res.status(400).json({ error: message });
+    }
+    console.error('Buy hint error:', error);
+    res.status(500).json({ error: 'Failed to buy hint' });
   }
 });
 

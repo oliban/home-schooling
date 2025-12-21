@@ -21,6 +21,8 @@ interface Problem {
   child_answer?: string | null;
   is_correct?: number | null;
   answered_at?: string | null;
+  attempts_count?: number;
+  hint_purchased?: number;
 }
 
 interface AssignmentDetail {
@@ -100,11 +102,14 @@ export default function AssignmentPreview() {
 
   // Calculate stats
   const calculateStats = () => {
-    if (!assignment) return { total: 0, answered: 0, correct: 0 };
+    if (!assignment) return { total: 0, answered: 0, correct: 0, hintsUsed: 0, avgAttempts: 0 };
     const total = assignment.questions.length;
     const answered = assignment.questions.filter(q => q.answered_at).length;
     const correct = assignment.questions.filter(q => q.is_correct === 1).length;
-    return { total, answered, correct };
+    const hintsUsed = assignment.questions.filter(q => q.hint_purchased === 1).length;
+    const totalAttempts = assignment.questions.reduce((sum, q) => sum + (q.attempts_count || 1), 0);
+    const avgAttempts = answered > 0 ? totalAttempts / answered : 0;
+    return { total, answered, correct, hintsUsed, avgAttempts };
   };
 
   if (loading) {
@@ -178,7 +183,7 @@ export default function AssignmentPreview() {
         {assignment.status === 'completed' && (
           <div className="bg-white p-6 rounded-2xl shadow-sm mb-6">
             <h2 className="text-lg font-bold mb-4">{t('parent.assignmentPreview.results')}</h2>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-3 lg:grid-cols-5 gap-4 text-center">
               <div className="p-4 bg-gray-50 rounded-xl">
                 <div className="text-3xl font-bold text-gray-700">{stats.total}</div>
                 <div className="text-sm text-gray-500">{t('parent.assignmentPreview.totalQuestions')}</div>
@@ -193,6 +198,18 @@ export default function AssignmentPreview() {
                 </div>
                 <div className="text-sm text-gray-500">{t('parent.assignmentPreview.score')}</div>
               </div>
+              {assignment.assignment_type === 'math' && (
+                <>
+                  <div className="p-4 bg-yellow-50 rounded-xl">
+                    <div className="text-3xl font-bold text-yellow-600">{stats.hintsUsed}</div>
+                    <div className="text-sm text-gray-500">{t('parent.assignmentPreview.hintsUsed')}</div>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-xl">
+                    <div className="text-3xl font-bold text-orange-600">{stats.avgAttempts.toFixed(1)}</div>
+                    <div className="text-sm text-gray-500">{t('parent.assignmentPreview.avgAttempts')}</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -218,7 +235,7 @@ export default function AssignmentPreview() {
                     <span className="text-sm font-medium text-gray-500">
                       {t('parent.assignmentPreview.question', { number: index + 1 })}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {problem.difficulty && (
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${getDifficultyColor(
@@ -235,6 +252,16 @@ export default function AssignmentPreview() {
                             : 'bg-red-200 text-red-800'
                         }`}>
                           {answerStatus === 'correct' ? t('parent.assignmentPreview.correct') : t('parent.assignmentPreview.incorrect')}
+                        </span>
+                      )}
+                      {problem.attempts_count && problem.attempts_count > 1 && (
+                        <span className="px-2 py-0.5 rounded text-xs bg-orange-100 text-orange-700">
+                          {t('parent.assignmentPreview.attempts', { count: problem.attempts_count })}
+                        </span>
+                      )}
+                      {problem.hint_purchased === 1 && (
+                        <span className="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">
+                          {t('parent.assignmentPreview.usedHint')}
                         </span>
                       )}
                     </div>

@@ -26,6 +26,8 @@ interface Question {
   child_answer: string | null;
   is_correct: number | null;
   answered_at?: string | null;
+  attempts_count?: number;
+  hint_purchased?: number;
 }
 
 interface AssignmentData {
@@ -57,11 +59,22 @@ export default function AssignmentPage() {
     correctAnswer?: string;
     coinsEarned: number;
     streak: number;
+    // Multi-attempt fields
+    attemptNumber: number;
+    canRetry: boolean;
+    maxAttempts: number;
+    potentialReward: number;
+    canBuyHint: boolean;
+    hintCost: number;
+    explanation?: string;
+    questionComplete: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [totalCoins, setTotalCoins] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [purchasedHint, setPurchasedHint] = useState<string | null>(null);
+  const [buyingHint, setBuyingHint] = useState(false);
   const sketchPadRef = useRef<SketchPadHandle>(null);
 
   useEffect(() => {
@@ -120,6 +133,14 @@ export default function AssignmentPage() {
         correctAnswer: result.correctAnswer,
         coinsEarned: result.coinsEarned,
         streak: result.streak,
+        attemptNumber: result.attemptNumber,
+        canRetry: result.canRetry,
+        maxAttempts: result.maxAttempts,
+        potentialReward: result.potentialReward,
+        canBuyHint: result.canBuyHint,
+        hintCost: result.hintCost,
+        explanation: result.explanation,
+        questionComplete: result.questionComplete,
       });
 
       // Update local state
@@ -128,6 +149,7 @@ export default function AssignmentPage() {
         ...question,
         child_answer: answer,
         is_correct: result.isCorrect ? 1 : 0,
+        attempts_count: result.attemptNumber,
       };
       setAssignment({ ...assignment, questions: updatedQuestions });
 
@@ -138,11 +160,50 @@ export default function AssignmentPage() {
     }
   };
 
+  const handleBuyHint = async () => {
+    const token = localStorage.getItem('childToken');
+    if (!token || !assignment) return;
+
+    setBuyingHint(true);
+    try {
+      const question = assignment.questions[currentIndex];
+      const result = await assignments.buyHint(token, assignmentId, question.id);
+
+      setPurchasedHint(result.hint);
+      setTotalCoins(result.newBalance);
+
+      // Update local state to mark hint as purchased
+      const updatedQuestions = [...assignment.questions];
+      updatedQuestions[currentIndex] = {
+        ...question,
+        hint_purchased: 1,
+      };
+      setAssignment({ ...assignment, questions: updatedQuestions });
+
+      // Update feedback to reflect hint is no longer available
+      if (feedback) {
+        setFeedback({ ...feedback, canBuyHint: false });
+      }
+    } catch (err) {
+      console.error('Failed to buy hint:', err);
+    } finally {
+      setBuyingHint(false);
+    }
+  };
+
+  const handleRetry = () => {
+    // Clear feedback but keep same question - allow retry
+    setFeedback(null);
+    setAnswer('');
+    // Don't clear sketchpad - child might want to keep their work
+  };
+
   const handleNext = () => {
     if (!assignment) return;
 
     setFeedback(null);
     setAnswer('');
+    setPurchasedHint(null);
     sketchPadRef.current?.clear();
 
     if (currentIndex < assignment.questions.length - 1) {
@@ -321,10 +382,50 @@ export default function AssignmentPage() {
                 </div>
               )}
 
-              {!feedback.isCorrect && feedback.correctAnswer && (
-                <p className="text-gray-700">
+              {/* Attempt indicator for wrong answers that can retry */}
+              {!feedback.isCorrect && feedback.canRetry && (
+                <div className="mt-2 text-gray-600">
+                  <span>{t('assignment.attempt', { current: feedback.attemptNumber, max: feedback.maxAttempts })}</span>
+                  <span className="ml-2 text-sm text-gray-500">
+                    ({t('assignment.nextReward', { coins: feedback.potentialReward })})
+                  </span>
+                </div>
+              )}
+
+              {/* Buy Hint button */}
+              {feedback.canBuyHint && !purchasedHint && (
+                <button
+                  onClick={handleBuyHint}
+                  disabled={buyingHint || totalCoins < feedback.hintCost}
+                  className="mt-3 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {buyingHint
+                    ? t('assignment.buyingHint')
+                    : t('assignment.buyHint', { cost: feedback.hintCost })}
+                </button>
+              )}
+
+              {/* Purchased hint display */}
+              {purchasedHint && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="font-semibold text-yellow-700">{t('assignment.hintLabel')}</div>
+                  <p className="text-gray-700">{purchasedHint}</p>
+                </div>
+              )}
+
+              {/* Show correct answer only when question is complete and wrong */}
+              {!feedback.isCorrect && feedback.questionComplete && feedback.correctAnswer && (
+                <p className="mt-2 text-gray-700">
                   {t('assignment.correctAnswer', { answer: feedback.correctAnswer })}
                 </p>
+              )}
+
+              {/* Explanation (shown when question is complete) */}
+              {feedback.questionComplete && feedback.explanation && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="font-semibold text-blue-700">{t('assignment.explanationLabel')}</div>
+                  <p className="text-gray-700">{feedback.explanation}</p>
+                </div>
               )}
             </div>
           )}
@@ -338,6 +439,13 @@ export default function AssignmentPage() {
                 className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {submitting ? t('assignment.submitting') : `${t('assignment.submitButton')} →`}
+              </button>
+            ) : feedback.canRetry ? (
+              <button
+                onClick={handleRetry}
+                className="flex-1 py-4 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+              >
+                {t('assignment.tryAgain')} 🔄
               </button>
             ) : (
               <button
