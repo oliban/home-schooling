@@ -91,10 +91,16 @@ export default function AssignmentPage() {
       const data = await assignments.get(token, assignmentId);
       setAssignment(data);
 
-      // Find first unanswered question
-      const unansweredIndex = data.questions.findIndex(q => q.child_answer === null);
-      if (unansweredIndex >= 0) {
-        setCurrentIndex(unansweredIndex);
+      // Find first incomplete question:
+      // - Unanswered (child_answer === null), OR
+      // - Wrong answer but can still retry (is_correct !== 1 AND attempts < 3)
+      const MAX_ATTEMPTS = 3;
+      const incompleteIndex = data.questions.findIndex(q =>
+        q.child_answer === null ||
+        (q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+      );
+      if (incompleteIndex >= 0) {
+        setCurrentIndex(incompleteIndex);
       } else if (data.questions.length > 0) {
         setCompleted(true);
       }
@@ -213,8 +219,17 @@ export default function AssignmentPage() {
     setPurchasedHint(null);
     sketchPadRef.current?.clear();
 
-    if (currentIndex < assignment.questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    // Find next incomplete question (unanswered OR wrong with retries left)
+    const MAX_ATTEMPTS = 3;
+    const nextIncompleteIndex = assignment.questions.findIndex((q, i) =>
+      i > currentIndex && (
+        q.child_answer === null ||
+        (q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+      )
+    );
+
+    if (nextIncompleteIndex >= 0) {
+      setCurrentIndex(nextIncompleteIndex);
     } else {
       setCompleted(true);
       fireConfetti('fireworks');
