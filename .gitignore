@@ -36,5 +36,9 @@ coverage/
 backend/test-frames/
 *.traineddata
 
+# Generated OCR output
+backend/best-frames/
+data/scratch-images/
+
 # Lock files (optional - uncomment if you want to ignore)
 # package-lock.json
