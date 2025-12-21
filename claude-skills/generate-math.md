@@ -221,7 +221,7 @@ For `answer_type: "multiple_choice"`:
 
 ## Important Notes
 1. Always write in Swedish
-2. Include hints for medium/hard problems
-3. Explanations should show step-by-step solution
+2. Always include hints for ALL problems (required for the hint purchase system)
+3. Always include explanations with step-by-step solutions
 4. Use Swedish number format (comma for decimals: 3,5 not 3.5)
 5. Currency is always "kr" (kronor)
