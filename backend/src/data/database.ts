@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { seedCollectibles } from './collectibles-seed.js';
+import { collectibles } from './collectibles-seed.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,12 +30,6 @@ class HomeSchoolingDatabase {
     const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
     this.db.exec(schema);
     this.runMigrations();
-    this.seedData();
-  }
-
-  private seedData() {
-    // Seed collectibles (120 brainrot characters)
-    seedCollectibles(this);
   }
 
   private runMigrations() {
@@ -141,6 +135,20 @@ class HomeSchoolingDatabase {
     const mathColsForScratch = this.db.prepare("PRAGMA table_info(math_problems)").all() as { name: string }[];
     if (!mathColsForScratch.some(c => c.name === 'scratch_pad_image')) {
       this.db.exec('ALTER TABLE math_problems ADD COLUMN scratch_pad_image TEXT');
+    }
+
+    // Migration: Seed collectibles (one-time)
+    const collectibleCount = this.db.prepare('SELECT COUNT(*) as count FROM collectibles').get() as { count: number };
+    if (collectibleCount.count < 120) {
+      this.db.exec('DELETE FROM child_collectibles');
+      this.db.exec('DELETE FROM collectibles');
+      for (const collectible of collectibles) {
+        const id = collectible.name.toLowerCase().replace(/ /g, '_').replace(/'/g, '');
+        this.db.prepare(
+          'INSERT INTO collectibles (id, name, ascii_art, price, rarity) VALUES (?, ?, ?, ?, ?)'
+        ).run(id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity);
+      }
+      console.log(`Seeded ${collectibles.length} collectibles`);
     }
   }
 
