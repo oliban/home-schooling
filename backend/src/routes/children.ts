@@ -20,14 +20,31 @@ router.get('/', authenticateParent, (req, res) => {
       [req.user!.id]
     );
 
-    res.json(children.map(c => ({
-      id: c.id,
-      name: c.name,
-      birthdate: c.birthdate,
-      grade_level: c.grade_level,
-      coins: c.coins,
-      hasPin: !!c.pin_hash
-    })));
+    // Get brainrot (collectible) stats for each child
+    const childrenWithBrainrots = children.map(c => {
+      const brainrotStats = db.get<{ count: number; totalValue: number }>(
+        `SELECT
+           COUNT(chc.collectible_id) as count,
+           COALESCE(SUM(col.price), 0) as totalValue
+         FROM child_collectibles chc
+         JOIN collectibles col ON chc.collectible_id = col.id
+         WHERE chc.child_id = ?`,
+        [c.id]
+      ) || { count: 0, totalValue: 0 };
+
+      return {
+        id: c.id,
+        name: c.name,
+        birthdate: c.birthdate,
+        grade_level: c.grade_level,
+        coins: c.coins,
+        hasPin: !!c.pin_hash,
+        brainrotCount: brainrotStats.count,
+        brainrotValue: brainrotStats.totalValue
+      };
+    });
+
+    res.json(childrenWithBrainrots);
   } catch (error) {
     console.error('List children error:', error);
     res.status(500).json({ error: 'Failed to list children' });

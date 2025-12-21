@@ -625,3 +625,144 @@ describe('GET /children/stats-by-date', () => {
     expect(stats30d.length).toBeGreaterThan(stats7d.length);
   });
 });
+
+describe('GET /children - brainrot (collectible) stats', () => {
+  let parentId: string;
+  let childId1: string;
+  let childId2: string;
+  const testEmail = `test-brainrot-stats-${Date.now()}@example.com`;
+
+  beforeAll(async () => {
+    parentId = uuidv4();
+    childId1 = uuidv4();
+    childId2 = uuidv4();
+
+    const db = getDb();
+    const passwordHash = await bcrypt.hash('test1234', 10);
+    const pinHash = await bcrypt.hash('1234', 10);
+
+    // Create parent
+    db.run(
+      'INSERT INTO parents (id, email, password_hash, name) VALUES (?, ?, ?, ?)',
+      [parentId, testEmail, passwordHash, 'Test Parent']
+    );
+
+    // Create two children
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+      [childId1, parentId, 'Child With Brainrots', 3, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id) VALUES (?)', [childId1]);
+
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+      [childId2, parentId, 'Child Without Brainrots', 5, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id) VALUES (?)', [childId2]);
+  });
+
+  afterAll(() => {
+    const db = getDb();
+    db.run('DELETE FROM child_collectibles WHERE child_id IN (?, ?)', [childId1, childId2]);
+    db.run('DELETE FROM child_coins WHERE child_id IN (?, ?)', [childId1, childId2]);
+    db.run('DELETE FROM children WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM parents WHERE id = ?', [parentId]);
+  });
+
+  it('should return zero brainrot count and value for child with no collectibles', () => {
+    const db = getDb();
+
+    const brainrotStats = db.get<{ count: number; totalValue: number }>(
+      `SELECT
+         COUNT(chc.collectible_id) as count,
+         COALESCE(SUM(col.price), 0) as totalValue
+       FROM child_collectibles chc
+       JOIN collectibles col ON chc.collectible_id = col.id
+       WHERE chc.child_id = ?`,
+      [childId2]
+    ) || { count: 0, totalValue: 0 };
+
+    expect(brainrotStats.count).toBe(0);
+    expect(brainrotStats.totalValue).toBe(0);
+  });
+
+  it('should return correct brainrot count and value for child with collectibles', () => {
+    const db = getDb();
+
+    // Get two collectibles with known prices
+    const collectibles = db.all<{ id: string; price: number }>(
+      'SELECT id, price FROM collectibles LIMIT 2'
+    );
+    expect(collectibles.length).toBe(2);
+
+    // Give child1 two collectibles
+    db.run(
+      'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
+      [childId1, collectibles[0].id]
+    );
+    db.run(
+      'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
+      [childId1, collectibles[1].id]
+    );
+
+    const expectedTotal = collectibles[0].price + collectibles[1].price;
+
+    // Query brainrot stats for child1
+    const brainrotStats = db.get<{ count: number; totalValue: number }>(
+      `SELECT
+         COUNT(chc.collectible_id) as count,
+         COALESCE(SUM(col.price), 0) as totalValue
+       FROM child_collectibles chc
+       JOIN collectibles col ON chc.collectible_id = col.id
+       WHERE chc.child_id = ?`,
+      [childId1]
+    ) || { count: 0, totalValue: 0 };
+
+    expect(brainrotStats.count).toBe(2);
+    expect(brainrotStats.totalValue).toBe(expectedTotal);
+  });
+
+  it('should include brainrot stats when listing children', () => {
+    const db = getDb();
+
+    // Query children with brainrot stats (simulating the endpoint)
+    const children = db.all<{ id: string; name: string; coins: number }>(
+      `SELECT c.*, COALESCE(cc.balance, 0) as coins
+       FROM children c
+       LEFT JOIN child_coins cc ON c.id = cc.child_id
+       WHERE c.parent_id = ?
+       ORDER BY c.name`,
+      [parentId]
+    );
+
+    const childrenWithBrainrots = children.map(c => {
+      const brainrotStats = db.get<{ count: number; totalValue: number }>(
+        `SELECT
+           COUNT(chc.collectible_id) as count,
+           COALESCE(SUM(col.price), 0) as totalValue
+         FROM child_collectibles chc
+         JOIN collectibles col ON chc.collectible_id = col.id
+         WHERE chc.child_id = ?`,
+        [c.id]
+      ) || { count: 0, totalValue: 0 };
+
+      return {
+        ...c,
+        brainrotCount: brainrotStats.count,
+        brainrotValue: brainrotStats.totalValue
+      };
+    });
+
+    expect(childrenWithBrainrots.length).toBe(2);
+
+    // Child with brainrots should have count 2 and positive value
+    const childWithBrainrots = childrenWithBrainrots.find(c => c.name === 'Child With Brainrots');
+    expect(childWithBrainrots?.brainrotCount).toBe(2);
+    expect(childWithBrainrots?.brainrotValue).toBeGreaterThan(0);
+
+    // Child without brainrots should have count 0 and value 0
+    const childWithoutBrainrots = childrenWithBrainrots.find(c => c.name === 'Child Without Brainrots');
+    expect(childWithoutBrainrots?.brainrotCount).toBe(0);
+    expect(childWithoutBrainrots?.brainrotValue).toBe(0);
+  });
+});

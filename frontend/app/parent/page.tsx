@@ -16,6 +16,8 @@ interface ChildData {
   grade_level: number;
   coins: number;
   hasPin: boolean;
+  brainrotCount: number;
+  brainrotValue: number;
 }
 
 interface AssignmentData {
@@ -416,7 +418,7 @@ export default function ParentDashboard() {
                       <p className="text-sm text-gray-600">{t('parent.dashboard.grade', { level: child.grade_level })}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm mb-2">
                     <div className="flex items-center gap-1 text-yellow-600">
                       <span>💰</span>
                       <span>{child.coins} {t('common.coins')}</span>
@@ -425,6 +427,15 @@ export default function ParentDashboard() {
                       child.hasPin ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                     }`}>
                       {child.hasPin ? t('parent.dashboard.pinSet') : t('parent.dashboard.noPin')}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-1 text-purple-600">
+                      <span>🧠</span>
+                      <span>{child.brainrotCount} brainrots</span>
+                    </div>
+                    <div className="text-gray-600">
+                      {child.brainrotValue} coins
                     </div>
                   </div>
                 </Link>
