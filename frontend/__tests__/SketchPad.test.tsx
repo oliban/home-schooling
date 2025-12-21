@@ -261,4 +261,13 @@ describe('SketchPad', () => {
       expect(canvasContainer).toHaveStyle({ height: '300px' });
     });
   });
+
+  describe('Mobile touch handling', () => {
+    it('should have touch-action: none to prevent page scrolling', () => {
+      const { container } = render(<SketchPad />);
+      const canvasContainer = container.querySelector('.border-2.border-gray-200.rounded-b-xl') as HTMLElement;
+      expect(canvasContainer).toBeTruthy();
+      expect(canvasContainer.style.touchAction).toBe('none');
+    });
+  });
 });

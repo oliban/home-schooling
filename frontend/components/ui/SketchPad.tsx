@@ -362,7 +362,7 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
         <div
           ref={containerRef}
           className="border-2 border-gray-200 rounded-b-xl overflow-hidden bg-white relative"
-          style={{ height }}
+          style={{ height, touchAction: 'none' }}
         >
           <Stage
             ref={stageRef}
