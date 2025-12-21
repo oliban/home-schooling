@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getDb } from './data/database.js';
 import authRoutes from './routes/auth.js';
 import childrenRoutes from './routes/children.js';
@@ -7,12 +9,19 @@ import assignmentsRoutes from './routes/assignments.js';
 import collectiblesRoutes from './routes/collectibles.js';
 import packagesRoutes from './routes/packages.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 6001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increase limit for base64 images
+
+// Serve scratch pad images (from compiled location backend/dist/ go up 2 levels to project root)
+const scratchImagesDir = path.join(__dirname, '../../data/scratch-images');
+app.use('/api/scratch-images', express.static(scratchImagesDir));
 
 // Initialize database
 getDb();

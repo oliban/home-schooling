@@ -23,6 +23,7 @@ interface Problem {
   answered_at?: string | null;
   attempts_count?: number;
   hint_purchased?: number;
+  scratch_pad_image?: string | null;
 }
 
 interface AssignmentDetail {
@@ -306,6 +307,20 @@ export default function AssignmentPreview() {
                   {problem.explanation && (
                     <div className="mt-2 text-sm text-gray-500">
                       {t('parent.assignmentPreview.explanation')}: {problem.explanation}
+                    </div>
+                  )}
+
+                  {problem.scratch_pad_image && (
+                    <div className="mt-4">
+                      <div className="text-sm text-gray-500 mb-2">
+                        {t('parent.assignmentPreview.scratchPad')}:
+                      </div>
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${problem.scratch_pad_image}`}
+                        alt={t('parent.assignmentPreview.scratchPadAlt')}
+                        className="max-w-full h-auto border rounded-lg bg-white"
+                        style={{ maxHeight: '300px' }}
+                      />
                     </div>
                   )}
                 </div>

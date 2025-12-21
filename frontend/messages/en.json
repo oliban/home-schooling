@@ -215,6 +215,8 @@
       "avgAttempts": "Avg Attempts",
       "attempts": "{count} attempts",
       "usedHint": "Used hint",
+      "scratchPad": "Scratch Pad",
+      "scratchPadAlt": "Child's scratch pad drawing",
       "difficulty": {
         "easy": "Easy",
         "medium": "Medium",
@@ -231,6 +233,9 @@
     "title": "Sketch Pad",
     "clear": "Clear",
     "eraser": "Eraser",
-    "pen": "Pen"
+    "pen": "Pen",
+    "text": "Text",
+    "move": "Move",
+    "typeHere": "Type here..."
   }
 }

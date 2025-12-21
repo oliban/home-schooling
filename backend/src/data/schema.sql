@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS math_problems (
     answered_at DATETIME,
     attempts_count INTEGER DEFAULT 1,
     hint_purchased INTEGER DEFAULT 0,
+    scratch_pad_image TEXT,
     UNIQUE(assignment_id, problem_number)
 );
 
@@ -192,6 +193,7 @@ CREATE TABLE IF NOT EXISTS assignment_answers (
     attempts_count INTEGER DEFAULT 1,
     hint_purchased INTEGER DEFAULT 0,
     coins_spent_on_hint INTEGER DEFAULT 0,
+    scratch_pad_image TEXT,
     UNIQUE(assignment_id, problem_id)
 );
 

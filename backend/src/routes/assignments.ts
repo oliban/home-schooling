@@ -1,8 +1,46 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getDb } from '../data/database.js';
 import { authenticateParent, authenticateChild, authenticateAny } from '../middleware/auth.js';
 import type { Assignment, MathProblem, ReadingQuestion, PackageProblem, AssignmentAnswer } from '../types/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Scratch images directory (from compiled location backend/dist/routes/ go up 3 levels to project root)
+const SCRATCH_IMAGES_DIR = path.join(__dirname, '../../../data/scratch-images');
+
+// Ensure scratch images directory exists
+if (!fs.existsSync(SCRATCH_IMAGES_DIR)) {
+  fs.mkdirSync(SCRATCH_IMAGES_DIR, { recursive: true });
+}
+
+// Helper to save base64 image to disk
+function saveScratchPadImage(assignmentId: string, questionId: string, dataUrl: string): string | null {
+  try {
+    // dataUrl format: "data:image/png;base64,<base64data>"
+    const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) return null;
+
+    const ext = matches[1];
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const filename = `${assignmentId}_${questionId}.${ext}`;
+    const filepath = path.join(SCRATCH_IMAGES_DIR, filename);
+
+    fs.writeFileSync(filepath, buffer);
+
+    // Return relative path for database storage (without /api prefix since NEXT_PUBLIC_API_URL already includes /api)
+    return `/scratch-images/${filename}`;
+  } catch (error) {
+    console.error('Failed to save scratch pad image:', error);
+    return null;
+  }
+}
 
 const router = Router();
 
@@ -100,7 +138,7 @@ router.get('/:id', authenticateAny, (req, res) => {
     // Package-based assignments (both math and reading) load from package_problems
     if (assignment.package_id) {
       questions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
-        `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at, aa.attempts_count, aa.hint_purchased
+        `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at, aa.attempts_count, aa.hint_purchased, aa.scratch_pad_image
          FROM package_problems pp
          LEFT JOIN assignment_answers aa ON pp.id = aa.problem_id AND aa.assignment_id = ?
          WHERE pp.package_id = ?
@@ -218,10 +256,16 @@ router.post('/', authenticateParent, (req, res) => {
 // Submit answer (child only) - with multi-attempt support for math
 router.post('/:id/submit', authenticateChild, (req, res) => {
   try {
-    const { questionId, answer } = req.body;
+    const { questionId, answer, scratchPadImage } = req.body;
 
     if (!questionId || answer === undefined) {
       return res.status(400).json({ error: 'questionId and answer are required' });
+    }
+
+    // Save scratch pad image if provided (math assignments only)
+    let scratchPadPath: string | null = null;
+    if (scratchPadImage && typeof scratchPadImage === 'string') {
+      scratchPadPath = saveScratchPadImage(req.params.id, questionId, scratchPadImage);
     }
 
     const db = getDb();
@@ -309,14 +353,15 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
 
         // Insert or update answer
         db.run(
-          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at, attempts_count, hint_purchased)
-           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at, attempts_count, hint_purchased, scratch_pad_image)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)
            ON CONFLICT(assignment_id, problem_id) DO UPDATE SET
              child_answer = excluded.child_answer,
              is_correct = excluded.is_correct,
              answered_at = excluded.answered_at,
-             attempts_count = excluded.attempts_count`,
-          [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0, attemptNumber, hintPurchased ? 1 : 0]
+             attempts_count = excluded.attempts_count,
+             scratch_pad_image = COALESCE(excluded.scratch_pad_image, scratch_pad_image)`,
+          [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0, attemptNumber, hintPurchased ? 1 : 0, scratchPadPath]
         );
       } else if (assignment.assignment_type === 'math') {
         // Legacy embedded math problems
@@ -347,9 +392,9 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
         questionComplete = isCorrect || attemptNumber >= MAX_ATTEMPTS;
 
         db.run(
-          `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP, attempts_count = ?
+          `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP, attempts_count = ?, scratch_pad_image = COALESCE(?, scratch_pad_image)
            WHERE id = ?`,
-          [answer, isCorrect ? 1 : 0, attemptNumber, questionId]
+          [answer, isCorrect ? 1 : 0, attemptNumber, scratchPadPath, questionId]
         );
       } else {
         // Legacy embedded reading questions (single attempt only)

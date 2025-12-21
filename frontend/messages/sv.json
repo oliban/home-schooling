@@ -215,6 +215,8 @@
       "avgAttempts": "Snitt försök",
       "attempts": "{count} försök",
       "usedHint": "Använde tips",
+      "scratchPad": "Ritblock",
+      "scratchPadAlt": "Barnets ritblock",
       "difficulty": {
         "easy": "Lätt",
         "medium": "Medel",
@@ -231,6 +233,9 @@
     "title": "Ritblock",
     "clear": "Rensa",
     "eraser": "Suddgummi",
-    "pen": "Penna"
+    "pen": "Penna",
+    "text": "Text",
+    "move": "Flytta",
+    "typeHere": "Skriv här..."
   }
 }

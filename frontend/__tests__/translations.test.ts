@@ -87,6 +87,34 @@ describe('Translation files', () => {
     });
   });
 
+  describe('SketchPad translations', () => {
+    const sketchPadKeys = [
+      'sketchPad.title',
+      'sketchPad.clear',
+      'sketchPad.eraser',
+      'sketchPad.pen',
+      'sketchPad.text',
+      'sketchPad.move',
+      'sketchPad.typeHere',
+    ];
+
+    it('should have all SketchPad translations in Swedish', () => {
+      for (const key of sketchPadKeys) {
+        const value = getNestedValue(svMessages, key);
+        expect(value, `Missing Swedish translation for: ${key}`).toBeDefined();
+        expect(typeof value, `Swedish translation for ${key} should be a string`).toBe('string');
+      }
+    });
+
+    it('should have all SketchPad translations in English', () => {
+      for (const key of sketchPadKeys) {
+        const value = getNestedValue(enMessages, key);
+        expect(value, `Missing English translation for: ${key}`).toBeDefined();
+        expect(typeof value, `English translation for ${key} should be a string`).toBe('string');
+      }
+    });
+  });
+
   describe('Translation parity', () => {
     it('should have the same top-level keys in both languages', () => {
       const svKeys = Object.keys(svMessages).sort();

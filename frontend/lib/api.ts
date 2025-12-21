@@ -159,6 +159,7 @@ export const assignments = {
         answered_at?: string | null;
         attempts_count?: number;
         hint_purchased?: number;
+        scratch_pad_image?: string | null;
       }>;
     }>(`/assignments/${id}`, { token }),
 
@@ -189,7 +190,7 @@ export const assignments = {
     }
   ) => fetchApi<{ id: string }>('/assignments', { method: 'POST', body: data, token }),
 
-  submit: (token: string, assignmentId: string, data: { questionId: string; answer: string }) =>
+  submit: (token: string, assignmentId: string, data: { questionId: string; answer: string; scratchPadImage?: string | null }) =>
     fetchApi<{
       isCorrect: boolean;
       correctAnswer?: string;

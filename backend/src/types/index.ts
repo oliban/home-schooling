@@ -69,6 +69,7 @@ export interface MathProblem {
   child_answer: string | null;
   is_correct: number | null;
   answered_at: string | null;
+  scratch_pad_image?: string | null;
 }
 
 export interface ReadingQuestion {
@@ -137,6 +138,7 @@ export interface AssignmentAnswer {
   attempts_count?: number;
   hint_purchased?: number;
   coins_spent_on_hint?: number;
+  scratch_pad_image?: string | null;
 }
 
 // Import package request types

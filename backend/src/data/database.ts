@@ -132,6 +132,16 @@ class HomeSchoolingDatabase {
     if (!mathProblemColumns.some(c => c.name === 'hint_purchased')) {
       this.db.exec('ALTER TABLE math_problems ADD COLUMN hint_purchased INTEGER DEFAULT 0');
     }
+
+    // Migration: Add scratch_pad_image column to assignment_answers and math_problems
+    const answerColsForScratch = this.db.prepare("PRAGMA table_info(assignment_answers)").all() as { name: string }[];
+    if (!answerColsForScratch.some(c => c.name === 'scratch_pad_image')) {
+      this.db.exec('ALTER TABLE assignment_answers ADD COLUMN scratch_pad_image TEXT');
+    }
+    const mathColsForScratch = this.db.prepare("PRAGMA table_info(math_problems)").all() as { name: string }[];
+    if (!mathColsForScratch.some(c => c.name === 'scratch_pad_image')) {
+      this.db.exec('ALTER TABLE math_problems ADD COLUMN scratch_pad_image TEXT');
+    }
   }
 
   get connection(): Database.Database {

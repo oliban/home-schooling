@@ -116,9 +116,16 @@ export default function AssignmentPage() {
 
     try {
       const question = assignment.questions[currentIndex];
+
+      // Capture scratch pad image for math assignments (only if not empty)
+      const scratchPadImage = assignment.assignment_type === 'math'
+        ? sketchPadRef.current?.getImage()
+        : undefined;
+
       const result = await assignments.submit(token, assignmentId, {
         questionId: question.id,
         answer: answer.trim(),
+        ...(scratchPadImage && { scratchPadImage }),
       });
 
       setTotalCoins(result.totalCoins);
