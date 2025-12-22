@@ -136,8 +136,10 @@ describe('CORS Configuration', () => {
       expect(options.origin).toEqual([
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:5001',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3001',
+        'http://127.0.0.1:5001',
       ]);
       expect(options.credentials).toBe(true);
     });
@@ -215,8 +217,10 @@ describe('CORS Configuration', () => {
       expect(result).toEqual([
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:5001',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3001',
+        'http://127.0.0.1:5001',
       ]);
     });
 

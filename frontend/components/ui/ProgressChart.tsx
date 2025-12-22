@@ -11,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Cell,
 } from 'recharts';
 
 export interface DailyStatsData {
@@ -48,12 +49,15 @@ function getDateRangeString(period: '7d' | '30d' | 'all', locale: string): strin
   return '';
 }
 
-// Generate colors for children
+// Ordered by contrast priority: dark, light, medium, then variants
+// 2 children get maximum contrast (dark vs light)
 const CHILD_COLORS = [
-  { correct: '#22c55e', incorrect: '#ef4444' },  // green/red
-  { correct: '#3b82f6', incorrect: '#f97316' },  // blue/orange
-  { correct: '#8b5cf6', incorrect: '#ec4899' },  // purple/pink
-  { correct: '#14b8a6', incorrect: '#f59e0b' },  // teal/amber
+  { correct: '#166534', incorrect: '#991b1b' },  // 1: dark green/red
+  { correct: '#86efac', incorrect: '#fca5a5' },  // 2: light green/red
+  { correct: '#22c55e', incorrect: '#ef4444' },  // 3: medium green/red
+  { correct: '#14b8a6', incorrect: '#f97316' },  // 4: teal-green/orange
+  { correct: '#10b981', incorrect: '#f43f5e' },  // 5: emerald/rose
+  { correct: '#84cc16', incorrect: '#ec4899' },  // 6: lime/pink
 ];
 
 export default function ProgressChart({ data, period, onPeriodChange }: ProgressChartProps) {
@@ -91,6 +95,12 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
   const children = [...new Set(data.map(d => d.childName))].sort();
   const dates = [...new Set(data.map(d => d.date))].sort();
 
+  // Create child to index mapping for colors
+  const childIndexMap = new Map<string, number>();
+  children.forEach((childName, index) => {
+    childIndexMap.set(childName, index);
+  });
+
   // Create a map for quick lookup
   const dataMap = new Map<string, DailyStatsData>();
   for (const item of data) {
@@ -107,6 +117,7 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
     subject: string;
     correct: number;
     incorrect: number;
+    childIndex: number;
   }> = [];
 
   // Sort dates ascending for display
@@ -132,6 +143,7 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
             subject: subjectLabel,
             correct: item.correct,
             incorrect: item.incorrect,
+            childIndex: childIndexMap.get(childName) ?? 0,
           });
         }
       }
@@ -225,31 +237,57 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
               <Bar
                 dataKey="correct"
                 stackId="bar"
-                fill="#22c55e"
                 name={t('parent.stats.correct')}
-              />
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`correct-${index}`}
+                    fill={CHILD_COLORS[entry.childIndex % CHILD_COLORS.length].correct}
+                  />
+                ))}
+              </Bar>
               <Bar
                 dataKey="incorrect"
                 stackId="bar"
-                fill="#ef4444"
                 name={t('parent.stats.incorrect')}
                 radius={[4, 4, 0, 0]}
-              />
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`incorrect-${index}`}
+                    fill={CHILD_COLORS[entry.childIndex % CHILD_COLORS.length].incorrect}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Legend explaining colors */}
-      <div className="flex justify-center gap-6 mt-2 text-sm">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-green-500" />
-          <span className="text-gray-600">{t('parent.stats.correct')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-red-500" />
-          <span className="text-gray-600">{t('parent.stats.incorrect')}</span>
-        </div>
+      {/* Legend explaining colors per child */}
+      <div className="flex flex-wrap justify-center gap-4 mt-2 text-sm">
+        {children.map((childName, index) => {
+          const colors = CHILD_COLORS[index % CHILD_COLORS.length];
+          return (
+            <div key={childName} className="flex items-center gap-2">
+              <span className="text-gray-700 font-medium">{childName}:</span>
+              <div className="flex items-center gap-1">
+                <div
+                  className="w-3 h-3 rounded"
+                  style={{ backgroundColor: colors.correct }}
+                />
+                <span className="text-gray-600">{t('parent.stats.correct')}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div
+                  className="w-3 h-3 rounded"
+                  style={{ backgroundColor: colors.incorrect }}
+                />
+                <span className="text-gray-600">{t('parent.stats.incorrect')}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
