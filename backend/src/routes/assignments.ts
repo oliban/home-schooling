@@ -10,8 +10,11 @@ import type { Assignment, MathProblem, ReadingQuestion, PackageProblem, Assignme
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Scratch images directory (from compiled location backend/dist/routes/ go up 3 levels to project root)
-const SCRATCH_IMAGES_DIR = path.join(__dirname, '../../../data/scratch-images');
+// Scratch images directory
+// Use DATA_DIR env var if set, otherwise derive from DATABASE_PATH, otherwise use relative path
+const dataDir = process.env.DATA_DIR ||
+  (process.env.DATABASE_PATH ? path.dirname(process.env.DATABASE_PATH) : path.join(__dirname, '../../../data'));
+const SCRATCH_IMAGES_DIR = path.join(dataDir, 'scratch-images');
 
 // Ensure scratch images directory exists
 if (!fs.existsSync(SCRATCH_IMAGES_DIR)) {

@@ -19,8 +19,11 @@ const PORT = process.env.PORT || 6001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Increase limit for base64 images
 
-// Serve scratch pad images (from compiled location backend/dist/ go up 2 levels to project root)
-const scratchImagesDir = path.join(__dirname, '../../data/scratch-images');
+// Serve scratch pad images
+// Use DATA_DIR env var if set, otherwise derive from DATABASE_PATH, otherwise use relative path
+const dataDir = process.env.DATA_DIR ||
+  (process.env.DATABASE_PATH ? path.dirname(process.env.DATABASE_PATH) : path.join(__dirname, '../../data'));
+const scratchImagesDir = path.join(dataDir, 'scratch-images');
 app.use('/api/scratch-images', express.static(scratchImagesDir));
 
 // Initialize database
