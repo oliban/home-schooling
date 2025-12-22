@@ -8,8 +8,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // From compiled location (backend/dist/data/) go up 3 levels to project root, then into data/
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../../data/homeschooling.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../../data/teacher.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
+const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
 class HomeSchoolingDatabase {
   private db: Database.Database;
@@ -155,6 +156,32 @@ class HomeSchoolingDatabase {
         ).run(id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity);
       }
       console.log(`Seeded ${collectibles.length} collectibles`);
+    }
+
+    // Migration: Run SQL migration files from migrations directory
+    this.runSqlMigrations();
+  }
+
+  private runSqlMigrations() {
+    // Check if migrations directory exists
+    if (!fs.existsSync(MIGRATIONS_DIR)) {
+      return;
+    }
+
+    // Get all SQL migration files sorted by name
+    const migrationFiles = fs.readdirSync(MIGRATIONS_DIR)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
+
+    for (const file of migrationFiles) {
+      const filePath = path.join(MIGRATIONS_DIR, file);
+      const sql = fs.readFileSync(filePath, 'utf-8');
+      try {
+        this.db.exec(sql);
+      } catch (err) {
+        // Ignore errors from INSERT OR IGNORE and CREATE IF NOT EXISTS
+        // These are expected when running migrations multiple times
+      }
     }
   }
 

@@ -20,7 +20,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Lägg ihop de två talen",
-          "explanation": "47 + 28 = 75 äpplen"
+          "explanation": "47 + 28 = 75 äpplen",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Det finns 83 fåglar i ett träd. 35 fåglar flyger iväg. Hur många fåglar är kvar?",
@@ -28,7 +31,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Dra bort antalet som flyger iväg",
-          "explanation": "83 - 35 = 48 fåglar"
+          "explanation": "83 - 35 = 48 fåglar",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Erik har 156 kr. Han får 89 kr av sin mormor. Hur mycket pengar har Erik nu?",
@@ -36,7 +42,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Addera de två beloppen",
-          "explanation": "156 + 89 = 245 kr"
+          "explanation": "156 + 89 = 245 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "En skola har 234 elever. 67 elever är hemma sjuka. Hur många elever är i skolan?",
@@ -44,7 +53,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Subtrahera de sjuka från totalen",
-          "explanation": "234 - 67 = 167 elever"
+          "explanation": "234 - 67 = 167 elever",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Maja samlar frimärken. Hon har 58 svenska och 34 utländska frimärken. Hur många frimärken har hon totalt?",
@@ -52,7 +64,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Lägg ihop alla frimärken",
-          "explanation": "58 + 34 = 92 frimärken"
+          "explanation": "58 + 34 = 92 frimärken",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Det var 100 kakor på ett fat. Barnen åt 43 kakor. Hur många kakor är kvar?",
@@ -60,7 +75,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Ta bort de uppätna kakorna",
-          "explanation": "100 - 43 = 57 kakor"
+          "explanation": "100 - 43 = 57 kakor",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "En buss har 45 passagerare. Vid nästa hållplats kliver 18 på och 7 av. Hur många passagerare finns på bussen nu?",
@@ -68,7 +86,10 @@
           "answer_type": "number",
           "difficulty": "hard",
           "hint": "Först addera de som kliver på, sedan subtrahera de som kliver av",
-          "explanation": "45 + 18 = 63, sedan 63 - 7 = 56 passagerare"
+          "explanation": "45 + 18 = 63, sedan 63 - 7 = 56 passagerare",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Kalle har 200 kr. Han köper en bok för 79 kr. Hur mycket pengar har han kvar?",
@@ -76,7 +97,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Dra bort bokens pris från pengarna",
-          "explanation": "200 - 79 = 121 kr"
+          "explanation": "200 - 79 = 121 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "I en ask finns 65 röda och 47 blå kulor. Hur många kulor finns det totalt?",
@@ -84,7 +108,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Addera röda och blå kulor",
-          "explanation": "65 + 47 = 112 kulor"
+          "explanation": "65 + 47 = 112 kulor",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "En affär hade 350 bananer. De sålde 186 bananer. Hur många bananer har de kvar?",
@@ -92,7 +119,10 @@
           "answer_type": "number",
           "difficulty": "hard",
           "hint": "Subtrahera de sålda bananerna från totalen",
-          "explanation": "350 - 186 = 164 bananer"
+          "explanation": "350 - 186 = 164 bananer",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         }
       ]
     },
@@ -111,7 +141,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Tänk 3 + 3 + 3 + 3",
-          "explanation": "3 × 4 = 12"
+          "explanation": "3 × 4 = 12",
+          "lgr22_codes": [
+            "MA-TAL-04"
+          ]
         },
         {
           "question_text": "Vad är 5 × 5?",
@@ -119,7 +152,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Fem gånger fem",
-          "explanation": "5 × 5 = 25"
+          "explanation": "5 × 5 = 25",
+          "lgr22_codes": [
+            "MA-TAL-04"
+          ]
         },
         {
           "question_text": "Det finns 4 burkar med 5 pennor i varje. Hur många pennor finns det totalt?",
@@ -127,7 +163,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Multiplicera antal burkar med pennor per burk",
-          "explanation": "4 × 5 = 20 pennor"
+          "explanation": "4 × 5 = 20 pennor",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är 2 × 8?",
@@ -135,7 +174,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Dubbla 8",
-          "explanation": "2 × 8 = 16"
+          "explanation": "2 × 8 = 16",
+          "lgr22_codes": [
+            "MA-TAL-04"
+          ]
         },
         {
           "question_text": "Anna köper 3 påsar godis. Varje påse kostar 9 kr. Hur mycket kostar det totalt?",
@@ -143,7 +185,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Multiplicera antal påsar med priset per påse",
-          "explanation": "3 × 9 = 27 kr"
+          "explanation": "3 × 9 = 27 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är 4 × 7?",
@@ -151,7 +196,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Fyra gånger sju",
-          "explanation": "4 × 7 = 28"
+          "explanation": "4 × 7 = 28",
+          "lgr22_codes": [
+            "MA-TAL-04"
+          ]
         },
         {
           "question_text": "Det finns 5 rader med 6 stolar i varje rad. Hur många stolar finns det?",
@@ -159,7 +207,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Multiplicera antal rader med stolar per rad",
-          "explanation": "5 × 6 = 30 stolar"
+          "explanation": "5 × 6 = 30 stolar",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är 3 × 9?",
@@ -167,7 +218,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Tre gånger nio",
-          "explanation": "3 × 9 = 27"
+          "explanation": "3 × 9 = 27",
+          "lgr22_codes": [
+            "MA-TAL-04"
+          ]
         },
         {
           "question_text": "Oscar har 4 askar med 8 leksaker i varje. Hur många leksaker har han?",
@@ -175,7 +229,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Multiplicera antal askar med leksaker per ask",
-          "explanation": "4 × 8 = 32 leksaker"
+          "explanation": "4 × 8 = 32 leksaker",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är 5 × 7?",
@@ -183,7 +240,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Fem gånger sju",
-          "explanation": "5 × 7 = 35"
+          "explanation": "5 × 7 = 35",
+          "lgr22_codes": [
+            "MA-TAL-04"
+          ]
         }
       ]
     },
@@ -202,16 +262,27 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Dela 10 i två lika delar",
-          "explanation": "10 ÷ 2 = 5"
+          "explanation": "10 ÷ 2 = 5",
+          "lgr22_codes": [
+            "MA-TAL-01"
+          ]
         },
         {
           "question_text": "Lisa delar en pizza i 4 lika stora bitar. Hur stor del av pizzan är en bit?",
           "correct_answer": "en fjärdedel",
           "answer_type": "multiple_choice",
-          "options": ["A: en halv", "B: en tredjedel", "C: en fjärdedel", "D: en femtedel"],
+          "options": [
+            "A: en halv",
+            "B: en tredjedel",
+            "C: en fjärdedel",
+            "D: en femtedel"
+          ],
           "difficulty": "easy",
           "hint": "4 bitar betyder att varje bit är 1/4",
-          "explanation": "En pizza delad i 4 bitar ger fjärdedelar"
+          "explanation": "En pizza delad i 4 bitar ger fjärdedelar",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är hälften av 20?",
@@ -219,16 +290,27 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Dela 20 i två lika delar",
-          "explanation": "20 ÷ 2 = 10"
+          "explanation": "20 ÷ 2 = 10",
+          "lgr22_codes": [
+            "MA-TAL-01"
+          ]
         },
         {
           "question_text": "En tårta delas i 3 lika stora bitar. Erik äter en bit. Hur stor del av tårtan åt Erik?",
           "correct_answer": "en tredjedel",
           "answer_type": "multiple_choice",
-          "options": ["A: en halv", "B: en tredjedel", "C: en fjärdedel", "D: två tredjedelar"],
+          "options": [
+            "A: en halv",
+            "B: en tredjedel",
+            "C: en fjärdedel",
+            "D: två tredjedelar"
+          ],
           "difficulty": "easy",
           "hint": "Tre bitar betyder att varje bit är 1/3",
-          "explanation": "En tårta delad i 3 bitar: varje bit är en tredjedel"
+          "explanation": "En tårta delad i 3 bitar: varje bit är en tredjedel",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är en fjärdedel av 8?",
@@ -236,7 +318,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Dela 8 i fyra lika delar",
-          "explanation": "8 ÷ 4 = 2"
+          "explanation": "8 ÷ 4 = 2",
+          "lgr22_codes": [
+            "MA-TAL-03"
+          ]
         },
         {
           "question_text": "Maja har 12 äpplen. Hon ger bort hälften. Hur många äpplen ger hon bort?",
@@ -244,7 +329,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Hälften av 12",
-          "explanation": "12 ÷ 2 = 6 äpplen"
+          "explanation": "12 ÷ 2 = 6 äpplen",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vad är en tredjedel av 9?",
@@ -252,7 +340,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Dela 9 i tre lika delar",
-          "explanation": "9 ÷ 3 = 3"
+          "explanation": "9 ÷ 3 = 3",
+          "lgr22_codes": [
+            "MA-TAL-03"
+          ]
         },
         {
           "question_text": "En chokladkaka har 16 bitar. Kalle äter en fjärdedel. Hur många bitar äter Kalle?",
@@ -260,16 +351,28 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "En fjärdedel av 16",
-          "explanation": "16 ÷ 4 = 4 bitar"
+          "explanation": "16 ÷ 4 = 4 bitar",
+          "lgr22_codes": [
+            "MA-TAL-03",
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vilken bråkdel är störst?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: 1/4", "B: 1/2", "C: 1/3", "D: 1/5"],
+          "options": [
+            "A: 1/4",
+            "B: 1/2",
+            "C: 1/3",
+            "D: 1/5"
+          ],
           "difficulty": "hard",
           "hint": "Ju färre delar, desto större är varje del",
-          "explanation": "1/2 (en halv) är störst eftersom den delar i minst antal delar"
+          "explanation": "1/2 (en halv) är störst eftersom den delar i minst antal delar",
+          "lgr22_codes": [
+            "MA-TAL-03"
+          ]
         },
         {
           "question_text": "Det finns 24 bollar. En tredjedel är röda. Hur många röda bollar finns det?",
@@ -277,7 +380,11 @@
           "answer_type": "number",
           "difficulty": "hard",
           "hint": "Dela 24 i tre lika delar",
-          "explanation": "24 ÷ 3 = 8 röda bollar"
+          "explanation": "24 ÷ 3 = 8 röda bollar",
+          "lgr22_codes": [
+            "MA-TAL-03",
+            "MA-PRO-01"
+          ]
         }
       ]
     },
@@ -296,16 +403,27 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Tri betyder tre",
-          "explanation": "En triangel har 3 sidor"
+          "explanation": "En triangel har 3 sidor",
+          "lgr22_codes": [
+            "MA-GEO-01"
+          ]
         },
         {
           "question_text": "Vilken form har en fotboll?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Kvadrat", "B: Triangel", "C: Cirkel", "D: Rektangel"],
+          "options": [
+            "A: Kvadrat",
+            "B: Triangel",
+            "C: Cirkel",
+            "D: Rektangel"
+          ],
           "difficulty": "easy",
           "hint": "En boll är rund",
-          "explanation": "En fotboll är rund som en cirkel (sfär i 3D)"
+          "explanation": "En fotboll är rund som en cirkel (sfär i 3D)",
+          "lgr22_codes": [
+            "MA-TAL-01"
+          ]
         },
         {
           "question_text": "Hur många hörn har en rektangel?",
@@ -313,7 +431,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Räkna hörnen på formen",
-          "explanation": "En rektangel har 4 hörn"
+          "explanation": "En rektangel har 4 hörn",
+          "lgr22_codes": [
+            "MA-GEO-01"
+          ]
         },
         {
           "question_text": "En sida på en kvadrat är 5 cm lång. Hur lång är omkretsen?",
@@ -321,7 +442,12 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "En kvadrat har 4 lika långa sidor",
-          "explanation": "4 × 5 = 20 cm"
+          "explanation": "4 × 5 = 20 cm",
+          "lgr22_codes": [
+            "MA-GEO-01",
+            "MA-GEO-07",
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Hur många centimeter är 1 meter?",
@@ -329,7 +455,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Centi betyder hundradel",
-          "explanation": "1 meter = 100 centimeter"
+          "explanation": "1 meter = 100 centimeter",
+          "lgr22_codes": [
+            "MA-TAL-01"
+          ]
         },
         {
           "question_text": "En rektangel är 6 cm lång och 4 cm bred. Vad är omkretsen?",
@@ -337,16 +466,29 @@
           "answer_type": "number",
           "difficulty": "hard",
           "hint": "Lägg ihop alla fyra sidorna: 6 + 4 + 6 + 4",
-          "explanation": "6 + 4 + 6 + 4 = 20 cm"
+          "explanation": "6 + 4 + 6 + 4 = 20 cm",
+          "lgr22_codes": [
+            "MA-GEO-01",
+            "MA-GEO-07",
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Vilken form har ett fönster vanligtvis?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Triangel", "B: Cirkel", "C: Pentagon", "D: Rektangel"],
+          "options": [
+            "A: Triangel",
+            "B: Cirkel",
+            "C: Pentagon",
+            "D: Rektangel"
+          ],
           "difficulty": "easy",
           "hint": "Tänk på vanliga husfönster",
-          "explanation": "De flesta fönster är rektangulära"
+          "explanation": "De flesta fönster är rektangulära",
+          "lgr22_codes": [
+            "MA-TAL-01"
+          ]
         },
         {
           "question_text": "Ett rep är 2 meter långt. Hur många centimeter är det?",
@@ -354,7 +496,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "1 meter = 100 cm",
-          "explanation": "2 × 100 = 200 cm"
+          "explanation": "2 × 100 = 200 cm",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Hur många sidor har en sexhörning?",
@@ -362,16 +507,27 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Sex-hörning",
-          "explanation": "En sexhörning har 6 sidor"
+          "explanation": "En sexhörning har 6 sidor",
+          "lgr22_codes": [
+            "MA-TAL-01"
+          ]
         },
         {
           "question_text": "En sträcka är 150 cm. Hur många meter och centimeter är det?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: 1 m 5 cm", "B: 1 m 50 cm", "C: 15 m", "D: 1 m 500 cm"],
+          "options": [
+            "A: 1 m 5 cm",
+            "B: 1 m 50 cm",
+            "C: 15 m",
+            "D: 1 m 500 cm"
+          ],
           "difficulty": "hard",
           "hint": "100 cm = 1 m, så 150 cm = 100 cm + 50 cm",
-          "explanation": "150 cm = 1 meter och 50 centimeter"
+          "explanation": "150 cm = 1 meter och 50 centimeter",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         }
       ]
     },
@@ -390,7 +546,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Multiplicera priset med antalet",
-          "explanation": "15 × 2 = 30 kr"
+          "explanation": "15 × 2 = 30 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Erik har 50 kr. Han köper en tidning för 35 kr. Hur mycket får han tillbaka?",
@@ -398,7 +557,10 @@
           "answer_type": "number",
           "difficulty": "easy",
           "hint": "Dra bort priset från pengarna",
-          "explanation": "50 - 35 = 15 kr"
+          "explanation": "50 - 35 = 15 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "En bok kostar 89 kr. Anna betalar med en hundralapp. Hur mycket får hon tillbaka?",
@@ -406,7 +568,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "100 - 89",
-          "explanation": "100 - 89 = 11 kr"
+          "explanation": "100 - 89 = 11 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Oscar sparar 5 kr varje dag. Hur mycket har han sparat efter en vecka (7 dagar)?",
@@ -414,7 +579,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Multiplicera dagsbeloppet med antal dagar",
-          "explanation": "5 × 7 = 35 kr"
+          "explanation": "5 × 7 = 35 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Tre barn delar lika på 24 karameller. Hur många karameller får varje barn?",
@@ -422,7 +590,10 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Dela antalet karameller med antal barn",
-          "explanation": "24 ÷ 3 = 8 karameller"
+          "explanation": "24 ÷ 3 = 8 karameller",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "En biljett till bio kostar 45 kr. Hur mycket kostar 3 biljetter?",
@@ -430,16 +601,27 @@
           "answer_type": "number",
           "difficulty": "hard",
           "hint": "Multiplicera biljettpriset med 3",
-          "explanation": "45 × 3 = 135 kr"
+          "explanation": "45 × 3 = 135 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Klockan är 14:00. Filmen börjar om 2 timmar och 30 minuter. Vilken tid börjar filmen?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: 16:00", "B: 16:15", "C: 16:30", "D: 17:00"],
+          "options": [
+            "A: 16:00",
+            "B: 16:15",
+            "C: 16:30",
+            "D: 17:00"
+          ],
           "difficulty": "hard",
           "hint": "Lägg till 2 timmar och 30 minuter till 14:00",
-          "explanation": "14:00 + 2:30 = 16:30"
+          "explanation": "14:00 + 2:30 = 16:30",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Lisa har 4 tjugor och 3 femkronor. Hur mycket pengar har hon?",
@@ -447,7 +629,10 @@
           "answer_type": "number",
           "difficulty": "hard",
           "hint": "Räkna ut värdet av tjugorna och femkronorna separat",
-          "explanation": "4 × 20 = 80, 3 × 5 = 15, 80 + 15 = 95 kr"
+          "explanation": "4 × 20 = 80, 3 × 5 = 15, 80 + 15 = 95 kr",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "Det går 12 barn i en klass. Hälften är flickor. Hur många pojkar finns det?",
@@ -455,16 +640,27 @@
           "answer_type": "number",
           "difficulty": "medium",
           "hint": "Om hälften är flickor, är resten pojkar",
-          "explanation": "12 ÷ 2 = 6 pojkar"
+          "explanation": "12 ÷ 2 = 6 pojkar",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         },
         {
           "question_text": "En buss avgår kl 08:15 och resan tar 45 minuter. När kommer bussen fram?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: 08:45", "B: 09:00", "C: 09:15", "D: 09:45"],
+          "options": [
+            "A: 08:45",
+            "B: 09:00",
+            "C: 09:15",
+            "D: 09:45"
+          ],
           "difficulty": "hard",
           "hint": "Lägg till 45 minuter till avgångstiden",
-          "explanation": "08:15 + 45 minuter = 09:00"
+          "explanation": "08:15 + 45 minuter = 09:00",
+          "lgr22_codes": [
+            "MA-PRO-01"
+          ]
         }
       ]
     }

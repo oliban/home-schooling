@@ -18,7 +18,10 @@
         "C: Han arbetade på ett företag som tillverkade borrar",
         "D: Han var lärare"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "lgr22_codes": [
+        "SV-LITERAL"
+      ]
     },
     {
       "question_text": "Vad var det märkliga med katten som mr Dursley såg på Privet Drive?",
@@ -30,7 +33,10 @@
         "C: Den kunde prata",
         "D: Den var helt vit"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "lgr22_codes": [
+        "SV-LITERAL"
+      ]
     },
     {
       "question_text": "Varför blev mr Dursley orolig när han hörde främlingarna prata om 'Potter'?",
@@ -42,7 +48,10 @@
         "C: Han hade själv hemligheter att dölja",
         "D: Hans frus syster hette Potter och han ville inte bli påmind om henne"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "lgr22_codes": [
+        "SV-INFERENCE"
+      ]
     },
     {
       "question_text": "Vilka ovanliga saker hände under dagen som mr Dursley försökte ignorera?",
@@ -54,7 +63,10 @@
         "C: Alla bilar stannade samtidigt",
         "D: Telefonen ringde hela tiden med mystiska meddelanden"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "lgr22_codes": [
+        "SV-LITERAL"
+      ]
     },
     {
       "question_text": "Vad kan man förstå om mr Dursleys personlighet utifrån hur han reagerar på de konstiga händelserna?",
@@ -66,7 +78,12 @@
         "C: Han är modig och konfronterar de konstiga människorna",
         "D: Han är vänlig mot alla han möter"
       ],
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "lgr22_codes": [
+        "SV-LITERAL",
+        "SV-INFERENCE",
+        "SV-CHARACTER"
+      ]
     }
   ]
 }

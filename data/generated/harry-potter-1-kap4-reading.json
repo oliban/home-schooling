@@ -24,7 +24,10 @@
             "C: Ett brev från Dumbledore med instruktioner för resan",
             "D: En trollstav som hans föräldrar hade lämnat efter sig"
           ],
-          "difficulty": "easy"
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vad berättar Hagrid att han arbetar som på Hogwarts?",
@@ -36,7 +39,10 @@
             "C: Han är nyckelväktare och egendomsförvaltare på skolan",
             "D: Han är vaktmästare och tar hand om slottets underhåll"
           ],
-          "difficulty": "easy"
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Varför blev moster Petunia så arg när hon pratade om sin syster Lily?",
@@ -48,7 +54,10 @@
             "C: Hon var orolig för att Harry skulle bli lika farlig som sin mamma",
             "D: Hon var rädd för att trollkarlarna skulle komma och hämta henne också"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad hände med Voldemort efter att han försökte döda Harry?",
@@ -60,7 +69,10 @@
             "C: Han flydde till ett annat land för att gömma sig från aurorer",
             "D: Han försvann och förlorade sin kraft men ingen vet om han dog"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Varför gav Hagrid Dudley en grissvans i slutet av kapitlet?",
@@ -72,7 +84,10 @@
             "C: Dudley hade kastat saker på Hagrid när han kom in genom dörren",
             "D: Familjen Dursley vägrade ge Hagrid mat och dryck som han bad om"
           ],
-          "difficulty": "hard"
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         }
       ]
     }

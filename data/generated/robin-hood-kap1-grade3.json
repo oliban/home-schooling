@@ -18,7 +18,10 @@
         "C: Att sjunga",
         "D: Att simma"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "lgr22_codes": [
+        "SV-LITERAL"
+      ]
     },
     {
       "question_text": "Vad hette kvinnan som Robin var kär i?",
@@ -30,7 +33,10 @@
         "C: Emma",
         "D: Lisa"
       ],
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "lgr22_codes": [
+        "SV-LITERAL"
+      ]
     },
     {
       "question_text": "Varför blev skogvaktarna arga på Robin?",
@@ -42,7 +48,10 @@
         "C: Han slog dem",
         "D: Han drack deras öl"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "lgr22_codes": [
+        "SV-INFERENCE"
+      ]
     },
     {
       "question_text": "Varför missade skogvaktarens pil Robin?",
@@ -54,7 +63,10 @@
         "C: Skogvaktaren hade druckit för mycket öl",
         "D: Det blåste för mycket"
       ],
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "lgr22_codes": [
+        "SV-INFERENCE"
+      ]
     },
     {
       "question_text": "Varför ångrade Robin att han hade skjutit mannen?",
@@ -66,7 +78,10 @@
         "C: Han tappade sin bästa pil",
         "D: Skogvaktarna blev ännu argare"
       ],
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "lgr22_codes": [
+        "SV-INFERENCE"
+      ]
     }
   ]
 }

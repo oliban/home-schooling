@@ -41,7 +41,8 @@ Use this format when generating reading questions for an entire book:
             "C: Han vägrade betala skatt",
             "D: Han hjälpte en fånge att fly"
           ],
-          "difficulty": "easy"
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
         }
       ]
     },
@@ -65,7 +66,8 @@ Use this format when generating reading questions for an entire book:
             "C: De slogs på en bro över en bäck",
             "D: Lille John kom till skogen för att gömma sig"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL"]
         }
       ]
     }
@@ -93,6 +95,7 @@ Use this format when generating reading questions for an entire book:
 - `answer_type`: Always "multiple_choice" for reading
 - `options`: Array of 4 options with "A:", "B:", "C:", "D:" prefixes
 - `difficulty`: "easy", "medium", or "hard"
+- `lgr22_codes`: Array of reading objective codes (see reference below)
 
 **Output location:** Save generated JSON files to `data/generated/`
 
@@ -166,7 +169,8 @@ Every problem MUST have:
     "C: Hennes pappa",
     "D: En polis"
   ],
-  "difficulty": "easy"
+  "difficulty": "easy",
+  "lgr22_codes": ["SV-LITERAL"]
 }
 ```
 
@@ -226,3 +230,58 @@ D: Han ville skydda Harry från människor som kunde vara farliga för honom
 ```
 
 **Rule of thumb:** If you can identify the correct answer just by looking at option lengths, rewrite the options.
+
+## LGR 22 Reading Objective Codes
+
+**REQUIRED:** Every question MUST include at least one objective code in `lgr22_codes`.
+
+### Available Codes
+
+| Code | Description | Use For |
+|------|-------------|---------|
+| SV-LITERAL | Direkt textförståelse - fakta och detaljer | Who/What/Where/When questions, sequence questions |
+| SV-INFERENCE | Inferens och slutledning | Why/How questions, drawing conclusions |
+| SV-MAIN-IDEA | Huvudtanke och budskap | Theme identification, main message, summary questions |
+| SV-CHARACTER | Karaktärsförståelse och motiv | Character motivation, feelings, personality traits |
+| SV-VOCABULARY | Ordförståelse i kontext | Word meaning questions, understanding expressions |
+
+### Question Type to Code Mapping
+
+| Question Type | Example | Code |
+|---------------|---------|------|
+| Vem/Vad/Var/När | "Vem träffade Harry på tåget?" | SV-LITERAL |
+| Sekvens | "Vad hände först?" | SV-LITERAL |
+| Varför/Hur | "Varför blev hon arg?" | SV-INFERENCE |
+| Tema/Budskap | "Vad handlar kapitlet om?" | SV-MAIN-IDEA |
+| Karaktär | "Varför kände sig Harry ledsen?" | SV-CHARACTER |
+| Ordförståelse | "Vad betyder 'förbluffad' i texten?" | SV-VOCABULARY |
+
+### Examples
+
+```json
+// Literal comprehension question
+{
+  "question_text": "Var bodde Harry innan han fick sitt brev?",
+  "lgr22_codes": ["SV-LITERAL"]
+}
+
+// Inference question
+{
+  "question_text": "Varför behandlade familjen Dursley Harry så illa?",
+  "lgr22_codes": ["SV-INFERENCE"]
+}
+
+// Character understanding question
+{
+  "question_text": "Hur förändrades Harrys känslor under kapitlet?",
+  "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+}
+
+// Main idea question
+{
+  "question_text": "Vilket budskap förmedlar kapitlet om vänskap?",
+  "lgr22_codes": ["SV-MAIN-IDEA"]
+}
+```
+
+**Note:** Some questions may cover multiple skills. For example, understanding why a character felt a certain way involves both SV-CHARACTER and SV-INFERENCE.

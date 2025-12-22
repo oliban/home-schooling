@@ -159,7 +159,7 @@ router.get('/:id', authenticateAny, (req, res) => {
 
     // Package-based assignments (both math and reading) load from package_problems
     if (assignment.package_id) {
-      questions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
+      const rawQuestions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
         `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at, aa.attempts_count, aa.hint_purchased, aa.scratch_pad_image
          FROM package_problems pp
          LEFT JOIN assignment_answers aa ON pp.id = aa.problem_id AND aa.assignment_id = ?
@@ -167,6 +167,36 @@ router.get('/:id', authenticateAny, (req, res) => {
          ORDER BY pp.problem_number`,
         [req.params.id, assignment.package_id]
       );
+
+      // Get curriculum codes for each problem
+      const problemIds = rawQuestions.map(q => q.id);
+      if (problemIds.length > 0) {
+        const placeholders = problemIds.map(() => '?').join(',');
+        const mappings = db.all<{ exercise_id: string; code: string }>(
+          `SELECT ecm.exercise_id, co.code
+           FROM exercise_curriculum_mapping ecm
+           JOIN curriculum_objectives co ON ecm.objective_id = co.id
+           WHERE ecm.exercise_type = 'package_problem' AND ecm.exercise_id IN (${placeholders})`,
+          problemIds
+        );
+
+        // Group codes by problem id
+        const codesByProblem = new Map<string, string[]>();
+        for (const m of mappings) {
+          if (!codesByProblem.has(m.exercise_id)) {
+            codesByProblem.set(m.exercise_id, []);
+          }
+          codesByProblem.get(m.exercise_id)!.push(m.code);
+        }
+
+        // Add codes to questions
+        questions = rawQuestions.map(q => ({
+          ...q,
+          lgr22_codes: codesByProblem.get(q.id) || []
+        }));
+      } else {
+        questions = rawQuestions;
+      }
     } else if (assignment.assignment_type === 'math') {
       // Legacy embedded math problems (includes attempts_count and hint_purchased)
       questions = db.all<MathProblem>(
@@ -587,10 +617,10 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
       potentialReward = Math.floor(baseReward * nextMultiplier);
     }
 
-    // Calculate hint availability
+    // Calculate hint availability - only after 2 wrong attempts
     const canBuyHint = !isReadingAssignment
       && assignment.hints_allowed === 1
-      && attemptNumber >= 1
+      && attemptNumber >= 2
       && !hintPurchased
       && !questionComplete
       && hint !== null;
@@ -678,9 +708,9 @@ router.post('/:id/questions/:questionId/buy-hint', authenticateChild, (req, res)
           [assignmentId, questionId]
         );
 
-        // Validate hint purchase conditions
-        if (!existingAnswer || (existingAnswer.attempts_count || 0) < 1) {
-          throw new Error('Must attempt question first');
+        // Validate hint purchase conditions - need 2 attempts first
+        if (!existingAnswer || (existingAnswer.attempts_count || 0) < 2) {
+          throw new Error('Must attempt question twice first');
         }
         if (existingAnswer.hint_purchased) {
           throw new Error('Hint already purchased');
@@ -733,9 +763,9 @@ router.post('/:id/questions/:questionId/buy-hint', authenticateChild, (req, res)
 
         hintText = problem.hint || null;
 
-        // Validate hint purchase conditions
-        if (problem.child_answer === null || (problem.attempts_count || 0) < 1) {
-          throw new Error('Must attempt question first');
+        // Validate hint purchase conditions - need 2 attempts first
+        if (problem.child_answer === null || (problem.attempts_count || 0) < 2) {
+          throw new Error('Must attempt question twice first');
         }
         if (problem.hint_purchased) {
           throw new Error('Hint already purchased');

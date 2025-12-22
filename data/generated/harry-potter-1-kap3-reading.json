@@ -24,7 +24,10 @@
             "C: Han ville slippa bo hos mrs Figg varje dag",
             "D: Han längade efter att få äta skolmaten igen"
           ],
-          "difficulty": "easy"
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad var speciellt med adressen på Harrys brev som gjorde familjen Dursley så upprörda?",
@@ -36,7 +39,10 @@
             "C: Adressen visade exakt var Harry sov i huset",
             "D: Brevet var adresserat till Harrys riktiga föräldrar"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur reagerar morbror Vernon när breven fortsätter att komma trots att han spikar igen brevlådan?",
@@ -48,7 +54,10 @@
             "C: Han anställer vakter som ska bevaka brevlådan",
             "D: Han flyr med familjen till en öde klippa ute i havet"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Varför flyttar familjen Dursley Harry från skrubben till Dudleys andra sovrum?",
@@ -60,7 +69,10 @@
             "C: Dudley behöver skrubben som förvaringsutrymme",
             "D: Skrubben har blivit för liten för att Harry ska få plats"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad säger familjen Dursleys desperata beteende om deras känslor kring Harrys brev?",
@@ -72,7 +84,10 @@
             "C: De är oroliga för att Harry ska bli besviken på brevens innehåll",
             "D: De vill skydda Harry från människor som kan vara farliga för honom"
           ],
-          "difficulty": "hard"
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         }
       ]
     }

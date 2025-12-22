@@ -52,7 +52,8 @@ Use this format when generating a package of problems:
       "answer_type": "number",
       "explanation": "25% av 200 = 50. 200 - 50 = 150 kr",
       "difficulty": "medium",
-      "hint": "Räkna först ut hur mycket rabatten är"
+      "hint": "Räkna först ut hur mycket rabatten är",
+      "lgr22_codes": ["MA-TAL-07", "MA-PRO-04"]
     }
   ]
 }
@@ -86,7 +87,7 @@ Use this format when generating 200 problems in 20 packages:
         "global": true
       },
       "problems": [
-        { "question_text": "...", "correct_answer": "...", ... }
+        { "question_text": "...", "correct_answer": "...", "lgr22_codes": ["MA-TAL-04"], ... }
       ]
     }
   ]
@@ -108,7 +109,8 @@ For backward compatibility with direct assignment creation:
       "explanation": "25% av 200 = 50. 200 - 50 = 150 kr",
       "difficulty": "medium",
       "category_id": "taluppfattning",
-      "hint": "Räkna först ut hur mycket rabatten är"
+      "hint": "Räkna först ut hur mycket rabatten är",
+      "lgr22_codes": ["MA-TAL-07", "MA-PRO-04"]
     }
   ]
 }
@@ -229,7 +231,8 @@ For `answer_type: "multiple_choice"`:
   "question_text": "Vad är 5 + 3?",
   "correct_answer": "8",
   "answer_type": "number",
-  "difficulty": "easy"
+  "difficulty": "easy",
+  "lgr22_codes": ["MA-TAL-01"]
 }
 ```
 
@@ -247,3 +250,107 @@ For `answer_type: "multiple_choice"`:
 3. Always include explanations with step-by-step solutions
 4. Use Swedish number format (comma for decimals: 3,5 not 3.5)
 5. Currency is always "kr" (kronor)
+6. **Always include `lgr22_codes`** - an array of objective codes for curriculum tracking
+
+## LGR 22 Objective Codes Reference
+
+**REQUIRED:** Every problem MUST include at least one objective code in `lgr22_codes`.
+
+### Taluppfattning (Number Sense)
+| Code | Description | Grades |
+|------|-------------|--------|
+| MA-TAL-01 | Naturliga tal och deras egenskaper | 1-3 |
+| MA-TAL-02 | Positionssystemet för naturliga tal | 1-3 |
+| MA-TAL-03 | Del av helhet och del av antal | 1-3 |
+| MA-TAL-04 | Naturliga tal och enkla tal i bråkform | 4-6 |
+| MA-TAL-05 | Positionssystemet för hela tal och decimaltal | 4-6 |
+| MA-TAL-06 | Tal i bråkform och decimalform | 4-6 |
+| MA-TAL-07 | Tal i procentform och sambandet med bråk och decimal | 4-6 |
+| MA-TAL-08 | Negativa tal och deras egenskaper | 4-6 |
+| MA-TAL-09 | Reella tal och deras egenskaper | 7-9 |
+| MA-TAL-10 | Talsystemets utveckling från naturliga tal till reella tal | 7-9 |
+| MA-TAL-11 | Centrala metoder för beräkningar med reella tal | 7-9 |
+| MA-TAL-12 | Rimlighetsbedömning vid uppskattningar och beräkningar | 1-9 |
+
+### Algebra
+| Code | Description | Grades |
+|------|-------------|--------|
+| MA-ALG-01 | Likheter och likhetstecknets betydelse | 1-3 |
+| MA-ALG-02 | Hur enkla mönster kan beskrivas och konstrueras | 1-3 |
+| MA-ALG-03 | Obekanta tal och hur de kan representeras | 4-6 |
+| MA-ALG-04 | Metoder för enkel ekvationslösning | 4-6 |
+| MA-ALG-05 | Hur mönster i talföljder kan konstrueras och beskrivas | 4-6 |
+| MA-ALG-06 | Innebörden av variabelbegreppet | 7-9 |
+| MA-ALG-07 | Algebraiska uttryck, formler och ekvationer | 7-9 |
+| MA-ALG-08 | Metoder för ekvationslösning | 7-9 |
+| MA-ALG-09 | Lösning av linjära ekvationssystem | 7-9 |
+| MA-ALG-10 | Potenser med heltaliga exponenter | 7-9 |
+
+### Geometri (Geometry)
+| Code | Description | Grades |
+|------|-------------|--------|
+| MA-GEO-01 | Grundläggande geometriska objekt | 1-3 |
+| MA-GEO-02 | Konstruktion av enkla geometriska objekt | 1-3 |
+| MA-GEO-03 | Vanliga lägesord för att beskriva placering i rummet | 1-3 |
+| MA-GEO-04 | Symmetri i vardagen och i konsten | 1-3 |
+| MA-GEO-05 | Grundläggande geometriska objekt och deras egenskaper | 4-6 |
+| MA-GEO-06 | Konstruktion av geometriska objekt | 4-6 |
+| MA-GEO-07 | Metoder för att bestämma omkrets och area | 4-6 |
+| MA-GEO-08 | Skala och dess användning i vardagliga situationer | 4-6 |
+| MA-GEO-09 | Geometriska objekt och deras egenskaper | 7-9 |
+| MA-GEO-10 | Avbildning och konstruktion av geometriska objekt | 7-9 |
+| MA-GEO-11 | Likformighet och symmetri | 7-9 |
+| MA-GEO-12 | Metoder för beräkning av area, omkrets och volym | 7-9 |
+| MA-GEO-13 | Satsen om triangelns vinkelsumma och Pythagoras sats | 7-9 |
+
+### Sannolikhet och Statistik (Probability & Statistics)
+| Code | Description | Grades |
+|------|-------------|--------|
+| MA-SAN-01 | Slumphändelser i experiment och spel | 1-3 |
+| MA-SAN-02 | Enkla tabeller och diagram | 1-3 |
+| MA-SAN-03 | Sannolikhet och chans i enkla situationer | 4-6 |
+| MA-SAN-04 | Enkel kombinatorik | 4-6 |
+| MA-SAN-05 | Tabeller och diagram för att beskriva resultat | 4-6 |
+| MA-SAN-06 | Lägesmått och hur de används i statistik | 4-6 |
+| MA-SAN-07 | Likformig sannolikhet och metoder för beräkning | 7-9 |
+| MA-SAN-08 | Hur kombinatorik kan användas | 7-9 |
+| MA-SAN-09 | Tabeller, diagram och grafer | 7-9 |
+| MA-SAN-10 | Lägesmått och spridningsmått | 7-9 |
+| MA-SAN-11 | Bedömning av risker och chanser | 7-9 |
+
+### Samband och Förändring (Relationships & Change)
+| Code | Description | Grades |
+|------|-------------|--------|
+| MA-SAM-01 | Proportionalitet och procent | 4-6 |
+| MA-SAM-02 | Grafer för att uttrycka proportionella samband | 4-6 |
+| MA-SAM-03 | Koordinatsystem och gradering av axlar | 4-6 |
+| MA-SAM-04 | Funktioner och linjära ekvationer | 7-9 |
+| MA-SAM-05 | Hur funktioner kan användas | 7-9 |
+| MA-SAM-06 | Linjära funktioner och linjära ekvationssystem | 7-9 |
+| MA-SAM-07 | Proportionalitet, förändringsfaktor och procentförändring | 7-9 |
+
+### Problemlösning (Problem Solving)
+| Code | Description | Grades |
+|------|-------------|--------|
+| MA-PRO-01 | Strategier för problemlösning i vardagliga situationer | 1-3 |
+| MA-PRO-02 | Matematisk formulering av frågeställningar | 1-3 |
+| MA-PRO-03 | Strategier för problemlösning med addition och subtraktion | 1-3 |
+| MA-PRO-04 | Strategier för problemlösning i vardagsnära situationer | 4-6 |
+| MA-PRO-05 | Formulering av frågeställningar med hjälp av matematik | 4-6 |
+| MA-PRO-06 | Strategier för problemlösning med de fyra räknesätten | 4-6 |
+| MA-PRO-07 | Strategier för problemlösning i vardags- och yrkessituationer | 7-9 |
+| MA-PRO-08 | Formulering av frågeställningar med matematiska modeller | 7-9 |
+| MA-PRO-09 | Strategier för matematisk problemlösning och resonemangsförmåga | 7-9 |
+
+## Choosing Objective Codes
+
+When assigning `lgr22_codes`:
+
+1. **Match grade level** - Use objectives appropriate for the target årskurs
+2. **Primary + Secondary** - Word problems often cover multiple objectives (e.g., calculation + problem-solving)
+3. **Be specific** - Choose the most specific applicable objective
+4. **Examples:**
+   - Addition problem for grade 2 → `["MA-TAL-01", "MA-PRO-03"]`
+   - Percentage discount problem → `["MA-TAL-07", "MA-PRO-04"]`
+   - Area calculation → `["MA-GEO-07"]`
+   - Equation solving → `["MA-ALG-04"]` or `["MA-ALG-08"]` depending on grade

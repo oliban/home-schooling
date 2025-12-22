@@ -103,11 +103,13 @@ router.post('/import', authenticateParent, (req, res) => {
 
         for (let i = 0; i < problems.length; i++) {
           const p = problems[i];
+          const problemId = uuidv4();
+
           db.run(
             `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-              uuidv4(),
+              problemId,
               packageId,
               i + 1,
               p.question_text,
@@ -119,6 +121,23 @@ router.post('/import', authenticateParent, (req, res) => {
               p.difficulty || 'medium'
             ]
           );
+
+          // Create curriculum mappings if lgr22_codes provided
+          if (p.lgr22_codes && Array.isArray(p.lgr22_codes)) {
+            for (const code of p.lgr22_codes) {
+              const objective = db.get<{ id: number }>(
+                'SELECT id FROM curriculum_objectives WHERE code = ?',
+                [code]
+              );
+              if (objective) {
+                db.run(
+                  `INSERT OR IGNORE INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+                   VALUES (?, ?, ?)`,
+                  ['package_problem', problemId, objective.id]
+                );
+              }
+            }
+          }
         }
 
         results.push({ id: packageId, name: pkg.name, problemCount: problems.length });

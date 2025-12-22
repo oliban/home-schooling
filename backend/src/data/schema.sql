@@ -63,6 +63,36 @@ CREATE TABLE IF NOT EXISTS math_categories (
     max_grade INTEGER
 );
 
+-- Curriculum objectives (LGR 22 detailed objectives per category)
+CREATE TABLE IF NOT EXISTS curriculum_objectives (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id TEXT NOT NULL REFERENCES math_categories(id) ON DELETE CASCADE,
+    code TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    grade_levels TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Exercise-to-curriculum mapping (links exercises to LGR 22 objectives)
+CREATE TABLE IF NOT EXISTS exercise_curriculum_mapping (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    exercise_type TEXT NOT NULL CHECK (exercise_type IN ('math_problem', 'reading_question', 'package_problem')),
+    exercise_id TEXT NOT NULL,
+    objective_id INTEGER NOT NULL REFERENCES curriculum_objectives(id) ON DELETE CASCADE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(exercise_type, exercise_id, objective_id)
+);
+
+-- Child curriculum progress (tracks completion of LGR 22 objectives per child)
+CREATE TABLE IF NOT EXISTS child_curriculum_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id TEXT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+    objective_id INTEGER NOT NULL REFERENCES curriculum_objectives(id) ON DELETE CASCADE,
+    completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    assignment_id TEXT REFERENCES assignments(id) ON DELETE SET NULL,
+    UNIQUE(child_id, objective_id, assignment_id)
+);
+
 -- Assignments
 CREATE TABLE IF NOT EXISTS assignments (
     id TEXT PRIMARY KEY,
@@ -209,6 +239,11 @@ CREATE INDEX IF NOT EXISTS idx_packages_grade ON math_packages(grade_level);
 CREATE INDEX IF NOT EXISTS idx_packages_parent ON math_packages(parent_id);
 CREATE INDEX IF NOT EXISTS idx_package_problems_package ON package_problems(package_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_answers_assignment ON assignment_answers(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_curriculum_objectives_category ON curriculum_objectives(category_id);
+CREATE INDEX IF NOT EXISTS idx_exercise_curriculum_mapping_objective ON exercise_curriculum_mapping(objective_id);
+CREATE INDEX IF NOT EXISTS idx_exercise_curriculum_mapping_exercise ON exercise_curriculum_mapping(exercise_type, exercise_id);
+CREATE INDEX IF NOT EXISTS idx_child_curriculum_progress_child ON child_curriculum_progress(child_id);
+CREATE INDEX IF NOT EXISTS idx_child_curriculum_progress_objective ON child_curriculum_progress(objective_id);
 
 -- Seed math categories (LGR 22)
 INSERT OR IGNORE INTO math_categories (id, name_sv, name_en, min_grade, max_grade) VALUES

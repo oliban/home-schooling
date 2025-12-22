@@ -18,36 +18,76 @@
           "question_text": "Hur gammal var Robin Hood när han blev fredlös?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: 15 år", "B: 18 år", "C: 21 år", "D: 25 år"],
-          "difficulty": "easy"
+          "options": [
+            "A: 15 år",
+            "B: 18 år",
+            "C: 21 år",
+            "D: 25 år"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Varför blev Robin Hood fredlös?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Han stal pengar från kungen", "B: Han hjälpte en fånge att fly", "C: Han dödade en av kungens hjortar", "D: Han vägrade betala skatt"],
-          "difficulty": "easy"
+          "options": [
+            "A: Han stal pengar från kungen",
+            "B: Han hjälpte en fånge att fly",
+            "C: Han dödade en av kungens hjortar",
+            "D: Han vägrade betala skatt"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Var gömde sig Robin Hood och de andra fredlösa?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: I Sherwood-skogen", "B: I ett slott", "C: I bergen", "D: På en ö"],
-          "difficulty": "easy"
+          "options": [
+            "A: I Sherwood-skogen",
+            "B: I ett slott",
+            "C: I bergen",
+            "D: På en ö"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vad gjorde Robin Hood och de fredlösa med guldet de stal?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: De köpte vapen", "B: De gav det till de fattiga", "C: De gömde det i skogen", "D: De betalade skatt"],
-          "difficulty": "medium"
+          "options": [
+            "A: De köpte vapen",
+            "B: De gav det till de fattiga",
+            "C: De gömde det i skogen",
+            "D: De betalade skatt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur mycket lovade kung Henrik i belöning för Robin Hood?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Femtio pund", "B: Hundra pund", "C: Hundrafemtio pund", "D: Tvåhundra pund"],
-          "difficulty": "hard"
+          "options": [
+            "A: Femtio pund",
+            "B: Hundra pund",
+            "C: Hundrafemtio pund",
+            "D: Tvåhundra pund"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         }
       ]
     },
@@ -65,36 +105,76 @@
           "question_text": "Var träffade Robin Hood Lille John första gången?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: I skogen", "B: På en bro", "C: På ett värdshus", "D: I staden"],
-          "difficulty": "easy"
+          "options": [
+            "A: I skogen",
+            "B: På en bro",
+            "C: På ett värdshus",
+            "D: I staden"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur länge brottades Robin och Lille John?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Tio minuter", "B: En halvtimme", "C: Mer än en timme", "D: Hela dagen"],
-          "difficulty": "easy"
+          "options": [
+            "A: Tio minuter",
+            "B: En halvtimme",
+            "C: Mer än en timme",
+            "D: Hela dagen"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad hände när de tävlade med pilbåge?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: Robins pil klöv Lille Johns pil mitt itu", "B: Lille John vann", "C: Båda missade målet", "D: Robin gav upp"],
-          "difficulty": "medium"
+          "options": [
+            "A: Robins pil klöv Lille Johns pil mitt itu",
+            "B: Lille John vann",
+            "C: Båda missade målet",
+            "D: Robin gav upp"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Varför kallas han Lille John fast han är stor?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Han var liten som barn", "B: Han har en liten bror", "C: Hans pappa heter John", "D: Det är ett skämt för att han är så stor"],
-          "difficulty": "medium"
+          "options": [
+            "A: Han var liten som barn",
+            "B: Han har en liten bror",
+            "C: Hans pappa heter John",
+            "D: Det är ett skämt för att han är så stor"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad hällde Robin över Lille Johns huvud när han döpte honom?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Vatten", "B: Mjölk", "C: Öl", "D: Vin"],
-          "difficulty": "hard"
+          "options": [
+            "A: Vatten",
+            "B: Mjölk",
+            "C: Öl",
+            "D: Vin"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         }
       ]
     },
@@ -112,36 +192,76 @@
           "question_text": "Vem ville fånga Robin Hood?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: Sheriffen i Nottingham", "B: Kungen själv", "C: En riddare", "D: Prästerna"],
-          "difficulty": "easy"
+          "options": [
+            "A: Sheriffen i Nottingham",
+            "B: Kungen själv",
+            "C: En riddare",
+            "D: Prästerna"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vad hade smeden med sig till Robin Hood?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: Ett svärd", "B: En fängelse-order", "C: Pengar", "D: Mat"],
-          "difficulty": "easy"
+          "options": [
+            "A: Ett svärd",
+            "B: En fängelse-order",
+            "C: Pengar",
+            "D: Mat"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur lurade Robin smeden?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Han gömde sig i skogen", "B: Han klädde ut sig", "C: Han hällde stark alkohol i smedens öl", "D: Han stal smedens häst"],
-          "difficulty": "medium"
+          "options": [
+            "A: Han gömde sig i skogen",
+            "B: Han klädde ut sig",
+            "C: Han hällde stark alkohol i smedens öl",
+            "D: Han stal smedens häst"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad hände när smeden vaknade och upptäckte att ordern var borta?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Han sprang till sheriffen", "B: Han grät", "C: Han gav upp", "D: Han gick tillbaka för att slåss med Robin"],
-          "difficulty": "medium"
+          "options": [
+            "A: Han sprang till sheriffen",
+            "B: Han grät",
+            "C: Han gav upp",
+            "D: Han gick tillbaka för att slåss med Robin"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur slutade det för smeden?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: Han blev en av Robins män", "B: Han återvände till sheriffen", "C: Han blev hängd", "D: Han flydde till en annan stad"],
-          "difficulty": "hard"
+          "options": [
+            "A: Han blev en av Robins män",
+            "B: Han återvände till sheriffen",
+            "C: Han blev hängd",
+            "D: Han flydde till en annan stad"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         }
       ]
     },
@@ -159,36 +279,76 @@
           "question_text": "Vad var priset i tävlingen som sheriffen ordnade?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: Hundra guldmynt", "B: En gyllene pil", "C: En häst", "D: Ett svärd"],
-          "difficulty": "easy"
+          "options": [
+            "A: Hundra guldmynt",
+            "B: En gyllene pil",
+            "C: En häst",
+            "D: Ett svärd"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Varför ordnade sheriffen tävlingen?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: För att fira kungens födelsedag", "B: För att hitta den bästa skytten", "C: För att locka Robin Hood i en fälla", "D: För att roa folket"],
-          "difficulty": "easy"
+          "options": [
+            "A: För att fira kungens födelsedag",
+            "B: För att hitta den bästa skytten",
+            "C: För att locka Robin Hood i en fälla",
+            "D: För att roa folket"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad varnade Robins vänner honom för?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: Att tävlingen var en fälla", "B: Att det skulle regna", "C: Att hans båge var trasig", "D: Att sheriffen hade ett nytt vapen"],
-          "difficulty": "medium"
+          "options": [
+            "A: Att tävlingen var en fälla",
+            "B: Att det skulle regna",
+            "C: Att hans båge var trasig",
+            "D: Att sheriffen hade ett nytt vapen"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vem vann tävlingen?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Sheriffen", "B: Lille John", "C: En okänd riddare", "D: Robin Hood"],
-          "difficulty": "medium"
+          "options": [
+            "A: Sheriffen",
+            "B: Lille John",
+            "C: En okänd riddare",
+            "D: Robin Hood"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur fick sheriffen reda på att det var Robin som hade vunnit?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: Han kände igen honom direkt", "B: Robin skickade ett meddelande efteråt", "C: Lille John berättade det", "D: En spion avslöjade det"],
-          "difficulty": "hard"
+          "options": [
+            "A: Han kände igen honom direkt",
+            "B: Robin skickade ett meddelande efteråt",
+            "C: Lille John berättade det",
+            "D: En spion avslöjade det"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         }
       ]
     },
@@ -206,36 +366,76 @@
           "question_text": "Hur mycket erbjöd sheriffen för Robin Hood?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Femtio silvermynt", "B: Sjuttiofem silvermynt", "C: Hundra silvermynt", "D: Tvåhundra silvermynt"],
-          "difficulty": "easy"
+          "options": [
+            "A: Femtio silvermynt",
+            "B: Sjuttiofem silvermynt",
+            "C: Hundra silvermynt",
+            "D: Tvåhundra silvermynt"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad hette värdshuset där Robin brukade vara?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: Blå Galten", "B: Röda Tuppen", "C: Gröna Draken", "D: Vita Hästen"],
-          "difficulty": "easy"
+          "options": [
+            "A: Blå Galten",
+            "B: Röda Tuppen",
+            "C: Gröna Draken",
+            "D: Vita Hästen"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vem varnade Robin om sheriffens plan?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: En soldat", "B: Ägaren av värdshuset", "C: Lille John", "D: En bonde"],
-          "difficulty": "medium"
+          "options": [
+            "A: En soldat",
+            "B: Ägaren av värdshuset",
+            "C: Lille John",
+            "D: En bonde"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur mycket fick man för att fånga en av Robins vänner?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Tio silvermynt", "B: Tjugo silvermynt", "C: Trettio silvermynt", "D: Fyrtio silvermynt"],
-          "difficulty": "medium"
+          "options": [
+            "A: Tio silvermynt",
+            "B: Tjugo silvermynt",
+            "C: Trettio silvermynt",
+            "D: Fyrtio silvermynt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad beordrade sheriffen sina soldater att göra?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: Dela upp sig i små grupper och smyga i skogen", "B: Bränna ner skogen", "C: Vänta vid värdshuset", "D: Rida genom skogen på hästar"],
-          "difficulty": "hard"
+          "options": [
+            "A: Dela upp sig i små grupper och smyga i skogen",
+            "B: Bränna ner skogen",
+            "C: Vänta vid värdshuset",
+            "D: Rida genom skogen på hästar"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         }
       ]
     },
@@ -253,36 +453,76 @@
           "question_text": "Vad klädde Robin ut sig till?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: En soldat", "B: En munk", "C: En slaktare", "D: En bonde"],
-          "difficulty": "easy"
+          "options": [
+            "A: En soldat",
+            "B: En munk",
+            "C: En slaktare",
+            "D: En bonde"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vad köpte Robin av den riktiga slaktaren?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: Bara köttet", "B: Hästen och kärran", "C: Kläderna", "D: Ingenting, han stal allt"],
-          "difficulty": "easy"
+          "options": [
+            "A: Bara köttet",
+            "B: Hästen och kärran",
+            "C: Kläderna",
+            "D: Ingenting, han stal allt"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur sålde Robin köttet till de fattiga?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: För halva priset", "B: För dubbla priset", "C: Gratis", "D: Till samma pris som andra"],
-          "difficulty": "medium"
+          "options": [
+            "A: För halva priset",
+            "B: För dubbla priset",
+            "C: Gratis",
+            "D: Till samma pris som andra"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad gjorde Robin efter att köttet tog slut?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Han åkte hem", "B: Han stal mer kött", "C: Han gömde sig", "D: Han bjöd in sheriffen till en fest"],
-          "difficulty": "medium"
+          "options": [
+            "A: Han åkte hem",
+            "B: Han stal mer kött",
+            "C: Han gömde sig",
+            "D: Han bjöd in sheriffen till en fest"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Hur behandlade Robin de rika kunderna?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Han vägrade sälja till dem", "B: Han gav dem rabatt", "C: Han tog dubbelt betalt", "D: Han behandlade alla lika"],
-          "difficulty": "hard"
+          "options": [
+            "A: Han vägrade sälja till dem",
+            "B: Han gav dem rabatt",
+            "C: Han tog dubbelt betalt",
+            "D: Han behandlade alla lika"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         }
       ]
     },
@@ -300,36 +540,76 @@
           "question_text": "Varför gav sig Robin Hood ut på resa?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: För att hitta mat", "B: För att köpa grönt tyg till kläder", "C: För att träffa kungen", "D: För att jaga hjortar"],
-          "difficulty": "easy"
+          "options": [
+            "A: För att hitta mat",
+            "B: För att köpa grönt tyg till kläder",
+            "C: För att träffa kungen",
+            "D: För att jaga hjortar"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad gjorde Robin och hans män vid bäcken?",
           "correct_answer": "A",
           "answer_type": "multiple_choice",
-          "options": ["A: De drack vatten och vilade", "B: De fiskade", "C: De tvättade sig", "D: De gömde sina skatter"],
-          "difficulty": "easy"
+          "options": [
+            "A: De drack vatten och vilade",
+            "B: De fiskade",
+            "C: De tvättade sig",
+            "D: De gömde sina skatter"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vilken färg hade den unge mannens jacka?",
           "correct_answer": "C",
           "answer_type": "multiple_choice",
-          "options": ["A: Grön", "B: Blå", "C: Röd", "D: Gul"],
-          "difficulty": "medium"
+          "options": [
+            "A: Grön",
+            "B: Blå",
+            "C: Röd",
+            "D: Gul"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vad hade den unge mannen i sin hatt?",
           "correct_answer": "D",
           "answer_type": "multiple_choice",
-          "options": ["A: Ett smycke", "B: Blommor", "C: Ett band", "D: En stor fjäder"],
-          "difficulty": "medium"
+          "options": [
+            "A: Ett smycke",
+            "B: Blommor",
+            "C: Ett band",
+            "D: En stor fjäder"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Vad planerade Robin att göra med den finklädde mannen?",
           "correct_answer": "B",
           "answer_type": "multiple_choice",
-          "options": ["A: Bjuda honom på middag", "B: Ta hans pengar", "C: Fråga om vägen", "D: Be honom om hjälp"],
-          "difficulty": "hard"
+          "options": [
+            "A: Bjuda honom på middag",
+            "B: Ta hans pengar",
+            "C: Fråga om vägen",
+            "D: Be honom om hjälp"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         }
       ]
     }

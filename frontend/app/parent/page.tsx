@@ -1148,7 +1148,7 @@ export default function ParentDashboard() {
         {/* Quick Actions */}
         <section>
           <h2 className="text-xl font-bold mb-4">{t('parent.dashboard.quickActions')}</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <Link
               href="/parent/children/add"
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
@@ -1169,6 +1169,13 @@ export default function ParentDashboard() {
             >
               <div className="text-3xl mb-2">📦</div>
               <p className="font-medium">{t('parent.dashboard.browsePackages')}</p>
+            </Link>
+            <Link
+              href="/parent/curriculum"
+              className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
+            >
+              <div className="text-3xl mb-2">📊</div>
+              <p className="font-medium">LGR 22 Coverage</p>
             </Link>
             <Link
               href="/login"

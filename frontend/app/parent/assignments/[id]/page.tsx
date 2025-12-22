@@ -24,6 +24,7 @@ interface Problem {
   attempts_count?: number;
   hint_purchased?: number;
   scratch_pad_image?: string | null;
+  lgr22_codes?: string[];
 }
 
 interface AssignmentDetail {
@@ -237,6 +238,19 @@ export default function AssignmentPreview() {
                       {t('parent.assignmentPreview.question', { number: index + 1 })}
                     </span>
                     <div className="flex items-center gap-2 flex-wrap">
+                      {problem.lgr22_codes && problem.lgr22_codes.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {problem.lgr22_codes.map((code) => (
+                            <span
+                              key={code}
+                              className="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-700 font-mono"
+                              title={`LGR22: ${code}`}
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {problem.difficulty && (
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${getDifficultyColor(

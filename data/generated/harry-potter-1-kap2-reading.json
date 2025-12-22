@@ -24,7 +24,10 @@
             "C: Harry kunde inte lämnas ensam hemma och Mrs Figg kunde inte ta hand om honom",
             "D: Harry var allergisk mot Dudleys födelsedagstårta"
           ],
-          "difficulty": "easy"
+          "difficulty": "easy",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Vad händer när Harry pratar med ormen på zoo?",
@@ -36,7 +39,10 @@
             "C: Ormen svarar med ord som alla kan höra",
             "D: Harry svimmar av skräck"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-LITERAL"
+          ]
         },
         {
           "question_text": "Varför tror du att konstiga saker alltid verkar hända runt Harry?",
@@ -48,7 +54,10 @@
             "C: Harry ljuger om vad som händer",
             "D: Harry har magiska krafter som han inte kan kontrollera"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE"
+          ]
         },
         {
           "question_text": "Hur behandlar familjen Dursley Harry jämfört med Dudley?",
@@ -60,7 +69,11 @@
             "C: Harry får mer uppmärksamhet för att han är föräldralös",
             "D: Dudley måste dela allt med Harry"
           ],
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "lgr22_codes": [
+            "SV-INFERENCE",
+            "SV-MAIN-IDEA"
+          ]
         },
         {
           "question_text": "Vad säger familjens behandling av Harry om deras karaktär och värderingar?",
@@ -72,7 +85,11 @@
             "C: De försöker uppfostra Harry till en bättre person",
             "D: De är fattiga och kan inte ge Harry mer"
           ],
-          "difficulty": "hard"
+          "difficulty": "hard",
+          "lgr22_codes": [
+            "SV-LITERAL",
+            "SV-CHARACTER"
+          ]
         }
       ]
     }

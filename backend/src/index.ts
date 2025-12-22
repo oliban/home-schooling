@@ -9,6 +9,7 @@ import childrenRoutes from './routes/children.js';
 import assignmentsRoutes from './routes/assignments.js';
 import collectiblesRoutes from './routes/collectibles.js';
 import packagesRoutes from './routes/packages.js';
+import curriculumRoutes from './routes/curriculum.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,7 @@ app.use('/api/children', childrenRoutes);
 app.use('/api/assignments', assignmentsRoutes);
 app.use('/api/collectibles', collectiblesRoutes);
 app.use('/api/packages', packagesRoutes);
+app.use('/api/curriculum', curriculumRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

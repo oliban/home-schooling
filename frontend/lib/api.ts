@@ -270,6 +270,112 @@ export const collectibles = {
     }>(`/collectibles/${id}/buy`, { method: 'POST', token }),
 };
 
+// Curriculum
+export const curriculum = {
+  getCoverage: (token: string, childId: string) =>
+    fetchApi<{
+      childId: string;
+      childGradeLevel: number;
+      categories: {
+        categoryId: string;
+        categoryName: string;
+        totalObjectives: number;
+        coveredObjectives: number;
+        coveragePercentage: number;
+        objectives: {
+          id: number;
+          code: string;
+          description: string;
+          isCovered: boolean;
+          completedAt: string | null;
+        }[];
+      }[];
+      totalObjectives: number;
+      coveredObjectives: number;
+      coveragePercentage: number;
+    }>(`/curriculum/coverage/${childId}`, { token }),
+
+  getGaps: (token: string, childId: string) =>
+    fetchApi<{
+      childId: string;
+      childGradeLevel: number;
+      gaps: {
+        id: number;
+        code: string;
+        description: string;
+        categoryId: string;
+        categoryName: string;
+      }[];
+      totalGaps: number;
+      totalObjectives: number;
+    }>(`/curriculum/gaps/${childId}`, { token }),
+
+  getRecommendations: (token: string, childId: string) =>
+    fetchApi<{
+      childId: string;
+      childGradeLevel: number;
+      recommendations: {
+        objective: {
+          id: number;
+          code: string;
+          description: string;
+          categoryId: string;
+          categoryName: string;
+        };
+        packages: {
+          packageId: string;
+          packageName: string;
+          gradeLevel: number;
+          categoryId: string | null;
+          categoryName: string | null;
+          problemCount: number;
+          description: string | null;
+          objectivesCovered: number;
+        }[];
+      }[];
+      totalGaps: number;
+      gapsWithPackages: number;
+      topPackages: {
+        packageId: string;
+        packageName: string;
+        gradeLevel: number;
+        categoryId: string | null;
+        categoryName: string | null;
+        problemCount: number;
+        description: string | null;
+        objectivesCovered: number;
+      }[];
+      message?: string;
+    }>(`/curriculum/recommendations/${childId}`, { token }),
+
+  getGenerationSuggestions: (token: string, childId: string) =>
+    fetchApi<{
+      childId: string;
+      childName: string;
+      childGradeLevel: number;
+      totalGaps: number;
+      categorizedGaps: {
+        categoryId: string;
+        categoryName: string;
+        objectives: { code: string; description: string }[];
+        gapCount: number;
+      }[];
+      suggestedCodes: string[];
+      suggestedObjectives: {
+        code: string;
+        description: string;
+        categoryName: string;
+      }[];
+      prompts: {
+        label: string;
+        prompt: string;
+        description: string;
+        gapsAddressed: number;
+        reason: string;
+      }[];
+    }>(`/curriculum/generation-suggestions/${childId}`, { token }),
+};
+
 // Packages
 export const packages = {
   import: (

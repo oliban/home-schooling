@@ -159,6 +159,7 @@ export interface ImportPackageRequest {
     explanation?: string;
     hint?: string;
     difficulty?: 'easy' | 'medium' | 'hard';
+    lgr22_codes?: string[];
   }>;
   isGlobal?: boolean;
 }

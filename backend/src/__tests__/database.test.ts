@@ -17,13 +17,44 @@ describe('Database', () => {
   it('should have math categories seeded', () => {
     const db = getDb();
     const categories = db.all<{ id: string }>('SELECT id FROM math_categories');
-    expect(categories.length).toBe(6);
+    expect(categories.length).toBe(7); // 6 math + 1 reading (lasforstaelse)
   });
 
   it('should have collectibles seeded', () => {
     const db = getDb();
     const collectibles = db.all<{ id: string }>('SELECT id FROM collectibles');
     expect(collectibles.length).toBeGreaterThan(0);
+  });
+
+  it('should have curriculum objectives seeded', () => {
+    const db = getDb();
+    const objectives = db.all<{ id: number; category_id: string; code: string }>(
+      'SELECT id, category_id, code FROM curriculum_objectives'
+    );
+    expect(objectives.length).toBeGreaterThan(0);
+    // Should have objectives for all 7 categories (6 math + 1 reading)
+    const categories = new Set(objectives.map(o => o.category_id));
+    expect(categories.size).toBe(7);
+  });
+
+  it('should have curriculum objectives with valid structure', () => {
+    const db = getDb();
+    const objective = db.get<{
+      id: number;
+      category_id: string;
+      code: string;
+      description: string;
+      grade_levels: string
+    }>(
+      'SELECT id, category_id, code, description, grade_levels FROM curriculum_objectives LIMIT 1'
+    );
+    expect(objective).toBeDefined();
+    expect(objective?.code).toMatch(/^MA-[A-Z]{3}-\d+$/);
+    expect(objective?.description).toBeDefined();
+    // grade_levels should be valid JSON array
+    const gradeLevels = JSON.parse(objective!.grade_levels);
+    expect(Array.isArray(gradeLevels)).toBe(true);
+    expect(gradeLevels.length).toBeGreaterThan(0);
   });
 });
 
