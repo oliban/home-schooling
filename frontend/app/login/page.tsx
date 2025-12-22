@@ -92,6 +92,7 @@ export default function ChildLogin() {
             maxLength={4}
             value={parentId}
             onChange={(e) => setParentId(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={(e) => e.key === 'Enter' && parentId.trim() && handleParentIdSubmit()}
             placeholder="____"
             className="w-full p-4 border-2 rounded-xl mb-4 text-center text-3xl font-bold tracking-[0.5em]"
           />
@@ -160,6 +161,7 @@ export default function ChildLogin() {
                 maxLength={4}
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                onKeyDown={(e) => e.key === 'Enter' && pin.length === 4 && !loading && handleLogin()}
                 className="w-full text-center text-3xl tracking-[0.5em] p-4 border-2 rounded-xl focus:border-blue-500 focus:outline-none"
                 placeholder="____"
               />

@@ -42,3 +42,6 @@ data/scratch-images/
 
 # Lock files (optional - uncomment if you want to ignore)
 # package-lock.json
+
+# Auto Claude data directory
+.auto-claude/
