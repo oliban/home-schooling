@@ -2,6 +2,20 @@
 
 # Development script - starts both backend and frontend
 
+# Kill any existing processes on our ports
+kill_port() {
+    local port=$1
+    local pid=$(lsof -ti :$port 2>/dev/null)
+    if [ -n "$pid" ]; then
+        echo "Killing existing process on port $port (PID: $pid)"
+        kill $pid 2>/dev/null
+        sleep 1
+    fi
+}
+
+kill_port 6001
+kill_port 5001
+
 cleanup() {
     echo "Stopping servers..."
     kill $BACKEND_PID 2>/dev/null
