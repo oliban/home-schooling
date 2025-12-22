@@ -119,7 +119,7 @@ router.get('/', authenticateAny, (req, res) => {
       params.push(childId as string);
     }
 
-    query += ' ORDER BY a.created_at DESC';
+    query += ' ORDER BY COALESCE(a.display_order, 999999) ASC, a.created_at DESC';
 
     const assignments = db.all<Assignment & { child_name: string; correct_count: number; total_count: number }>(query, params);
 
@@ -794,6 +794,45 @@ router.post('/:id/questions/:questionId/buy-hint', authenticateChild, (req, res)
     }
     console.error('Buy hint error:', error);
     res.status(500).json({ error: 'Failed to buy hint' });
+  }
+});
+
+// Reorder assignments (parent only)
+router.put('/reorder', authenticateParent, (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+
+    if (!orderedIds || !Array.isArray(orderedIds) || orderedIds.length === 0) {
+      return res.status(400).json({ error: 'orderedIds array is required' });
+    }
+
+    const db = getDb();
+
+    // Verify all assignments belong to this parent
+    const placeholders = orderedIds.map(() => '?').join(',');
+    const assignments = db.all<{ id: string }>(
+      `SELECT id FROM assignments WHERE id IN (${placeholders}) AND parent_id = ?`,
+      [...orderedIds, req.user!.id]
+    );
+
+    if (assignments.length !== orderedIds.length) {
+      return res.status(403).json({ error: 'One or more assignments not found or not owned by you' });
+    }
+
+    // Update display_order for each assignment
+    db.transaction(() => {
+      orderedIds.forEach((id, index) => {
+        db.run(
+          'UPDATE assignments SET display_order = ? WHERE id = ?',
+          [index, id]
+        );
+      });
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Reorder assignments error:', error);
+    res.status(500).json({ error: 'Failed to reorder assignments' });
   }
 });
 

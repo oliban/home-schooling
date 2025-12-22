@@ -367,4 +367,136 @@ describe('Assignment Scores', () => {
       expect(assignment?.status).toBe('in_progress');
     });
   });
+
+  describe('Assignment Reordering', () => {
+    let reorderAssignmentIds: string[] = [];
+
+    beforeAll(() => {
+      const db = getDb();
+
+      // Create 4 assignments for reordering tests
+      for (let i = 0; i < 4; i++) {
+        const assignmentId = uuidv4();
+        reorderAssignmentIds.push(assignmentId);
+        db.run(
+          `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, created_at)
+           VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?, datetime('now', '-${3 - i} days'))`,
+          [assignmentId, parentId, childId, `Reorder Test ${i + 1}`, 3, packageId]
+        );
+      }
+    });
+
+    afterAll(() => {
+      const db = getDb();
+      for (const id of reorderAssignmentIds) {
+        db.run('DELETE FROM assignments WHERE id = ?', [id]);
+      }
+    });
+
+    it('should update display_order when reordering assignments', () => {
+      const db = getDb();
+
+      // Reorder: reverse the order
+      const newOrder = [...reorderAssignmentIds].reverse();
+
+      // Update display_order for each assignment
+      newOrder.forEach((id, index) => {
+        db.run(
+          'UPDATE assignments SET display_order = ? WHERE id = ? AND parent_id = ?',
+          [index, id, parentId]
+        );
+      });
+
+      // Verify the order was updated
+      const assignments = db.all<{ id: string; display_order: number }>(
+        'SELECT id, display_order FROM assignments WHERE id IN (?, ?, ?, ?) ORDER BY display_order ASC',
+        reorderAssignmentIds
+      );
+
+      expect(assignments.length).toBe(4);
+      expect(assignments[0].id).toBe(newOrder[0]);
+      expect(assignments[1].id).toBe(newOrder[1]);
+      expect(assignments[2].id).toBe(newOrder[2]);
+      expect(assignments[3].id).toBe(newOrder[3]);
+    });
+
+    it('should return assignments ordered by display_order', () => {
+      const db = getDb();
+
+      // Set specific order: [2, 0, 3, 1]
+      const customOrder = [
+        reorderAssignmentIds[2],
+        reorderAssignmentIds[0],
+        reorderAssignmentIds[3],
+        reorderAssignmentIds[1],
+      ];
+
+      customOrder.forEach((id, index) => {
+        db.run(
+          'UPDATE assignments SET display_order = ? WHERE id = ?',
+          [index, id]
+        );
+      });
+
+      // Query with ORDER BY display_order
+      const assignments = db.all<{ id: string; title: string; display_order: number }>(
+        `SELECT id, title, display_order FROM assignments
+         WHERE id IN (?, ?, ?, ?)
+         ORDER BY display_order ASC, created_at DESC`,
+        reorderAssignmentIds
+      );
+
+      expect(assignments[0].id).toBe(customOrder[0]);
+      expect(assignments[1].id).toBe(customOrder[1]);
+      expect(assignments[2].id).toBe(customOrder[2]);
+      expect(assignments[3].id).toBe(customOrder[3]);
+    });
+
+    it('should not allow reordering assignments belonging to another parent', () => {
+      const db = getDb();
+      const otherParentId = uuidv4();
+
+      // Try to update an assignment with wrong parent_id
+      const result = db.run(
+        'UPDATE assignments SET display_order = ? WHERE id = ? AND parent_id = ?',
+        [0, reorderAssignmentIds[0], otherParentId]
+      );
+
+      // Should not have updated any rows
+      expect(result.changes).toBe(0);
+    });
+
+    it('should handle assignments without display_order using created_at fallback', () => {
+      const db = getDb();
+
+      // Create assignments without display_order
+      const noOrderIds: string[] = [];
+      for (let i = 0; i < 2; i++) {
+        const id = uuidv4();
+        noOrderIds.push(id);
+        db.run(
+          `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, created_at)
+           VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?, datetime('now', '-${1 - i} hours'))`,
+          [id, parentId, childId, `No Order Test ${i + 1}`, 3, packageId]
+        );
+      }
+
+      // Query - should fallback to created_at DESC when display_order is NULL
+      const assignments = db.all<{ id: string; display_order: number | null; created_at: string }>(
+        `SELECT id, display_order, created_at FROM assignments
+         WHERE id IN (?, ?)
+         ORDER BY COALESCE(display_order, 999999) ASC, created_at DESC`,
+        noOrderIds
+      );
+
+      // Newer assignment (noOrderIds[1]) should come first due to created_at DESC
+      expect(assignments[0].id).toBe(noOrderIds[1]);
+      expect(assignments[0].display_order).toBeNull();
+
+      // Cleanup
+      for (const id of noOrderIds) {
+        db.run('DELETE FROM assignments WHERE id = ?', [id]);
+      }
+    });
+  });
 });

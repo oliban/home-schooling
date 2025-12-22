@@ -8,6 +8,23 @@ import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import FileDropZone from '@/components/ui/FileDropZone';
 import ProgressChart, { DailyStatsData } from '@/components/ui/ProgressChart';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ChildData {
   id: string;
@@ -64,6 +81,105 @@ interface ImportedBatch {
     global?: boolean;
   };
   packages: ImportedPackage[];
+}
+
+// Sortable Assignment Card Component
+function SortableAssignmentCard({
+  assignment,
+  deletingAssignmentId,
+  onDelete,
+  t,
+  variant = 'pending',
+}: {
+  assignment: AssignmentData;
+  deletingAssignmentId: string | null;
+  onDelete: (id: string, e: React.MouseEvent) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  variant?: 'pending' | 'in_progress';
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: assignment.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const borderClass = variant === 'in_progress' ? 'border-l-4 border-orange-400' : '';
+  const statusClass = variant === 'in_progress'
+    ? 'bg-orange-100 text-orange-700'
+    : 'bg-yellow-100 text-yellow-700';
+  const statusText = variant === 'in_progress'
+    ? t('parent.dashboard.inProgress')
+    : t('parent.dashboard.pending');
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow ${borderClass} ${isDragging ? 'shadow-lg ring-2 ring-blue-400' : ''}`}
+    >
+      {/* Drag Handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="p-2 mr-2 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
+        title="Drag to reorder"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="4" cy="3" r="1.5" />
+          <circle cx="12" cy="3" r="1.5" />
+          <circle cx="4" cy="8" r="1.5" />
+          <circle cx="12" cy="8" r="1.5" />
+          <circle cx="4" cy="13" r="1.5" />
+          <circle cx="12" cy="13" r="1.5" />
+        </svg>
+      </button>
+
+      <Link
+        href={`/parent/assignments/${assignment.id}`}
+        className="flex-1 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">
+            {assignment.assignment_type === 'math' ? '📐' : '📖'}
+          </span>
+          <div>
+            <p className="font-medium">{assignment.title}</p>
+            <p className="text-sm text-gray-600">
+              {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {variant === 'in_progress' && (
+            <span className="font-medium text-orange-700">
+              {assignment.correct_count}/{assignment.total_count}
+            </span>
+          )}
+          <span className={`px-3 py-1 rounded-full text-sm ${statusClass}`}>
+            {statusText}
+          </span>
+        </div>
+      </Link>
+
+      <button
+        onClick={(e) => onDelete(assignment.id, e)}
+        disabled={deletingAssignmentId === assignment.id}
+        className="p-2 ml-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+        title={t('parent.dashboard.deleteAssignment')}
+      >
+        {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
+      </button>
+    </div>
+  );
 }
 
 export default function ParentDashboard() {
@@ -350,6 +466,78 @@ export default function ParentDashboard() {
     }
   };
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for reordering assignments
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const token = localStorage.getItem('parentToken');
+    if (!token) return;
+
+    // Find the assignments being reordered
+    const activeAssignment = assignmentsList.find(a => a.id === active.id);
+    const overAssignment = assignmentsList.find(a => a.id === over.id);
+
+    if (!activeAssignment || !overAssignment) return;
+
+    // Only allow reordering within the same child and status
+    if (activeAssignment.child_id !== overAssignment.child_id ||
+        activeAssignment.status !== overAssignment.status) {
+      return;
+    }
+
+    // Get all assignments for this child and status
+    const childStatusAssignments = assignmentsList.filter(
+      a => a.child_id === activeAssignment.child_id && a.status === activeAssignment.status
+    );
+
+    const oldIndex = childStatusAssignments.findIndex(a => a.id === active.id);
+    const newIndex = childStatusAssignments.findIndex(a => a.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Reorder the assignments
+    const reordered = arrayMove(childStatusAssignments, oldIndex, newIndex);
+    const orderedIds = reordered.map(a => a.id);
+
+    // Optimistic UI update
+    setAssignmentsList(prev => {
+      const updated = [...prev];
+      const otherAssignments = updated.filter(
+        a => a.child_id !== activeAssignment.child_id || a.status !== activeAssignment.status
+      );
+      return [...otherAssignments, ...reordered];
+    });
+
+    // Persist to backend
+    try {
+      await assignments.reorder(token, orderedIds);
+    } catch (err) {
+      console.error('Failed to reorder assignments:', err);
+      // Reload on error to restore correct order
+      const token = localStorage.getItem('parentToken');
+      if (token) {
+        const updatedAssignments = await assignments.list(token);
+        setAssignmentsList(updatedAssignments);
+      }
+    }
+  };
+
   if (loading || !parent) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -536,50 +724,36 @@ export default function ParentDashboard() {
               {inProgressAssignments.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.inProgress')} ({inProgressAssignments.length})</h3>
-                  <div className="space-y-4">
-                    {inProgressByChild.map(([childId, { childName, assignments }]) => (
-                      <div key={childId}>
-                        <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
-                        <div className="space-y-2">
-                          {assignments.map((assignment) => (
-                            <Link
-                              key={assignment.id}
-                              href={`/parent/assignments/${assignment.id}`}
-                              className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block border-l-4 border-orange-400"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-2xl">
-                                  {assignment.assignment_type === 'math' ? '📐' : '📖'}
-                                </span>
-                                <div>
-                                  <p className="font-medium">{assignment.title}</p>
-                                  <p className="text-sm text-gray-600">
-                                    {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-orange-700">
-                                  {assignment.correct_count}/{assignment.total_count}
-                                </span>
-                                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
-                                  {t('parent.dashboard.inProgress')}
-                                </span>
-                                <button
-                                  onClick={(e) => handleDeleteAssignment(assignment.id, e)}
-                                  disabled={deletingAssignmentId === assignment.id}
-                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                  title={t('parent.dashboard.deleteAssignment')}
-                                >
-                                  {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
-                                </button>
-                              </div>
-                            </Link>
-                          ))}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="space-y-4">
+                      {inProgressByChild.map(([childId, { childName, assignments: childAssignments }]) => (
+                        <div key={childId}>
+                          <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
+                          <SortableContext
+                            items={childAssignments.map(a => a.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="space-y-2">
+                              {childAssignments.map((assignment) => (
+                                <SortableAssignmentCard
+                                  key={assignment.id}
+                                  assignment={assignment}
+                                  deletingAssignmentId={deletingAssignmentId}
+                                  onDelete={handleDeleteAssignment}
+                                  t={t}
+                                  variant="in_progress"
+                                />
+                              ))}
+                            </div>
+                          </SortableContext>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </DndContext>
                 </div>
               )}
 
@@ -587,47 +761,36 @@ export default function ParentDashboard() {
               {pendingAssignments.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.pending')} ({pendingAssignments.length})</h3>
-                  <div className="space-y-4">
-                    {pendingByChild.map(([childId, { childName, assignments }]) => (
-                      <div key={childId}>
-                        <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
-                        <div className="space-y-2">
-                          {assignments.map((assignment) => (
-                            <Link
-                              key={assignment.id}
-                              href={`/parent/assignments/${assignment.id}`}
-                              className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow block"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-2xl">
-                                  {assignment.assignment_type === 'math' ? '📐' : '📖'}
-                                </span>
-                                <div>
-                                  <p className="font-medium">{assignment.title}</p>
-                                  <p className="text-sm text-gray-600">
-                                    {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
-                                  {t('parent.dashboard.pending')}
-                                </span>
-                                <button
-                                  onClick={(e) => handleDeleteAssignment(assignment.id, e)}
-                                  disabled={deletingAssignmentId === assignment.id}
-                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                  title={t('parent.dashboard.deleteAssignment')}
-                                >
-                                  {deletingAssignmentId === assignment.id ? '...' : '🗑️'}
-                                </button>
-                              </div>
-                            </Link>
-                          ))}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="space-y-4">
+                      {pendingByChild.map(([childId, { childName, assignments: childAssignments }]) => (
+                        <div key={childId}>
+                          <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
+                          <SortableContext
+                            items={childAssignments.map(a => a.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="space-y-2">
+                              {childAssignments.map((assignment) => (
+                                <SortableAssignmentCard
+                                  key={assignment.id}
+                                  assignment={assignment}
+                                  deletingAssignmentId={deletingAssignmentId}
+                                  onDelete={handleDeleteAssignment}
+                                  t={t}
+                                  variant="pending"
+                                />
+                              ))}
+                            </div>
+                          </SortableContext>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </DndContext>
                 </div>
               )}
 

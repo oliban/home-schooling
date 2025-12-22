@@ -137,6 +137,12 @@ class HomeSchoolingDatabase {
       this.db.exec('ALTER TABLE math_problems ADD COLUMN scratch_pad_image TEXT');
     }
 
+    // Migration: Add display_order column to assignments for custom sorting
+    const assignmentColsForOrder = this.db.prepare("PRAGMA table_info(assignments)").all() as { name: string }[];
+    if (!assignmentColsForOrder.some(c => c.name === 'display_order')) {
+      this.db.exec('ALTER TABLE assignments ADD COLUMN display_order INTEGER');
+    }
+
     // Migration: Seed collectibles (one-time)
     const collectibleCount = this.db.prepare('SELECT COUNT(*) as count FROM collectibles').get() as { count: number };
     if (collectibleCount.count < 120) {

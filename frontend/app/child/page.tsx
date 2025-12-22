@@ -30,6 +30,8 @@ export default function ChildDashboard() {
   const [assignmentList, setAssignmentList] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewItemAlert, setShowNewItemAlert] = useState(false);
+  const [mathPendingExpanded, setMathPendingExpanded] = useState(false);
+  const [readingPendingExpanded, setReadingPendingExpanded] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('childToken');
@@ -222,11 +224,32 @@ export default function ChildDashboard() {
                   {t('childDashboard.continueButton')} →
                 </Link>
                 {mathPending.length > 0 && (
-                  <p className="text-gray-500 text-sm mt-3 text-center">
-                    + {mathPending.length > 1
-                      ? t('childDashboard.tasksCountPlural', { count: mathPending.length })
-                      : t('childDashboard.tasksCount', { count: mathPending.length })}
-                  </p>
+                  <div className="mt-3">
+                    <button
+                      onClick={() => setMathPendingExpanded(!mathPendingExpanded)}
+                      className="w-full text-gray-500 text-sm text-center hover:text-gray-700 transition-colors flex items-center justify-center gap-1"
+                    >
+                      <span className={`transform transition-transform ${mathPendingExpanded ? 'rotate-90' : ''}`}>
+                        ▶
+                      </span>
+                      + {mathPending.length > 1
+                        ? t('childDashboard.tasksCountPlural', { count: mathPending.length })
+                        : t('childDashboard.tasksCount', { count: mathPending.length })}
+                    </button>
+                    {mathPendingExpanded && (
+                      <div className="mt-2 space-y-1">
+                        {mathPending.map((assignment, index) => (
+                          <Link
+                            key={assignment.id}
+                            href={`/child/assignment/${assignment.id}`}
+                            className="block text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+                          >
+                            {index + 1}. {assignment.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             ) : mathPending.length > 0 ? (
@@ -269,11 +292,32 @@ export default function ChildDashboard() {
                   {t('childDashboard.continueButton')} →
                 </Link>
                 {readingPending.length > 0 && (
-                  <p className="text-gray-500 text-sm mt-3 text-center">
-                    + {readingPending.length > 1
-                      ? t('childDashboard.tasksCountPlural', { count: readingPending.length })
-                      : t('childDashboard.tasksCount', { count: readingPending.length })}
-                  </p>
+                  <div className="mt-3">
+                    <button
+                      onClick={() => setReadingPendingExpanded(!readingPendingExpanded)}
+                      className="w-full text-gray-500 text-sm text-center hover:text-gray-700 transition-colors flex items-center justify-center gap-1"
+                    >
+                      <span className={`transform transition-transform ${readingPendingExpanded ? 'rotate-90' : ''}`}>
+                        ▶
+                      </span>
+                      + {readingPending.length > 1
+                        ? t('childDashboard.tasksCountPlural', { count: readingPending.length })
+                        : t('childDashboard.tasksCount', { count: readingPending.length })}
+                    </button>
+                    {readingPendingExpanded && (
+                      <div className="mt-2 space-y-1">
+                        {readingPending.map((assignment, index) => (
+                          <Link
+                            key={assignment.id}
+                            href={`/child/assignment/${assignment.id}`}
+                            className="block text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+                          >
+                            {index + 1}. {assignment.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             ) : readingPending.length > 0 ? (

@@ -230,6 +230,9 @@ export const assignments = {
 
   delete: (token: string, id: string) =>
     fetchApi<{ success: boolean }>(`/assignments/${id}`, { method: 'DELETE', token }),
+
+  reorder: (token: string, orderedIds: string[]) =>
+    fetchApi<{ success: boolean }>('/assignments/reorder', { method: 'PUT', body: { orderedIds }, token }),
 };
 
 // Collectibles
