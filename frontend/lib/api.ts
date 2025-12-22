@@ -294,10 +294,12 @@ export const packages = {
     }
   ) => fetchApi<{ id: string; problemCount: number }>('/packages/import', { method: 'POST', body: data, token }),
 
-  list: (token: string, filters?: { grade?: number; category?: string }) => {
+  list: (token: string, filters?: { grade?: number; category?: string; scope?: 'private' | 'global'; type?: 'math' | 'reading' }) => {
     const params = new URLSearchParams();
     if (filters?.grade) params.set('grade', String(filters.grade));
     if (filters?.category) params.set('category', filters.category);
+    if (filters?.scope) params.set('scope', filters.scope);
+    if (filters?.type) params.set('type', filters.type);
     const query = params.toString() ? `?${params}` : '';
     return fetchApi<{
       id: string;

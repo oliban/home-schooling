@@ -144,7 +144,25 @@
       "setupComplete": "Parent ID saved: {id}\n\nChildren can now log in at /login",
       "deleteAssignment": "Delete assignment",
       "confirmDeleteAssignment": "Are you sure you want to delete this assignment?",
-      "deleteAssignmentError": "Failed to delete assignment"
+      "deleteAssignmentError": "Failed to delete assignment",
+      "browsePackages": "Browse Packages"
+    },
+    "packages": {
+      "title": "Assignment Packages",
+      "gradeLabel": "Grade",
+      "topicLabel": "Topic",
+      "categoryLabel": "Category",
+      "visibilityLabel": "Visibility",
+      "all": "All",
+      "gradeAbbr": "Grade {grade}",
+      "math": "Math",
+      "reading": "Swedish",
+      "private": "Private",
+      "global": "Global",
+      "gradeHeader": "Grade {grade}",
+      "packageCount": "{count} packages",
+      "noPackages": "No packages available yet",
+      "importPackage": "Import a Package"
     },
     "child": {
       "addTitle": "Add Child",

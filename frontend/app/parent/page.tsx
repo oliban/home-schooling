@@ -862,7 +862,7 @@ export default function ParentDashboard() {
               href="/parent/packages"
               className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
-              Browse Packages
+              {t('parent.dashboard.browsePackages')}
             </Link>
           </div>
 
@@ -1162,7 +1162,7 @@ export default function ParentDashboard() {
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">📦</div>
-              <p className="font-medium">Browse Packages</p>
+              <p className="font-medium">{t('parent.dashboard.browsePackages')}</p>
             </Link>
             <Link
               href="/login"

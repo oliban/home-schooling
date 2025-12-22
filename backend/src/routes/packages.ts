@@ -141,7 +141,7 @@ router.post('/import', authenticateParent, (req, res) => {
 router.get('/', authenticateParent, (req, res) => {
   try {
     const db = getDb();
-    const { grade, category } = req.query;
+    const { grade, category, scope, type } = req.query;
 
     // Get all children for this parent
     const allChildren = db.all<{ id: string; name: string; grade_level: number }>(
@@ -166,6 +166,15 @@ router.get('/', authenticateParent, (req, res) => {
     if (category) {
       query += ' AND p.category_id = ?';
       params.push(category);
+    }
+    if (scope === 'private') {
+      query += ' AND p.is_global = 0';
+    } else if (scope === 'global') {
+      query += ' AND p.is_global = 1';
+    }
+    if (type === 'math' || type === 'reading') {
+      query += ' AND p.assignment_type = ?';
+      params.push(type);
     }
 
     query += ' ORDER BY p.grade_level, p.created_at DESC';

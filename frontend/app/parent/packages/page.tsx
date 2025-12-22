@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { packages, children } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 interface ChildAssignment {
   childId: string;
@@ -15,6 +16,7 @@ interface PackageData {
   id: string;
   name: string;
   grade_level: number;
+  assignment_type: 'math' | 'reading';
   category_id: string | null;
   category_name: string | null;
   problem_count: number;
@@ -34,11 +36,16 @@ interface ChildData {
 
 export default function PackageBrowser() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [packagesList, setPackagesList] = useState<PackageData[]>([]);
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<number | null>(null);
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'private' | 'global'>('all');
+  const [topicFilter, setTopicFilter] = useState<'all' | 'math' | 'reading'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [allPackages, setAllPackages] = useState<PackageData[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<PackageData | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -58,6 +65,7 @@ export default function PackageBrowser() {
         children.list(token),
       ]);
       setPackagesList(packagesData);
+      setAllPackages(packagesData);
       setChildrenList(childrenData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load packages');
@@ -66,17 +74,47 @@ export default function PackageBrowser() {
     }
   };
 
-  const handleFilterChange = async (grade: number | null) => {
-    setGradeFilter(grade);
+  const applyFilters = async (
+    grade: number | null,
+    scope: 'all' | 'private' | 'global',
+    topic: 'all' | 'math' | 'reading',
+    category: string | null
+  ) => {
     const token = localStorage.getItem('parentToken');
     if (!token) return;
 
     try {
-      const data = await packages.list(token, grade ? { grade } : undefined);
+      const filters: { grade?: number; category?: string; scope?: 'private' | 'global'; type?: 'math' | 'reading' } = {};
+      if (grade) filters.grade = grade;
+      if (category) filters.category = category;
+      if (scope !== 'all') filters.scope = scope;
+      if (topic !== 'all') filters.type = topic;
+
+      const data = await packages.list(token, Object.keys(filters).length > 0 ? filters : undefined);
       setPackagesList(data);
     } catch (err) {
       console.error('Failed to filter packages:', err);
     }
+  };
+
+  const handleGradeFilterChange = (grade: number | null) => {
+    setGradeFilter(grade);
+    applyFilters(grade, scopeFilter, topicFilter, categoryFilter);
+  };
+
+  const handleScopeFilterChange = (scope: 'all' | 'private' | 'global') => {
+    setScopeFilter(scope);
+    applyFilters(gradeFilter, scope, topicFilter, categoryFilter);
+  };
+
+  const handleTopicFilterChange = (topic: 'all' | 'math' | 'reading') => {
+    setTopicFilter(topic);
+    applyFilters(gradeFilter, scopeFilter, topic, categoryFilter);
+  };
+
+  const handleCategoryFilterChange = (category: string | null) => {
+    setCategoryFilter(category);
+    applyFilters(gradeFilter, scopeFilter, topicFilter, category);
   };
 
   const parseDifficulty = (summary: string | null): Record<string, number> => {
@@ -109,6 +147,13 @@ export default function PackageBrowser() {
   // Get unique grades from children
   const childGrades = [...new Set(childrenList.map(c => c.grade_level))].sort((a, b) => a - b);
 
+  // Get unique categories from all packages
+  const uniqueCategories = [...new Map(
+    allPackages
+      .filter(p => p.category_id && p.category_name)
+      .map(p => [p.category_id, { id: p.category_id!, name: p.category_name! }])
+  ).values()];
+
   // Group packages by grade
   const packagesByGrade = packagesList.reduce((acc, pkg) => {
     const grade = pkg.grade_level;
@@ -133,37 +178,141 @@ export default function PackageBrowser() {
             <Link href="/parent" className="text-gray-500 hover:text-gray-700">
               &larr; Back
             </Link>
-            <h1 className="text-xl font-bold">Problem Packages</h1>
+            <h1 className="text-xl font-bold">{t('parent.packages.title')}</h1>
           </div>
         </div>
       </header>
 
       <div className="max-w-5xl mx-auto p-6">
-        {/* Grade Filter */}
-        <div className="mb-6 flex gap-2 flex-wrap">
-          <button
-            onClick={() => handleFilterChange(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              gradeFilter === null
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            All Grades
-          </button>
-          {childGrades.map((grade) => (
+        {/* Filters */}
+        <div className="mb-6 space-y-3">
+          {/* Grade Filter */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-sm text-gray-500 w-20">{t('parent.packages.gradeLabel')}:</span>
             <button
-              key={grade}
-              onClick={() => handleFilterChange(grade)}
+              onClick={() => handleGradeFilterChange(null)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                gradeFilter === grade
+                gradeFilter === null
                   ? 'bg-purple-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
-              Grade {grade}
+              {t('parent.packages.all')}
             </button>
-          ))}
+            {childGrades.map((grade) => (
+              <button
+                key={grade}
+                onClick={() => handleGradeFilterChange(grade)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  gradeFilter === grade
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {t('parent.packages.gradeAbbr', { grade })}
+              </button>
+            ))}
+          </div>
+
+          {/* Topic Filter (Math/Svenska) */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-sm text-gray-500 w-20">{t('parent.packages.topicLabel')}:</span>
+            <button
+              onClick={() => handleTopicFilterChange('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                topicFilter === 'all'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {t('parent.packages.all')}
+            </button>
+            <button
+              onClick={() => handleTopicFilterChange('math')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                topicFilter === 'math'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {t('parent.packages.math')}
+            </button>
+            <button
+              onClick={() => handleTopicFilterChange('reading')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                topicFilter === 'reading'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {t('parent.packages.reading')}
+            </button>
+          </div>
+
+          {/* Category Filter (Algebra, Geometri etc) */}
+          {uniqueCategories.length > 0 && (
+            <div className="flex gap-2 flex-wrap items-center">
+              <span className="text-sm text-gray-500 w-20">{t('parent.packages.categoryLabel')}:</span>
+              <button
+                onClick={() => handleCategoryFilterChange(null)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  categoryFilter === null
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {t('parent.packages.all')}
+              </button>
+              {uniqueCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryFilterChange(cat.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    categoryFilter === cat.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Scope Filter (Private/Global) */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-sm text-gray-500 w-20">{t('parent.packages.visibilityLabel')}:</span>
+            <button
+              onClick={() => handleScopeFilterChange('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                scopeFilter === 'all'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {t('parent.packages.all')}
+            </button>
+            <button
+              onClick={() => handleScopeFilterChange('private')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                scopeFilter === 'private'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {t('parent.packages.private')}
+            </button>
+            <button
+              onClick={() => handleScopeFilterChange('global')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                scopeFilter === 'global'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {t('parent.packages.global')}
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -190,9 +339,9 @@ export default function PackageBrowser() {
               .map(([grade, pkgs]) => (
                 <div key={grade}>
                   <h2 className="text-lg font-bold mb-4 text-gray-700">
-                    Grade {grade}
+                    {t('parent.packages.gradeHeader', { grade })}
                     <span className="ml-2 text-sm font-normal text-gray-500">
-                      ({pkgs.length} package{pkgs.length !== 1 ? 's' : ''})
+                      ({t('parent.packages.packageCount', { count: pkgs.length })})
                     </span>
                   </h2>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -144,7 +144,25 @@
       "setupComplete": "Förälder-ID sparat: {id}\n\nBarn kan nu logga in på /login",
       "deleteAssignment": "Ta bort uppgift",
       "confirmDeleteAssignment": "Är du säker på att du vill ta bort denna uppgift?",
-      "deleteAssignmentError": "Kunde inte ta bort uppgiften"
+      "deleteAssignmentError": "Kunde inte ta bort uppgiften",
+      "browsePackages": "Välj paket"
+    },
+    "packages": {
+      "title": "Uppgiftspaket",
+      "gradeLabel": "Årskurs",
+      "topicLabel": "Ämne",
+      "categoryLabel": "Kategori",
+      "visibilityLabel": "Synlighet",
+      "all": "Alla",
+      "gradeAbbr": "Åk {grade}",
+      "math": "Matte",
+      "reading": "Svenska",
+      "private": "Privata",
+      "global": "Globala",
+      "gradeHeader": "Årskurs {grade}",
+      "packageCount": "{count} paket",
+      "noPackages": "Inga paket tillgängliga än",
+      "importPackage": "Importera ett paket"
     },
     "child": {
       "addTitle": "Lägg till barn",
