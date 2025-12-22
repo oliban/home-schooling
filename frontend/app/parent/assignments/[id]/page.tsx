@@ -290,6 +290,14 @@ export default function AssignmentPreview() {
                         <span className={problem.is_correct ? 'text-green-600' : 'text-red-600'}>
                           {t('parent.assignmentPreview.childAnswered')}: <strong>{problem.child_answer}</strong>
                         </span>
+                        {problem.answered_at && (
+                          <>
+                            <span className="text-gray-400">|</span>
+                            <span className="text-gray-500">
+                              {t('parent.assignmentPreview.answeredAt')}: {new Date(problem.answered_at).toLocaleString()}
+                            </span>
+                          </>
+                        )}
                       </>
                     )}
                     <span className="text-gray-400">|</span>

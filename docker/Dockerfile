@@ -20,6 +20,22 @@ RUN npm run build
 # Stage 3: Production
 FROM node:20-alpine AS production
 
+# ============================================================================
+# CORS Configuration (Required for Production)
+# ============================================================================
+# Set the ALLOWED_ORIGINS environment variable to restrict which domains
+# can make cross-origin requests to the API.
+#
+# For Fly.io deployment, set this using:
+#   fly secrets set ALLOWED_ORIGINS=https://your-domain.com
+#
+# Multiple origins can be specified as comma-separated values:
+#   fly secrets set ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+#
+# If ALLOWED_ORIGINS is not set, the server defaults to allowing localhost
+# origins in development mode only (NODE_ENV != production).
+# ============================================================================
+
 # Install nginx
 RUN apk add --no-cache nginx
 

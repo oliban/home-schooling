@@ -142,6 +142,34 @@ Main tables:
 PORT=6001
 JWT_SECRET=your-secret-key
 DATABASE_PATH=/path/to/homeschooling.db  # Optional, defaults to ./data/homeschooling.db
+ALLOWED_ORIGINS=http://localhost:3000    # Comma-separated list of allowed CORS origins
+```
+
+**CORS Configuration (`ALLOWED_ORIGINS`):**
+
+The `ALLOWED_ORIGINS` environment variable controls which domains can make cross-origin requests to the API.
+
+| Environment | Behavior |
+|-------------|----------|
+| Development (default) | Allows localhost:3000, localhost:3001, 127.0.0.1:3000, 127.0.0.1:3001 |
+| Production without `ALLOWED_ORIGINS` | Blocks all cross-origin requests |
+| With `ALLOWED_ORIGINS` set | Only allows specified origins |
+
+**Format:** Comma-separated list of full origin URLs (including protocol and port)
+
+**Examples:**
+```bash
+# Single origin
+ALLOWED_ORIGINS=https://myapp.example.com
+
+# Multiple origins
+ALLOWED_ORIGINS=https://myapp.example.com,https://admin.example.com
+
+# Local development (explicit)
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# Fly.io deployment
+fly secrets set ALLOWED_ORIGINS=https://teacher.fly.dev
 ```
 
 **Frontend:**

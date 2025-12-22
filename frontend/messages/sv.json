@@ -145,7 +145,8 @@
       "deleteAssignment": "Ta bort uppgift",
       "confirmDeleteAssignment": "Är du säker på att du vill ta bort denna uppgift?",
       "deleteAssignmentError": "Kunde inte ta bort uppgiften",
-      "browsePackages": "Välj paket"
+      "browsePackages": "Välj paket",
+      "completedAt": "Klar:"
     },
     "packages": {
       "title": "Uppgiftspaket",
@@ -238,6 +239,7 @@
       "usedHint": "Använde tips",
       "scratchPad": "Ritblock",
       "scratchPadAlt": "Barnets ritblock",
+      "answeredAt": "Besvarad",
       "difficulty": {
         "easy": "Lätt",
         "medium": "Medel",

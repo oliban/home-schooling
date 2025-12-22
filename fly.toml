@@ -1,6 +1,19 @@
 app = "home-schooling"
 primary_region = "arn"
 
+# ============================================================================
+# Environment Variables
+# ============================================================================
+# ALLOWED_ORIGINS - Required for production CORS configuration
+# Set this secret to restrict which domains can make cross-origin API requests.
+#
+# Set using Fly CLI (do not put in [env] section for security):
+#   fly secrets set ALLOWED_ORIGINS=https://home-schooling.fly.dev
+#
+# Multiple origins:
+#   fly secrets set ALLOWED_ORIGINS=https://domain1.com,https://domain2.com
+# ============================================================================
+
 [build]
   dockerfile = "docker/Dockerfile"
 

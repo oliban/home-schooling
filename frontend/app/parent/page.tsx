@@ -45,6 +45,7 @@ interface AssignmentData {
   title: string;
   status: string;
   created_at: string;
+  completed_at: string | null;
   correct_count: number;
   total_count: number;
 }
@@ -830,6 +831,11 @@ export default function ParentDashboard() {
                                     </span>
                                     <div>
                                       <p className="font-medium">{assignment.title}</p>
+                                      {assignment.completed_at && (
+                                        <p className="text-xs text-gray-500">
+                                          {t('parent.dashboard.completedAt')} {new Date(assignment.completed_at).toLocaleString()}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3">

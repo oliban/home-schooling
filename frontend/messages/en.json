@@ -145,7 +145,8 @@
       "deleteAssignment": "Delete assignment",
       "confirmDeleteAssignment": "Are you sure you want to delete this assignment?",
       "deleteAssignmentError": "Failed to delete assignment",
-      "browsePackages": "Browse Packages"
+      "browsePackages": "Browse Packages",
+      "completedAt": "Completed:"
     },
     "packages": {
       "title": "Assignment Packages",
@@ -238,6 +239,7 @@
       "usedHint": "Used hint",
       "scratchPad": "Scratch Pad",
       "scratchPadAlt": "Child's scratch pad drawing",
+      "answeredAt": "Answered",
       "difficulty": {
         "easy": "Easy",
         "medium": "Medium",
