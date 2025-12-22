@@ -48,3 +48,6 @@ data/scratch-images/
 
 # Git worktrees
 .worktrees/
+
+# Database backups
+backups/

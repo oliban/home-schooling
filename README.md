@@ -177,6 +177,57 @@ fly secrets set ALLOWED_ORIGINS=https://teacher.fly.dev
 NEXT_PUBLIC_API_URL=http://localhost:6001/api
 ```
 
+## Database Backup
+
+Automated backup system that syncs the production database to your local machine.
+
+### Setup (one-time)
+
+```bash
+# Install the backup scheduler
+./scripts/install-backup-scheduler.sh
+```
+
+This installs a macOS launchd agent that:
+- Runs on every login and wake from sleep
+- Runs every 4 hours as a fallback
+- Only backs up once per day (skips if today's backup exists)
+
+### Manual Commands
+
+```bash
+# Backup production database
+./scripts/backup-prod.sh
+
+# Force backup even if one exists today
+./scripts/backup-prod.sh -f
+
+# Restore latest backup to local database
+./scripts/restore-local.sh
+
+# Restore a specific backup
+./scripts/restore-local.sh ./backups/teacher-2025-12-20.db
+```
+
+### Managing the Scheduler
+
+```bash
+# Check if scheduler is running
+launchctl list | grep teacher
+
+# View backup log
+cat ./backups/backup.log
+
+# Uninstall scheduler
+launchctl unload ~/Library/LaunchAgents/com.teacher.backup.plist
+rm ~/Library/LaunchAgents/com.teacher.backup.plist
+```
+
+### Prerequisites
+
+- Fly CLI installed (`brew install flyctl`)
+- Authenticated with Fly.io (`fly auth login`)
+
 ## Collectibles System
 
 - **120 unique characters** with Italian-style names
