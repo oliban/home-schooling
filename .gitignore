@@ -45,3 +45,6 @@ data/scratch-images/
 
 # Auto Claude data directory
 .auto-claude/
+
+# Git worktrees
+.worktrees/
