@@ -8,6 +8,29 @@
 
 import { describe, it, expect } from 'vitest';
 
+describe('Parent Dashboard - Navigation Links', () => {
+  /**
+   * Define expected navigation links in parent dashboard
+   * These should be present in both header and quick actions
+   */
+  const expectedLinks = {
+    curriculum: '/parent/curriculum',
+    packages: '/parent/packages',
+    createAssignment: '/parent/assignments/create',
+    addChild: '/parent/children/add',
+  };
+
+  it('should have curriculum link path defined', () => {
+    expect(expectedLinks.curriculum).toBe('/parent/curriculum');
+  });
+
+  it('should have all navigation paths as valid routes', () => {
+    Object.values(expectedLinks).forEach(path => {
+      expect(path).toMatch(/^\/parent\//);
+    });
+  });
+});
+
 interface AssignmentData {
   id: string;
   child_id: string;

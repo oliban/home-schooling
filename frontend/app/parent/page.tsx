@@ -583,6 +583,12 @@ export default function ParentDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/parent/curriculum"
+              className="px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors font-medium"
+            >
+              📊 LGR 22
+            </Link>
             <LanguageSwitcher showLabel={true} />
             <button
               onClick={handleLogout}
