@@ -2,10 +2,29 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../data/database.js';
+import { redis, cacheHits, cacheMisses } from '../index.js';
 import { generateParentToken, generateChildToken } from '../middleware/auth.js';
 import type { Parent, Child, RegisterRequest, LoginRequest, ChildLoginRequest } from '../types/index.js';
 
 const router = Router();
+
+// Cache TTL in seconds
+const CHILDREN_CACHE_TTL = 300; // 5 minutes
+
+// Cache key generator for children list by family code
+function getChildrenCacheKey(familyCode: string): string {
+  return `auth:children:${familyCode}`;
+}
+
+// Invalidate children cache for a family code
+export async function invalidateChildrenCache(familyCode: string): Promise<void> {
+  try {
+    await redis.del(getChildrenCacheKey(familyCode));
+  } catch (err) {
+    // Log but don't fail the operation if cache invalidation fails
+    console.error('Cache invalidation error:', err instanceof Error ? err.message : err);
+  }
+}
 
 // Generate unique 4-digit family code
 function generateFamilyCode(): string {
@@ -181,9 +200,26 @@ router.post('/child-login', async (req, res) => {
 });
 
 // Get children for parent (for login screen) - uses family_code (4-digit)
-router.get('/children/:familyCode', (req, res) => {
+router.get('/children/:familyCode', async (req, res) => {
   try {
     const { familyCode } = req.params;
+    const cacheKey = getChildrenCacheKey(familyCode);
+
+    // Try to get from cache first
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'children' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'children' });
+
     const db = getDb();
 
     // Look up parent by family_code
@@ -196,6 +232,14 @@ router.get('/children/:familyCode', (req, res) => {
       'SELECT id, name FROM children WHERE parent_id = ?',
       [parent.id]
     );
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, CHILDREN_CACHE_TTL, JSON.stringify(children));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
 
     res.json(children);
   } catch (error) {

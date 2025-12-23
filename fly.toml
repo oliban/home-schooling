@@ -1,34 +1,54 @@
+# Fly.io configuration for Teacher Portal
 app = "home-schooling"
-primary_region = "arn"
-
-# ============================================================================
-# Environment Variables
-# ============================================================================
-# ALLOWED_ORIGINS - Required for production CORS configuration
-# Set this secret to restrict which domains can make cross-origin API requests.
-#
-# Set using Fly CLI (do not put in [env] section for security):
-#   fly secrets set ALLOWED_ORIGINS=https://home-schooling.fly.dev
-#
-# Multiple origins:
-#   fly secrets set ALLOWED_ORIGINS=https://domain1.com,https://domain2.com
-# ============================================================================
+primary_region = "arn"  # Stockholm region
 
 [build]
   dockerfile = "docker/Dockerfile"
 
+[env]
+  NODE_ENV = "production"
+  DATABASE_PATH = "/data/teacher.db"
+  # REDIS_HOST and REDIS_PORT should be set via fly secrets or from Upstash Redis URL
+
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = "off"  # Keep machines running for educational app
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/api/health"
 
 [mounts]
   source = "teacher_data"
   destination = "/data"
+  initial_size = "1GB"
 
 [[vm]]
+  memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 512
+
+# Redis configuration instructions:
+#
+# Option 1: Upstash Redis (Recommended)
+# 1. Create Upstash Redis: fly redis create
+# 2. This will automatically set REDIS_URL
+# 3. Parse it in your code or set REDIS_HOST/REDIS_PORT manually
+#
+# Option 2: Fly.io Redis
+# 1. Create a Redis app: fly apps create teacher-redis
+# 2. Deploy Redis: fly deploy --app teacher-redis --image redis:7-alpine
+# 3. Set secrets:
+#    fly secrets set REDIS_HOST=teacher-redis.internal REDIS_PORT=6379
+#
+# Required secrets to set:
+# - fly secrets set JWT_SECRET=<your-secret>
+# - fly secrets set ALLOWED_ORIGINS=https://your-domain.com
+# - fly secrets set REDIS_HOST=<redis-host>
+# - fly secrets set REDIS_PORT=6379

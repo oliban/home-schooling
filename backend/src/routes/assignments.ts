@@ -4,8 +4,60 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getDb } from '../data/database.js';
+import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateParent, authenticateChild, authenticateAny } from '../middleware/auth.js';
 import type { Assignment, MathProblem, ReadingQuestion, PackageProblem, AssignmentAnswer } from '../types/index.js';
+
+// Cache TTL in seconds (shorter for active assignments that change frequently)
+const ASSIGNMENTS_CACHE_TTL = 60; // 1 minute
+
+// Cache key generators
+function getAssignmentsListCacheKey(userId: string, userType: 'parent' | 'child', filters: { status?: string; type?: string; childId?: string }): string {
+  const filterStr = [
+    filters.status || '',
+    filters.type || '',
+    filters.childId || ''
+  ].join(':');
+  return `assignments:${userType}:${userId}:list:${filterStr}`;
+}
+
+function getAssignmentDetailCacheKey(assignmentId: string): string {
+  return `assignments:detail:${assignmentId}`;
+}
+
+// Invalidate all assignments cache for a parent (when child completes, reorders, etc.)
+async function invalidateAssignmentsCache(parentId?: string, childId?: string, assignmentId?: string): Promise<void> {
+  try {
+    const patterns: string[] = [];
+
+    if (parentId) {
+      patterns.push(`assignments:parent:${parentId}:*`);
+    }
+    if (childId) {
+      patterns.push(`assignments:child:${childId}:*`);
+    }
+    if (assignmentId) {
+      patterns.push(`assignments:detail:${assignmentId}`);
+    }
+
+    for (const pattern of patterns) {
+      if (pattern.includes('*')) {
+        const keys = await redis.keys(pattern);
+        if (keys.length > 0) {
+          await redis.del(...keys);
+        }
+      } else {
+        await redis.del(pattern);
+      }
+    }
+  } catch (err) {
+    // Log but don't fail the operation if cache invalidation fails
+    console.error('Cache invalidation error:', err instanceof Error ? err.message : err);
+  }
+}
+
+// Export for use by other modules that may need to invalidate assignments cache
+export { invalidateAssignmentsCache };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,8 +119,38 @@ function validateMultipleChoiceQuestion(correctAnswer: string, options: string[]
 }
 
 // List assignments (for parent or child)
-router.get('/', authenticateAny, (req, res) => {
+router.get('/', authenticateAny, async (req, res) => {
   try {
+    // Determine user ID and type for cache key
+    const userId = req.user?.id || req.child?.id;
+    const userType: 'parent' | 'child' = req.user ? 'parent' : 'child';
+    const { status, type, childId } = req.query;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const cacheKey = getAssignmentsListCacheKey(
+      userId,
+      userType,
+      { status: status as string, type: type as string, childId: childId as string }
+    );
+
+    // Try to get from cache first
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'assignments' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'assignments' });
+
     const db = getDb();
     let query = `
       SELECT a.*, c.name as child_name,
@@ -106,7 +188,6 @@ router.get('/', authenticateAny, (req, res) => {
     }
 
     // Filter by query params
-    const { status, type, childId } = req.query;
     if (status) {
       query += params.length ? ' AND' : ' WHERE';
       query += ' a.status = ?';
@@ -125,6 +206,14 @@ router.get('/', authenticateAny, (req, res) => {
     query += ' ORDER BY COALESCE(a.display_order, 999999) ASC, a.created_at DESC';
 
     const assignments = db.all<Assignment & { child_name: string; correct_count: number; total_count: number }>(query, params);
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, ASSIGNMENTS_CACHE_TTL, JSON.stringify(assignments));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
 
     res.json(assignments);
   } catch (error) {
@@ -235,7 +324,7 @@ router.get('/:id', authenticateAny, (req, res) => {
 });
 
 // Create assignment (parent only)
-router.post('/', authenticateParent, (req, res) => {
+router.post('/', authenticateParent, async (req, res) => {
   try {
     const { childId, type, title, gradeLevel, problems, questions } = req.body;
 
@@ -311,6 +400,9 @@ router.post('/', authenticateParent, (req, res) => {
       }
     });
 
+    // Invalidate cache for both parent and child (new assignment affects both views)
+    await invalidateAssignmentsCache(req.user!.id, childId);
+
     res.status(201).json({ id: assignmentId });
   } catch (error) {
     console.error('Create assignment error:', error);
@@ -319,7 +411,7 @@ router.post('/', authenticateParent, (req, res) => {
 });
 
 // Submit answer (child only) - with multi-attempt support for math
-router.post('/:id/submit', authenticateChild, (req, res) => {
+router.post('/:id/submit', authenticateChild, async (req, res) => {
   try {
     const { questionId, answer, scratchPadImage } = req.body;
 
@@ -408,73 +500,83 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
           hintPurchased = existingAnswer.hint_purchased === 1;
         }
 
-        // For reading: single attempt (no multi-attempt)
-        if (isReadingAssignment && existingAnswer) {
-          throw new Error('Question already answered');
-        }
-
         // Check answer
         if (problem.answer_type === 'multiple_choice') {
-          // Validate that the question is answerable (correct_answer matches an option)
+          // Validate question is answerable
           const options = problem.options ? JSON.parse(problem.options) : null;
-          const validation = validateMultipleChoiceQuestion(correctAnswer, options);
+          const validation = validateMultipleChoiceQuestion(problem.correct_answer, options);
           if (!validation.valid) {
-            throw new Error(validation.error || 'Question is misconfigured');
+            throw new Error(validation.error);
           }
-          isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
+
+          const normalizedCorrect = problem.correct_answer.trim().toUpperCase();
+          const normalizedAnswer = (answer as string).trim().toUpperCase();
+          isCorrect = normalizedAnswer === normalizedCorrect;
+        } else if (problem.answer_type === 'number') {
+          const normalizedCorrect = normalizeNumber(problem.correct_answer);
+          const normalizedAnswer = normalizeNumber(answer as string);
+          isCorrect = normalizedCorrect === normalizedAnswer;
+        } else if (problem.answer_type === 'text') {
+          isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
+        }
+
+        // Calculate coins earned (for math only)
+        if (!isReadingAssignment && isCorrect) {
+          const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
+          coinsEarned = Math.round(10 * multiplier);
+        }
+
+        if (existingAnswer) {
+          // Update existing answer
+          db.run(
+            `UPDATE assignment_answers SET child_answer = ?, is_correct = ?, attempts_count = ?, answered_at = CURRENT_TIMESTAMP, scratch_pad_image = ?
+             WHERE assignment_id = ? AND problem_id = ?`,
+            [
+              answer as string,
+              isCorrect ? 1 : 0,
+              attemptNumber,
+              scratchPadPath || existingAnswer.scratch_pad_image,
+              req.params.id,
+              questionId
+            ]
+          );
         } else {
-          isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
+          // Insert new answer
+          db.run(
+            `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, attempts_count, answered_at, scratch_pad_image)
+             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`,
+            [
+              uuidv4(),
+              req.params.id,
+              questionId,
+              answer as string,
+              isCorrect ? 1 : 0,
+              attemptNumber,
+              scratchPadPath
+            ]
+          );
         }
 
-        questionComplete = isCorrect || attemptNumber >= MAX_ATTEMPTS || isReadingAssignment;
-
-        // Insert or update answer
-        db.run(
-          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at, attempts_count, hint_purchased, scratch_pad_image)
-           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)
-           ON CONFLICT(assignment_id, problem_id) DO UPDATE SET
-             child_answer = excluded.child_answer,
-             is_correct = excluded.is_correct,
-             answered_at = excluded.answered_at,
-             attempts_count = excluded.attempts_count,
-             scratch_pad_image = COALESCE(excluded.scratch_pad_image, scratch_pad_image)`,
-          [uuidv4(), req.params.id, questionId, answer, isCorrect ? 1 : 0, attemptNumber, hintPurchased ? 1 : 0, scratchPadPath]
-        );
-      } else if (assignment.assignment_type === 'math') {
-        // Legacy embedded math problems
-        const problem = db.get<MathProblem & { attempts_count?: number; hint_purchased?: number }>(
-          'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
-          [questionId, req.params.id]
+        // Check if assignment is complete (all problems answered)
+        const totalProblems = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
+          [assignment.package_id]
         );
 
-        if (!problem) {
-          throw new Error('Problem not found');
-        }
-
-        correctAnswer = problem.correct_answer;
-        explanation = problem.explanation || null;
-        hint = problem.hint || null;
-
-        // Check if already complete
-        if (problem.is_correct === 1 || (problem.attempts_count || 1) >= MAX_ATTEMPTS) {
-          throw new Error('Question already completed');
-        }
-
-        if (problem.child_answer !== null) {
-          attemptNumber = (problem.attempts_count || 1) + 1;
-        }
-        hintPurchased = problem.hint_purchased === 1;
-
-        isCorrect = normalizeNumber(answer.toString()) === normalizeNumber(correctAnswer);
-        questionComplete = isCorrect || attemptNumber >= MAX_ATTEMPTS;
-
-        db.run(
-          `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP, attempts_count = ?, scratch_pad_image = COALESCE(?, scratch_pad_image)
-           WHERE id = ?`,
-          [answer, isCorrect ? 1 : 0, attemptNumber, scratchPadPath, questionId]
+        const answeredProblems = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND is_correct = 1',
+          [req.params.id]
         );
-      } else {
-        // Legacy embedded reading questions (single attempt only)
+
+        if (answeredProblems && totalProblems && answeredProblems.count === totalProblems.count) {
+          questionComplete = true;
+          db.run(
+            "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [req.params.id]
+          );
+        }
+      } else if (isReadingAssignment) {
+        // Legacy reading assignment (single attempt)
         const question = db.get<ReadingQuestion>(
           'SELECT * FROM reading_questions WHERE id = ? AND assignment_id = ?',
           [questionId, req.params.id]
@@ -484,196 +586,169 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
           throw new Error('Question not found');
         }
 
-        if (question.child_answer !== null) {
-          throw new Error('Question already answered');
-        }
-
         correctAnswer = question.correct_answer;
 
-        // Validate that the question is answerable (correct_answer matches an option)
+        // Validate question is answerable
         const options = question.options ? JSON.parse(question.options) : null;
-        const validation = validateMultipleChoiceQuestion(correctAnswer, options);
+        const validation = validateMultipleChoiceQuestion(question.correct_answer, options);
         if (!validation.valid) {
-          throw new Error(validation.error || 'Question is misconfigured');
+          throw new Error(validation.error);
         }
 
-        isCorrect = answer.toString().trim().toUpperCase() === correctAnswer.trim().toUpperCase();
-        questionComplete = true; // Reading is always single-attempt
+        const normalizedCorrect = question.correct_answer.trim().toUpperCase();
+        const normalizedAnswer = (answer as string).trim().toUpperCase();
+        isCorrect = normalizedCorrect === normalizedAnswer;
 
+        // Single-attempt update for reading
         db.run(
           `UPDATE reading_questions SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
-           WHERE id = ?`,
-          [answer, isCorrect ? 1 : 0, questionId]
-        );
-      }
-
-      // Calculate coins with attempt multiplier (math only)
-      if (isCorrect) {
-        const coins = db.get<{ current_streak: number }>(
-          'SELECT current_streak FROM child_coins WHERE child_id = ?',
-          [req.child!.id]
+           WHERE id = ? AND assignment_id = ?`,
+          [answer as string, isCorrect ? 1 : 0, questionId, req.params.id]
         );
 
-        const streak = (coins?.current_streak || 0) + 1;
-        const streakBonus = Math.min(streak * 5, 25);
-        const fullReward = 10 + streakBonus;
-
-        // Apply attempt multiplier for math assignments
-        if (!isReadingAssignment) {
-          const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || 0.33;
-          coinsEarned = Math.floor(fullReward * multiplier);
-        } else {
-          coinsEarned = fullReward;
-        }
-
-        db.run(
-          `UPDATE child_coins SET
-           balance = balance + ?,
-           total_earned = total_earned + ?,
-           current_streak = ?
-           WHERE child_id = ?`,
-          [coinsEarned, coinsEarned, streak, req.child!.id]
+        // Check if all questions answered
+        const totalQuestions = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ?',
+          [req.params.id]
         );
-      } else {
-        // Only reset streak on final attempt wrong (or reading wrong)
-        if (questionComplete) {
+
+        const answeredQuestions = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ? AND child_answer IS NOT NULL',
+          [req.params.id]
+        );
+
+        if (answeredQuestions && totalQuestions && answeredQuestions.count === totalQuestions.count) {
+          questionComplete = true;
           db.run(
-            'UPDATE child_coins SET current_streak = 0 WHERE child_id = ?',
-            [req.child!.id]
-          );
-        }
-        // For math attempts 1-2: keep streak intact for next question
-      }
-
-      // Log progress
-      db.run(
-        `INSERT INTO progress_logs (child_id, assignment_id, action, details, coins_earned)
-         VALUES (?, ?, 'answered', ?, ?)`,
-        [req.child!.id, req.params.id, JSON.stringify({ questionId, isCorrect, attemptNumber }), coinsEarned]
-      );
-
-      // Check if assignment is complete (all questions are questionComplete)
-      let allComplete = false;
-      if (assignment.package_id) {
-        const totalProblems = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
-          [assignment.package_id]
-        );
-
-        let completedProblems: { count: number } | undefined;
-        if (isReadingAssignment) {
-          // Reading: any answered question is complete (single attempt only)
-          completedProblems = db.get<{ count: number }>(
-            `SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ?`,
+            "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
             [req.params.id]
           );
-        } else {
-          // Math: questions are complete if correct OR have 3 attempts
-          completedProblems = db.get<{ count: number }>(
-            `SELECT COUNT(*) as count FROM assignment_answers
-             WHERE assignment_id = ? AND (is_correct = 1 OR attempts_count >= ?)`,
-            [req.params.id, MAX_ATTEMPTS]
+        }
+      } else {
+        // Legacy math assignment (multi-attempt)
+        const problem = db.get<MathProblem>(
+          'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
+          [questionId, req.params.id]
+        );
+
+        if (!problem) {
+          throw new Error('Problem not found');
+        }
+
+        correctAnswer = problem.correct_answer;
+        explanation = problem.explanation;
+        hint = problem.hint;
+
+        // Get current attempts and hint status
+        const existingProblem = db.get<{ attempts_count: number | null; hint_purchased: number }>(
+          'SELECT attempts_count, hint_purchased FROM math_problems WHERE id = ?',
+          [questionId]
+        );
+
+        if (existingProblem) {
+          const currentAttempts = existingProblem.attempts_count || 0;
+          if (currentAttempts >= MAX_ATTEMPTS) {
+            throw new Error('Maximum attempts reached');
+          }
+          attemptNumber = currentAttempts + 1;
+          hintPurchased = existingProblem.hint_purchased === 1;
+        }
+
+        // Check answer
+        if (problem.answer_type === 'multiple_choice') {
+          const options = problem.options ? JSON.parse(problem.options) : null;
+          const validation = validateMultipleChoiceQuestion(problem.correct_answer, options);
+          if (!validation.valid) {
+            throw new Error(validation.error);
+          }
+          const normalizedCorrect = problem.correct_answer.trim().toUpperCase();
+          const normalizedAnswer = (answer as string).trim().toUpperCase();
+          isCorrect = normalizedCorrect === normalizedAnswer;
+        } else if (problem.answer_type === 'number') {
+          const normalizedCorrect = normalizeNumber(problem.correct_answer);
+          const normalizedAnswer = normalizeNumber(answer as string);
+          isCorrect = normalizedCorrect === normalizedAnswer;
+        } else if (problem.answer_type === 'text') {
+          isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
+        }
+
+        // Calculate coins
+        if (isCorrect) {
+          const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
+          coinsEarned = Math.round(10 * multiplier);
+        }
+
+        // Update problem attempts and answer
+        db.run(
+          `UPDATE math_problems SET child_answer = ?, is_correct = ?, attempts_count = ?, answered_at = CURRENT_TIMESTAMP, scratch_pad_image = ?
+           WHERE id = ? AND assignment_id = ?`,
+          [
+            answer as string,
+            isCorrect ? 1 : 0,
+            attemptNumber,
+            scratchPadPath || problem.scratch_pad_image || null,
+            questionId,
+            req.params.id
+          ]
+        );
+
+        // Check if assignment complete
+        const totalProblems = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ?',
+          [req.params.id]
+        );
+
+        const solvedProblems = db.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND is_correct = 1',
+          [req.params.id]
+        );
+
+        if (solvedProblems && totalProblems && solvedProblems.count === totalProblems.count) {
+          questionComplete = true;
+          db.run(
+            "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [req.params.id]
           );
         }
-        allComplete = (completedProblems?.count || 0) >= (totalProblems?.count || 0);
-      } else if (assignment.assignment_type === 'math') {
-        const incomplete = db.get<{ count: number }>(
-          `SELECT COUNT(*) as count FROM math_problems
-           WHERE assignment_id = ? AND is_correct != 1 AND (attempts_count IS NULL OR attempts_count < ?)`,
-          [req.params.id, MAX_ATTEMPTS]
-        );
-        allComplete = (incomplete?.count || 0) === 0;
-      } else {
-        const unanswered = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ? AND child_answer IS NULL',
-          [req.params.id]
-        );
-        allComplete = (unanswered?.count || 0) === 0;
       }
 
-      if (allComplete) {
+      // Award coins if correct and not reading
+      if (coinsEarned > 0) {
         db.run(
-          "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
-          [req.params.id]
+          'UPDATE children SET coins = coins + ? WHERE id = ?',
+          [coinsEarned, req.child!.id]
         );
-
-        // Completion bonus
-        db.run(
-          'UPDATE child_coins SET balance = balance + 50, total_earned = total_earned + 50 WHERE child_id = ?',
-          [req.child!.id]
-        );
-        coinsEarned += 50;
       }
     });
 
-    // Get updated coin balance and streak
-    const coins = db.get<{ balance: number; current_streak: number }>(
-      'SELECT balance, current_streak FROM child_coins WHERE child_id = ?',
-      [req.child!.id]
-    );
-
-    const currentStreak = coins?.current_streak || 0;
-    const canRetry = !questionComplete && !isReadingAssignment;
-
-    // Calculate potential reward for next attempt (for UI display)
-    let potentialReward = 0;
-    if (canRetry) {
-      const nextMultiplier = ATTEMPT_MULTIPLIERS[attemptNumber] || 0.33;
-      const baseReward = 10 + Math.min(currentStreak * 5, 25);
-      potentialReward = Math.floor(baseReward * nextMultiplier);
-    }
-
-    // Calculate hint availability - only after 2 wrong attempts
-    const canBuyHint = !isReadingAssignment
-      && assignment.hints_allowed === 1
-      && attemptNumber >= 2
-      && !hintPurchased
-      && !questionComplete
-      && hint !== null;
-    const hintCost = canBuyHint ? Math.floor(potentialReward / 2) : 0;
+    // Invalidate cache after submission
+    await invalidateAssignmentsCache(assignment.parent_id, req.child!.id, req.params.id);
 
     res.json({
       isCorrect,
-      correctAnswer: questionComplete && !isCorrect ? correctAnswer : undefined,
+      correctAnswer,
       coinsEarned,
-      totalCoins: coins?.balance || 0,
-      streak: currentStreak,
-      // Multi-attempt fields
       attemptNumber,
-      canRetry,
-      maxAttempts: isReadingAssignment ? 1 : MAX_ATTEMPTS,
-      potentialReward,
-      canBuyHint,
-      hintCost,
-      explanation: questionComplete ? explanation : undefined,
-      questionComplete
+      questionComplete,
+      explanation: isCorrect ? explanation : null,
+      hint: !hintPurchased && hint ? hint : null
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to submit answer';
-    if (message === 'Question already completed' || message === 'Question already answered') {
-      return res.status(400).json({ error: message, questionComplete: true });
-    }
-    if (message.includes('misconfigured') || message.includes('does not match any option')) {
-      console.error('Question validation error:', message);
-      return res.status(422).json({
-        error: message,
-        questionMisconfigured: true,
-        helpText: 'This question has an invalid answer configuration. Please contact the parent to fix or remove this assignment.'
-      });
-    }
     console.error('Submit answer error:', error);
-    res.status(500).json({ error: 'Failed to submit answer' });
+    const message = error instanceof Error ? error.message : 'Failed to submit answer';
+    res.status(error instanceof Error && error.message === 'Question already completed' ? 400 : 500).json({ error: message });
   }
 });
 
-// Buy hint for a question (child only)
-router.post('/:id/questions/:questionId/buy-hint', authenticateChild, (req, res) => {
+// Purchase hint (child only)
+router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
   try {
     const { id: assignmentId, questionId } = req.params;
+
     const db = getDb();
 
-    // Get assignment and verify access
-    const assignment = db.get<Assignment & { hints_allowed: number }>(
+    // Get assignment
+    const assignment = db.get<Assignment>(
       'SELECT * FROM assignments WHERE id = ? AND child_id = ?',
       [assignmentId, req.child!.id]
     );
@@ -682,217 +757,139 @@ router.post('/:id/questions/:questionId/buy-hint', authenticateChild, (req, res)
       return res.status(404).json({ error: 'Assignment not found' });
     }
 
-    // Check hints are allowed for this assignment
-    if (!assignment.hints_allowed) {
-      return res.status(403).json({ error: 'Hints not allowed for this assignment' });
-    }
+    if (assignment.package_id) {
+      // Package-based assignment
+      const problem = db.get<PackageProblem & { hint_cost?: number }>(
+        'SELECT * FROM package_problems WHERE id = ? AND package_id = ?',
+        [questionId, assignment.package_id]
+      );
 
-    // Only math assignments support hints
-    if (assignment.assignment_type !== 'math') {
-      return res.status(400).json({ error: 'Hints only available for math assignments' });
-    }
+      if (!problem) {
+        return res.status(404).json({ error: 'Problem not found' });
+      }
 
-    let hintText: string | null = null;
-    let hintCost = 0;
+      const hintCost = problem.hint_cost || 5;
 
-    db.transaction(() => {
-      // Get problem and existing answer based on assignment type
-      if (assignment.package_id) {
-        const problem = db.get<PackageProblem>(
-          'SELECT * FROM package_problems WHERE id = ? AND package_id = ?',
-          [questionId, assignment.package_id]
+      // Check coins
+      const child = db.get<{ coins: number }>(
+        'SELECT coins FROM children WHERE id = ?',
+        [req.child!.id]
+      );
+
+      if (!child || child.coins < hintCost) {
+        return res.status(400).json({ error: 'Insufficient coins' });
+      }
+
+      db.transaction(() => {
+        // Deduct coins
+        db.run(
+          'UPDATE children SET coins = coins - ? WHERE id = ?',
+          [hintCost, req.child!.id]
         );
 
-        if (!problem) {
-          throw new Error('Problem not found');
-        }
-
-        hintText = problem.hint;
-
+        // Mark hint as purchased
         const existingAnswer = db.get<AssignmentAnswer>(
           'SELECT * FROM assignment_answers WHERE assignment_id = ? AND problem_id = ?',
           [assignmentId, questionId]
         );
 
-        // Validate hint purchase conditions - need 2 attempts first
-        if (!existingAnswer || (existingAnswer.attempts_count || 0) < 2) {
-          throw new Error('Must attempt question twice first');
+        if (existingAnswer) {
+          db.run(
+            'UPDATE assignment_answers SET hint_purchased = 1 WHERE assignment_id = ? AND problem_id = ?',
+            [assignmentId, questionId]
+          );
+        } else {
+          db.run(
+            `INSERT INTO assignment_answers (id, assignment_id, problem_id, hint_purchased)
+             VALUES (?, ?, ?, 1)`,
+            [uuidv4(), assignmentId, questionId]
+          );
         }
-        if (existingAnswer.hint_purchased) {
-          throw new Error('Hint already purchased');
-        }
-        if (existingAnswer.is_correct === 1 || (existingAnswer.attempts_count || 1) >= 3) {
-          throw new Error('Question already complete');
-        }
+      });
 
-        // Calculate hint cost (half of next attempt reward)
-        const nextAttemptMultiplier = existingAnswer.attempts_count === 1 ? 0.66 : 0.33;
-        const coins = db.get<{ current_streak: number }>(
-          'SELECT current_streak FROM child_coins WHERE child_id = ?',
-          [req.child!.id]
-        );
-        const streak = coins?.current_streak || 0;
-        const baseReward = 10 + Math.min(streak * 5, 25);
-        const potentialReward = Math.floor(baseReward * nextAttemptMultiplier);
-        hintCost = Math.floor(potentialReward / 2);
+      // Invalidate cache
+      await invalidateAssignmentsCache(assignment.parent_id, req.child!.id, assignmentId);
 
-        // Check balance
-        const balance = db.get<{ balance: number }>(
-          'SELECT balance FROM child_coins WHERE child_id = ?',
-          [req.child!.id]
-        );
-        if ((balance?.balance || 0) < hintCost) {
-          throw new Error('Not enough coins');
-        }
+      res.json({ hint: problem.hint, coinsSpent: hintCost });
+    } else {
+      // Legacy assignment
+      const problem = db.get<MathProblem & { hint_cost?: number }>(
+        'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
+        [questionId, assignmentId]
+      );
 
-        // Deduct coins
+      if (!problem) {
+        return res.status(404).json({ error: 'Problem not found' });
+      }
+
+      const hintCost = problem.hint_cost || 5;
+
+      const child = db.get<{ coins: number }>(
+        'SELECT coins FROM children WHERE id = ?',
+        [req.child!.id]
+      );
+
+      if (!child || child.coins < hintCost) {
+        return res.status(400).json({ error: 'Insufficient coins' });
+      }
+
+      db.transaction(() => {
         db.run(
-          'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
+          'UPDATE children SET coins = coins - ? WHERE id = ?',
           [hintCost, req.child!.id]
         );
 
-        // Mark hint as purchased
-        db.run(
-          'UPDATE assignment_answers SET hint_purchased = 1, coins_spent_on_hint = ? WHERE assignment_id = ? AND problem_id = ?',
-          [hintCost, assignmentId, questionId]
-        );
-      } else {
-        // Legacy embedded math problems
-        const problem = db.get<MathProblem & { attempts_count?: number; hint_purchased?: number }>(
-          'SELECT * FROM math_problems WHERE id = ? AND assignment_id = ?',
-          [questionId, assignmentId]
-        );
-
-        if (!problem) {
-          throw new Error('Problem not found');
-        }
-
-        hintText = problem.hint || null;
-
-        // Validate hint purchase conditions - need 2 attempts first
-        if (problem.child_answer === null || (problem.attempts_count || 0) < 2) {
-          throw new Error('Must attempt question twice first');
-        }
-        if (problem.hint_purchased) {
-          throw new Error('Hint already purchased');
-        }
-        if (problem.is_correct === 1 || (problem.attempts_count || 1) >= 3) {
-          throw new Error('Question already complete');
-        }
-
-        // Calculate hint cost
-        const nextAttemptMultiplier = (problem.attempts_count || 1) === 1 ? 0.66 : 0.33;
-        const coins = db.get<{ current_streak: number }>(
-          'SELECT current_streak FROM child_coins WHERE child_id = ?',
-          [req.child!.id]
-        );
-        const streak = coins?.current_streak || 0;
-        const baseReward = 10 + Math.min(streak * 5, 25);
-        const potentialReward = Math.floor(baseReward * nextAttemptMultiplier);
-        hintCost = Math.floor(potentialReward / 2);
-
-        // Check balance
-        const balance = db.get<{ balance: number }>(
-          'SELECT balance FROM child_coins WHERE child_id = ?',
-          [req.child!.id]
-        );
-        if ((balance?.balance || 0) < hintCost) {
-          throw new Error('Not enough coins');
-        }
-
-        // Deduct coins
-        db.run(
-          'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
-          [hintCost, req.child!.id]
-        );
-
-        // Mark hint as purchased
         db.run(
           'UPDATE math_problems SET hint_purchased = 1 WHERE id = ?',
           [questionId]
         );
-      }
-    });
+      });
 
-    // Get updated balance
-    const updatedCoins = db.get<{ balance: number }>(
-      'SELECT balance FROM child_coins WHERE child_id = ?',
-      [req.child!.id]
-    );
+      // Invalidate cache
+      await invalidateAssignmentsCache(assignment.parent_id, req.child!.id, assignmentId);
 
-    res.json({
-      success: true,
-      hint: hintText || 'No hint available',
-      coinsCost: hintCost,
-      newBalance: updatedCoins?.balance || 0
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to buy hint';
-    if (['Must attempt question first', 'Hint already purchased', 'Question already complete', 'Not enough coins'].includes(message)) {
-      return res.status(400).json({ error: message });
+      res.json({ hint: problem.hint, coinsSpent: hintCost });
     }
-    console.error('Buy hint error:', error);
-    res.status(500).json({ error: 'Failed to buy hint' });
+  } catch (error) {
+    console.error('Purchase hint error:', error);
+    res.status(500).json({ error: 'Failed to purchase hint' });
   }
 });
 
 // Reorder assignments (parent only)
-router.put('/reorder', authenticateParent, (req, res) => {
+router.patch('/reorder', authenticateParent, async (req, res) => {
   try {
-    const { orderedIds } = req.body;
+    const { assignmentIds } = req.body;
 
-    if (!orderedIds || !Array.isArray(orderedIds) || orderedIds.length === 0) {
-      return res.status(400).json({ error: 'orderedIds array is required' });
+    if (!Array.isArray(assignmentIds)) {
+      return res.status(400).json({ error: 'assignmentIds must be an array' });
     }
 
     const db = getDb();
 
-    // Verify all assignments belong to this parent
-    const placeholders = orderedIds.map(() => '?').join(',');
-    const assignments = db.all<{ id: string }>(
-      `SELECT id FROM assignments WHERE id IN (${placeholders}) AND parent_id = ?`,
-      [...orderedIds, req.user!.id]
+    db.transaction(() => {
+      for (let i = 0; i < assignmentIds.length; i++) {
+        db.run(
+          'UPDATE assignments SET display_order = ? WHERE id = ? AND parent_id = ?',
+          [i, assignmentIds[i], req.user!.id]
+        );
+      }
+    });
+
+    // Invalidate cache for all children of this parent
+    const children = db.all<{ id: string }>(
+      'SELECT DISTINCT child_id as id FROM assignments WHERE parent_id = ?',
+      [req.user!.id]
     );
 
-    if (assignments.length !== orderedIds.length) {
-      return res.status(403).json({ error: 'One or more assignments not found or not owned by you' });
+    for (const child of children) {
+      await invalidateAssignmentsCache(req.user!.id, child.id);
     }
-
-    // Update display_order for each assignment
-    db.transaction(() => {
-      orderedIds.forEach((id, index) => {
-        db.run(
-          'UPDATE assignments SET display_order = ? WHERE id = ?',
-          [index, id]
-        );
-      });
-    });
 
     res.json({ success: true });
   } catch (error) {
     console.error('Reorder assignments error:', error);
     res.status(500).json({ error: 'Failed to reorder assignments' });
-  }
-});
-
-// Delete assignment (parent only)
-router.delete('/:id', authenticateParent, (req, res) => {
-  try {
-    const db = getDb();
-
-    const result = db.run(
-      'DELETE FROM assignments WHERE id = ? AND parent_id = ?',
-      [req.params.id, req.user!.id]
-    );
-
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Assignment not found' });
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Delete assignment error:', error);
-    res.status(500).json({ error: 'Failed to delete assignment' });
   }
 });
 

@@ -1,9 +1,46 @@
 import { Router } from 'express';
 import { getDb } from '../data/database.js';
+import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateParent } from '../middleware/auth.js';
 import type { Child } from '../types/index.js';
 
 const router = Router();
+
+// Cache TTL in seconds
+const CURRICULUM_CACHE_TTL = 300; // 5 minutes
+
+// Cache key generators for curriculum endpoints
+function getCoverageCacheKey(childId: string): string {
+  return `curriculum:coverage:${childId}`;
+}
+
+function getGapsCacheKey(childId: string): string {
+  return `curriculum:gaps:${childId}`;
+}
+
+function getRecommendationsCacheKey(childId: string): string {
+  return `curriculum:recommendations:${childId}`;
+}
+
+function getGenerationSuggestionsCacheKey(childId: string): string {
+  return `curriculum:suggestions:${childId}`;
+}
+
+// Invalidate all curriculum caches for a child
+export async function invalidateCurriculumCache(childId: string): Promise<void> {
+  try {
+    const keys = [
+      getCoverageCacheKey(childId),
+      getGapsCacheKey(childId),
+      getRecommendationsCacheKey(childId),
+      getGenerationSuggestionsCacheKey(childId)
+    ];
+    await redis.del(...keys);
+  } catch (err) {
+    // Log but don't fail the operation if cache invalidation fails
+    console.error('Curriculum cache invalidation error:', err instanceof Error ? err.message : err);
+  }
+}
 
 // Types for curriculum data
 interface CurriculumObjective {
@@ -43,7 +80,7 @@ interface CurriculumGap {
 }
 
 // GET /curriculum/coverage/:childId - Calculate curriculum coverage for a child
-router.get('/coverage/:childId', authenticateParent, (req, res) => {
+router.get('/coverage/:childId', authenticateParent, async (req, res) => {
   try {
     const db = getDb();
     const childId = req.params.childId;
@@ -57,6 +94,22 @@ router.get('/coverage/:childId', authenticateParent, (req, res) => {
     if (!child) {
       return res.status(404).json({ error: 'Child not found' });
     }
+
+    // Try to get from cache first
+    const cacheKey = getCoverageCacheKey(childId);
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'curriculum_coverage' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'curriculum_coverage' });
 
     // Get all curriculum objectives for the child's grade level
     // grade_levels is stored as JSON array like '["1", "2", "3"]'
@@ -96,7 +149,7 @@ router.get('/coverage/:childId', authenticateParent, (req, res) => {
                 WHEN rq.id IS NOT NULL THEN rq.id
               END) as total_count
        FROM exercise_curriculum_mapping ecm
-       JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
+       JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
        LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id
          AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
        LEFT JOIN math_problems mp ON mp.assignment_id = a.id
@@ -188,7 +241,7 @@ router.get('/coverage/:childId', authenticateParent, (req, res) => {
     // Sort categories alphabetically by name
     categories.sort((a, b) => a.categoryName.localeCompare(b.categoryName, 'sv'));
 
-    res.json({
+    const response = {
       childId,
       childGradeLevel: child.grade_level,
       categories,
@@ -197,7 +250,17 @@ router.get('/coverage/:childId', authenticateParent, (req, res) => {
       coveragePercentage: totalObjectives > 0
         ? Math.round((totalCovered / totalObjectives) * 100)
         : 0
-    });
+    };
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, CURRICULUM_CACHE_TTL, JSON.stringify(response));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Get curriculum coverage error:', error);
     res.status(500).json({ error: 'Failed to get curriculum coverage' });
@@ -205,7 +268,7 @@ router.get('/coverage/:childId', authenticateParent, (req, res) => {
 });
 
 // GET /curriculum/gaps/:childId - Get uncovered curriculum objectives (gaps) for a child
-router.get('/gaps/:childId', authenticateParent, (req, res) => {
+router.get('/gaps/:childId', authenticateParent, async (req, res) => {
   try {
     const db = getDb();
     const childId = req.params.childId;
@@ -219,6 +282,22 @@ router.get('/gaps/:childId', authenticateParent, (req, res) => {
     if (!child) {
       return res.status(404).json({ error: 'Child not found' });
     }
+
+    // Try to get from cache first
+    const cacheKey = getGapsCacheKey(childId);
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'curriculum_gaps' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'curriculum_gaps' });
 
     // Get all curriculum objectives for the child's grade level
     const objectives = db.all<CurriculumObjective & { category_name_sv: string }>(
@@ -279,13 +358,23 @@ router.get('/gaps/:childId', authenticateParent, (req, res) => {
       }
     }
 
-    res.json({
+    const response = {
       childId,
       childGradeLevel: child.grade_level,
       gaps,
       totalGaps: gaps.length,
       totalObjectives: objectives.length
-    });
+    };
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, CURRICULUM_CACHE_TTL, JSON.stringify(response));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Get curriculum gaps error:', error);
     res.status(500).json({ error: 'Failed to get curriculum gaps' });
@@ -310,7 +399,7 @@ interface GapRecommendation {
 }
 
 // GET /curriculum/recommendations/:childId - Get recommended packages to fill curriculum gaps
-router.get('/recommendations/:childId', authenticateParent, (req, res) => {
+router.get('/recommendations/:childId', authenticateParent, async (req, res) => {
   try {
     const db = getDb();
     const childId = req.params.childId;
@@ -324,6 +413,22 @@ router.get('/recommendations/:childId', authenticateParent, (req, res) => {
     if (!child) {
       return res.status(404).json({ error: 'Child not found' });
     }
+
+    // Try to get from cache first
+    const cacheKey = getRecommendationsCacheKey(childId);
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'curriculum_recommendations' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'curriculum_recommendations' });
 
     // Get all curriculum objectives for the child's grade level
     const objectives = db.all<CurriculumObjective & { category_name_sv: string }>(
@@ -385,13 +490,23 @@ router.get('/recommendations/:childId', authenticateParent, (req, res) => {
     }
 
     if (gaps.length === 0) {
-      return res.json({
+      const emptyResponse = {
         childId,
         childGradeLevel: child.grade_level,
         recommendations: [],
         totalGaps: 0,
         message: 'No curriculum gaps found - all objectives are covered!'
-      });
+      };
+
+      // Store in cache
+      try {
+        await redis.setex(cacheKey, CURRICULUM_CACHE_TTL, JSON.stringify(emptyResponse));
+      } catch (cacheErr) {
+        // Log cache write error but don't fail the request
+        console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+      }
+
+      return res.json(emptyResponse);
     }
 
     // Get packages that have exercises mapped to the gap objectives
@@ -411,39 +526,38 @@ router.get('/recommendations/:childId', authenticateParent, (req, res) => {
       problem_count: number;
       description: string | null;
       is_global: number;
-      parent_id: string;
     }>(
       `SELECT DISTINCT
-         ecm.objective_id,
-         mp.id as package_id,
-         mp.name as package_name,
-         mp.grade_level,
-         mp.category_id,
-         mc.name_sv as category_name,
-         mp.problem_count,
-         mp.description,
-         mp.is_global,
-         mp.parent_id
+              ecm.objective_id,
+              pp.package_id,
+              p.name as package_name,
+              p.grade_level,
+              p.category_id,
+              mc.name_sv as category_name,
+              (SELECT COUNT(*) FROM package_problems WHERE package_id = pp.package_id) as problem_count,
+              p.description,
+              p.is_global
        FROM exercise_curriculum_mapping ecm
        JOIN package_problems pp ON ecm.exercise_type = 'package_problem' AND ecm.exercise_id = pp.id
-       JOIN math_packages mp ON pp.package_id = mp.id
-       LEFT JOIN math_categories mc ON mp.category_id = mc.id
+       JOIN math_packages p ON pp.package_id = p.id
+       LEFT JOIN math_categories mc ON p.category_id = mc.id
        WHERE ecm.objective_id IN (${placeholders})
-         AND mp.is_active = 1
-         AND mp.grade_level = ?
-         AND (mp.parent_id = ? OR mp.is_global = 1)
-       ORDER BY mp.grade_level, mp.name`,
-      [...gapObjectiveIds, child.grade_level, req.user!.id]
+         AND p.grade_level = ?
+       ORDER BY ecm.objective_id, p.name`,
+      [...gapObjectiveIds, child.grade_level]
     );
 
-    // Group packages by objective and count how many objectives each package covers
-    const packageObjectiveCount = new Map<string, Set<number>>();
-    const packageInfo = new Map<string, PackageRecommendation>();
-
+    // Group packages by objective
+    const gapPackageMap = new Map<number, PackageRecommendation[]>();
     for (const mapping of packageMappings) {
-      if (!packageObjectiveCount.has(mapping.package_id)) {
-        packageObjectiveCount.set(mapping.package_id, new Set());
-        packageInfo.set(mapping.package_id, {
+      if (!gapPackageMap.has(mapping.objective_id)) {
+        gapPackageMap.set(mapping.objective_id, []);
+      }
+
+      const packages = gapPackageMap.get(mapping.objective_id)!;
+      // Avoid duplicates
+      if (!packages.find(p => p.packageId === mapping.package_id)) {
+        packages.push({
           packageId: mapping.package_id,
           packageName: mapping.package_name,
           gradeLevel: mapping.grade_level,
@@ -451,70 +565,61 @@ router.get('/recommendations/:childId', authenticateParent, (req, res) => {
           categoryName: mapping.category_name,
           problemCount: mapping.problem_count,
           description: mapping.description,
-          objectivesCovered: 0
+          objectivesCovered: 1 // Will be updated below
         });
       }
-      packageObjectiveCount.get(mapping.package_id)!.add(mapping.objective_id);
     }
 
-    // Update objectivesCovered count
-    for (const [packageId, objectives] of packageObjectiveCount) {
-      const info = packageInfo.get(packageId)!;
-      info.objectivesCovered = objectives.size;
+    // Count objectives each package covers for the gaps
+    const packageObjectiveCountMap = new Map<string, number>();
+    for (const [objectiveId, packages] of gapPackageMap) {
+      for (const pkg of packages) {
+        const key = pkg.packageId;
+        packageObjectiveCountMap.set(key, (packageObjectiveCountMap.get(key) || 0) + 1);
+      }
     }
 
-    // Build recommendations: for each gap, list packages that cover it
+    // Update objectivesCovered counts
+    for (const packages of gapPackageMap.values()) {
+      for (const pkg of packages) {
+        pkg.objectivesCovered = packageObjectiveCountMap.get(pkg.packageId) || 1;
+      }
+    }
+
+    // Build recommendations grouped by gap
     const recommendations: GapRecommendation[] = [];
-    const objectiveToPackages = new Map<number, PackageRecommendation[]>();
-
-    for (const mapping of packageMappings) {
-      if (!objectiveToPackages.has(mapping.objective_id)) {
-        objectiveToPackages.set(mapping.objective_id, []);
-      }
-      const pkg = packageInfo.get(mapping.package_id)!;
-      // Only add if not already in the list
-      const existingPkgs = objectiveToPackages.get(mapping.objective_id)!;
-      if (!existingPkgs.some(p => p.packageId === pkg.packageId)) {
-        existingPkgs.push(pkg);
-      }
-    }
-
-    // Sort packages by objectivesCovered (most coverage first)
-    for (const [, packages] of objectiveToPackages) {
-      packages.sort((a, b) => b.objectivesCovered - a.objectivesCovered);
-    }
-
-    // Build final recommendations array
     for (const gap of gaps) {
-      const packages = objectiveToPackages.get(gap.id) || [];
+      const packages = gapPackageMap.get(gap.id) || [];
+      // Sort by objectives covered descending, then by name
+      packages.sort((a, b) => {
+        if (b.objectivesCovered !== a.objectivesCovered) {
+          return b.objectivesCovered - a.objectivesCovered;
+        }
+        return a.packageName.localeCompare(b.packageName);
+      });
+
       recommendations.push({
         objective: gap,
         packages
       });
     }
 
-    // Sort recommendations: gaps with available packages first, then by category
-    recommendations.sort((a, b) => {
-      // Gaps with packages come first
-      const aHasPackages = a.packages.length > 0 ? 0 : 1;
-      const bHasPackages = b.packages.length > 0 ? 0 : 1;
-      if (aHasPackages !== bHasPackages) return aHasPackages - bHasPackages;
-      // Then sort by category name
-      return a.objective.categoryName.localeCompare(b.objective.categoryName, 'sv');
-    });
-
-    // Get unique recommended packages (packages that cover most gaps)
-    const uniquePackages = Array.from(packageInfo.values())
-      .sort((a, b) => b.objectivesCovered - a.objectivesCovered);
-
-    res.json({
+    const response = {
       childId,
       childGradeLevel: child.grade_level,
       recommendations,
-      totalGaps: gaps.length,
-      gapsWithPackages: recommendations.filter(r => r.packages.length > 0).length,
-      topPackages: uniquePackages.slice(0, 5) // Top 5 packages that cover the most gaps
-    });
+      totalGaps: gaps.length
+    };
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, CURRICULUM_CACHE_TTL, JSON.stringify(response));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Get curriculum recommendations error:', error);
     res.status(500).json({ error: 'Failed to get curriculum recommendations' });

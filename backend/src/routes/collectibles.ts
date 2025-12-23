@@ -1,19 +1,74 @@
 import { Router } from 'express';
 import { getDb } from '../data/database.js';
+import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateChild } from '../middleware/auth.js';
 import type { Collectible, ChildCollectible } from '../types/index.js';
 
 const router = Router();
 
-// Get all collectibles with ownership status (limited by unlocked count for shop)
-router.get('/', authenticateChild, (req, res) => {
+// Cache TTL in seconds
+const COLLECTIBLES_CACHE_TTL = 300; // 5 minutes
+
+// Default pagination values
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+// Cache key generator for collectibles list by child (includes pagination)
+function getCollectiblesCacheKey(childId: string, limit: number, offset: number): string {
+  return `collectibles:child:${childId}:limit:${limit}:offset:${offset}`;
+}
+
+// Invalidate collectibles cache for a child (all pagination variants)
+async function invalidateCollectiblesCache(childId: string): Promise<void> {
   try {
+    // Use pattern matching to delete all cache keys for this child
+    const pattern = `collectibles:child:${childId}:*`;
+    const keys = await redis.keys(pattern);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } catch (err) {
+    // Log but don't fail the operation if cache invalidation fails
+    console.error('Cache invalidation error:', err instanceof Error ? err.message : err);
+  }
+}
+
+// Get all collectibles with ownership status (limited by unlocked count for shop)
+// Supports lazy loading with pagination: ?limit=N&offset=M (default limit=20, offset=0)
+router.get('/', authenticateChild, async (req, res) => {
+  try {
+    const childId = req.child!.id;
+
+    // Parse pagination parameters
+    const limit = Math.min(
+      Math.max(1, parseInt(req.query.limit as string, 10) || DEFAULT_LIMIT),
+      MAX_LIMIT
+    );
+    const offset = Math.max(0, parseInt(req.query.offset as string, 10) || 0);
+
+    const cacheKey = getCollectiblesCacheKey(childId, limit, offset);
+
+    // Try to get from cache first
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'collectibles' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'collectibles' });
+
     const db = getDb();
 
     // Get child's unlocked shop items count and rowid for seeded ordering
     const childData = db.get<{ unlocked_shop_items: number; child_rowid: number }>(
       'SELECT unlocked_shop_items, rowid as child_rowid FROM children WHERE id = ?',
-      [req.child!.id]
+      [childId]
     );
     const unlockedCount = childData?.unlocked_shop_items || 3;
     const childRowid = childData?.child_rowid || 1;
@@ -30,7 +85,7 @@ router.get('/', authenticateChild, (req, res) => {
       FROM collectibles c
       LEFT JOIN child_collectibles cc ON c.id = cc.collectible_id AND cc.child_id = ?
       ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
-    `, [req.child!.id]);
+    `, [childId]);
 
     // Show items based on their position in the random order (row_num)
     // This ensures buying an item doesn't cause new items to appear
@@ -41,8 +96,11 @@ router.get('/', authenticateChild, (req, res) => {
       return c.row_num <= unlockedCount || c.owned === 1;
     });
 
-    res.json({
-      collectibles: filteredCollectibles.map(c => ({
+    // Apply pagination to filtered results
+    const paginatedCollectibles = filteredCollectibles.slice(offset, offset + limit);
+
+    const response = {
+      collectibles: paginatedCollectibles.map(c => ({
         id: c.id,
         name: c.name,
         ascii_art: c.ascii_art,
@@ -51,8 +109,25 @@ router.get('/', authenticateChild, (req, res) => {
         owned: c.owned === 1
       })),
       unlockedCount,
-      totalCount: collectibles.length
-    });
+      totalCount: collectibles.length,
+      // Pagination metadata
+      pagination: {
+        limit,
+        offset,
+        total: filteredCollectibles.length,
+        hasMore: offset + limit < filteredCollectibles.length
+      }
+    };
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, COLLECTIBLES_CACHE_TTL, JSON.stringify(response));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('List collectibles error:', error);
     res.status(500).json({ error: 'Failed to list collectibles' });
@@ -80,9 +155,10 @@ router.get('/owned', authenticateChild, (req, res) => {
 });
 
 // Purchase collectible
-router.post('/:id/buy', authenticateChild, (req, res) => {
+router.post('/:id/buy', authenticateChild, async (req, res) => {
   try {
     const db = getDb();
+    const childId = req.child!.id;
 
     const collectible = db.get<Collectible>(
       'SELECT * FROM collectibles WHERE id = ?',
@@ -96,7 +172,7 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
     // Check if already owned
     const alreadyOwned = db.get<ChildCollectible>(
       'SELECT * FROM child_collectibles WHERE child_id = ? AND collectible_id = ?',
-      [req.child!.id, req.params.id]
+      [childId, req.params.id]
     );
 
     if (alreadyOwned) {
@@ -106,7 +182,7 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
     // Check balance
     const coins = db.get<{ balance: number }>(
       'SELECT balance FROM child_coins WHERE child_id = ?',
-      [req.child!.id]
+      [childId]
     );
 
     if (!coins || coins.balance < collectible.price) {
@@ -123,7 +199,7 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
       // 1. Deduct coins
       const updateResult = db.run(
         'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
-        [collectible.price, req.child!.id]
+        [collectible.price, childId]
       );
 
       // Verify UPDATE affected exactly 1 row
@@ -134,7 +210,7 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
       // 2. Create ownership record
       const insertResult = db.run(
         'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
-        [req.child!.id, req.params.id]
+        [childId, req.params.id]
       );
 
       // CRITICAL: Verify INSERT succeeded (changes === 1)
@@ -148,13 +224,13 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
     // 3. Verify ownership record exists in database (belt-and-suspenders check)
     const verifyOwnership = db.get<{ child_id: string }>(
       'SELECT child_id FROM child_collectibles WHERE child_id = ? AND collectible_id = ?',
-      [req.child!.id, req.params.id]
+      [childId, req.params.id]
     );
 
     if (!verifyOwnership) {
       // This should never happen if transaction worked, but fail-safe
       console.error('CRITICAL: Ownership record missing after successful transaction', {
-        childId: req.child!.id,
+        childId,
         collectibleId: req.params.id
       });
       return res.status(500).json({
@@ -162,9 +238,12 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
       });
     }
 
+    // Invalidate collectibles cache for this child (ownership status changed)
+    await invalidateCollectiblesCache(childId);
+
     const newBalance = db.get<{ balance: number }>(
       'SELECT balance FROM child_coins WHERE child_id = ?',
-      [req.child!.id]
+      [childId]
     );
 
     res.json({

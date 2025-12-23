@@ -1,21 +1,101 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../data/database.js';
+import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateParent } from '../middleware/auth.js';
+import { ocrQueue, type OcrJobData } from '../services/ocr-queue.js';
 import type { MathPackage, PackageProblem, ImportPackageRequest, BatchImportRequest } from '../types/index.js';
 
 const router = Router();
 
-// Import package(s) from JSON - handles both single and batch
-router.post('/import', authenticateParent, (req, res) => {
+// Cache TTL for packages list (5 minutes - moderate freshness)
+const PACKAGES_CACHE_TTL = 300;
+
+// Cache key generation for packages list
+function getPackagesCacheKey(
+  parentId: string,
+  filters: { grade?: string; category?: string; scope?: string; type?: string }
+): string {
+  const grade = filters.grade || 'all';
+  const category = filters.category || 'all';
+  const scope = filters.scope || 'all';
+  const type = filters.type || 'all';
+  return `packages:parent:${parentId}:grade:${grade}:category:${category}:scope:${scope}:type:${type}`;
+}
+
+// Invalidate packages cache for a parent
+async function invalidatePackagesCache(parentId: string): Promise<void> {
   try {
-    const data = req.body;
+    const pattern = `packages:parent:${parentId}:*`;
+    const keys = await redis.keys(pattern);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } catch (err) {
+    // Log but don't fail the operation if cache invalidation fails
+    console.error('Packages cache invalidation error:', err instanceof Error ? err.message : err);
+  }
+}
+
+// Export for use by other modules that may need to invalidate packages cache
+export { invalidatePackagesCache };
+
+/**
+ * Extended import request interface that supports optional OCR processing
+ * When imagePaths or images are provided, OCR jobs are queued asynchronously
+ */
+interface OcrImportRequest {
+  package?: {
+    name: string;
+    grade_level: number;
+    category_id?: string | null;
+    assignment_type?: string;
+    description?: string;
+    global?: boolean;
+  };
+  packages?: ImportPackageRequest[];
+  problems?: PackageProblem[];
+  isGlobal?: boolean;
+  // OCR-related fields for async processing
+  imagePaths?: string[];
+  language?: string;
+}
+
+// Import package(s) from JSON - handles both single and batch
+// Returns 202 Accepted with job ID when OCR processing is queued
+// Returns 201 Created when packages are imported synchronously
+router.post('/import', authenticateParent, async (req, res) => {
+  try {
+    const data: OcrImportRequest = req.body;
+
+    // Check if OCR processing is requested (imagePaths provided)
+    // When imagePaths are provided, queue OCR job and return immediately with job ID
+    if (data.imagePaths && data.imagePaths.length > 0) {
+      const jobData: OcrJobData = {
+        type: data.imagePaths.length === 1 ? 'single' : 'batch',
+        imagePath: data.imagePaths.length === 1 ? data.imagePaths[0] : undefined,
+        imagePaths: data.imagePaths.length > 1 ? data.imagePaths : undefined,
+        language: data.language || 'swe',
+      };
+
+      const job = await ocrQueue.add('ocr-import', jobData, {
+        jobId: uuidv4(), // Use predictable job ID for tracking
+      });
+
+      // Return 202 Accepted with job ID for async polling
+      return res.status(202).json({
+        status: 'queued',
+        jobId: job.id,
+        message: 'OCR processing queued. Poll /api/packages/jobs/:jobId for status.',
+        imagePaths: data.imagePaths,
+      });
+    }
 
     // Detect if this is a batch import (has "packages" array) or single import (has "package" object)
     const isBatch = Array.isArray(data.packages);
-    const packagesToImport: ImportPackageRequest[] = isBatch
+    const packagesToImport = (isBatch && data.packages
       ? data.packages
-      : [{ package: data.package, problems: data.problems, isGlobal: data.isGlobal }];
+      : [{ package: data.package, problems: data.problems, isGlobal: data.isGlobal }]) as ImportPackageRequest[];
 
     if (packagesToImport.length === 0) {
       return res.status(400).json({ error: 'No packages to import' });
@@ -144,6 +224,9 @@ router.post('/import', authenticateParent, (req, res) => {
       }
     });
 
+    // Invalidate packages cache for this parent (new packages added)
+    await invalidatePackagesCache(req.user!.id);
+
     // Return format depends on single vs batch
     if (isBatch) {
       res.status(201).json({ imported: results.length, packages: results });
@@ -157,26 +240,55 @@ router.post('/import', authenticateParent, (req, res) => {
 });
 
 // List packages (own packages + global packages for children's grades)
-router.get('/', authenticateParent, (req, res) => {
+// Optimized with Redis caching and prepared statements
+router.get('/', authenticateParent, async (req, res) => {
   try {
-    const db = getDb();
     const { grade, category, scope, type } = req.query;
+    const parentId = req.user!.id;
 
-    // Get all children for this parent
+    // Generate cache key based on parent and filters
+    const cacheKey = getPackagesCacheKey(parentId, {
+      grade: grade as string,
+      category: category as string,
+      scope: scope as string,
+      type: type as string
+    });
+
+    // Try to get from cache first
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        cacheHits.inc({ cache_type: 'packages' });
+        return res.json(JSON.parse(cached));
+      }
+    } catch (cacheErr) {
+      // Log cache error but continue to database
+      console.error('Packages cache read error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
+
+    // Cache miss - fetch from database
+    cacheMisses.inc({ cache_type: 'packages' });
+
+    const db = getDb();
+
+    // Get all children for this parent (uses prepared statement internally via db.all)
     const allChildren = db.all<{ id: string; name: string; grade_level: number }>(
       'SELECT id, name, grade_level FROM children WHERE parent_id = ?',
-      [req.user!.id]
+      [parentId]
     );
     const childGrades = [...new Set(allChildren.map(c => c.grade_level))];
 
+    // Build dynamic query for packages
+    // Note: Dynamic queries with varying placeholders can't be prepared at module level
+    // but better-sqlite3's db.all() still compiles efficiently
     let query = `
       SELECT p.*, c.name_sv as category_name
       FROM math_packages p
       LEFT JOIN math_categories c ON p.category_id = c.id
       WHERE p.is_active = 1
-        AND (p.parent_id = ? OR (p.is_global = 1 AND p.grade_level IN (${childGrades.map(() => '?').join(',')})))
+        AND (p.parent_id = ? OR (p.is_global = 1 AND p.grade_level IN (${childGrades.map(() => '?').join(',') || 'NULL'})))
     `;
-    const params: unknown[] = [req.user!.id, ...childGrades];
+    const params: unknown[] = [parentId, ...childGrades];
 
     if (grade) {
       query += ' AND p.grade_level = ?';
@@ -201,21 +313,22 @@ router.get('/', authenticateParent, (req, res) => {
     const packages = db.all<MathPackage & { category_name: string | null }>(query, params);
 
     // Get assignment status for each package per child
-    const assignmentStatusQuery = `
-      SELECT a.package_id, a.child_id, a.status, c.name as child_name
-      FROM assignments a
-      JOIN children c ON a.child_id = c.id
-      WHERE a.package_id IN (${packages.map(() => '?').join(',') || "''"})
-        AND a.parent_id = ?
-    `;
-    const assignmentParams = [...packages.map(p => p.id), req.user!.id];
-
-    const assignments = packages.length > 0
-      ? db.all<{ package_id: string; child_id: string; status: string; child_name: string }>(
-          assignmentStatusQuery,
-          assignmentParams
-        )
-      : [];
+    // Only fetch if there are packages to look up
+    let assignments: { package_id: string; child_id: string; status: string; child_name: string }[] = [];
+    if (packages.length > 0) {
+      const assignmentStatusQuery = `
+        SELECT a.package_id, a.child_id, a.status, c.name as child_name
+        FROM assignments a
+        JOIN children c ON a.child_id = c.id
+        WHERE a.package_id IN (${packages.map(() => '?').join(',')})
+          AND a.parent_id = ?
+      `;
+      const assignmentParams = [...packages.map(p => p.id), parentId];
+      assignments = db.all<{ package_id: string; child_id: string; status: string; child_name: string }>(
+        assignmentStatusQuery,
+        assignmentParams
+      );
+    }
 
     // Group assignments by package_id
     const assignmentsByPackage = assignments.reduce((acc, a) => {
@@ -231,9 +344,17 @@ router.get('/', authenticateParent, (req, res) => {
     // Add isOwner flag and assignment stats to each package
     const result = packages.map(pkg => ({
       ...pkg,
-      isOwner: pkg.parent_id === req.user!.id,
+      isOwner: pkg.parent_id === parentId,
       childAssignments: assignmentsByPackage[pkg.id] || []
     }));
+
+    // Store in cache
+    try {
+      await redis.setex(cacheKey, PACKAGES_CACHE_TTL, JSON.stringify(result));
+    } catch (cacheErr) {
+      // Log cache write error but don't fail the request
+      console.error('Packages cache write error:', cacheErr instanceof Error ? cacheErr.message : cacheErr);
+    }
 
     res.json(result);
   } catch (error) {
@@ -284,7 +405,7 @@ router.get('/:id', authenticateParent, (req, res) => {
 });
 
 // Assign package to child (creates assignment)
-router.post('/:id/assign', authenticateParent, (req, res) => {
+router.post('/:id/assign', authenticateParent, async (req, res) => {
   try {
     const { childId, title, hintsAllowed = true } = req.body;
 
@@ -293,11 +414,12 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
     }
 
     const db = getDb();
+    const parentId = req.user!.id;
 
     // Verify child belongs to parent
     const child = db.get<{ id: string; grade_level: number }>(
       'SELECT id, grade_level FROM children WHERE id = ? AND parent_id = ?',
-      [childId, req.user!.id]
+      [childId, parentId]
     );
 
     if (!child) {
@@ -307,7 +429,7 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
     // Get children's grades for visibility check
     const children = db.all<{ grade_level: number }>(
       'SELECT DISTINCT grade_level FROM children WHERE parent_id = ?',
-      [req.user!.id]
+      [parentId]
     );
     const childGrades = children.map(c => c.grade_level);
 
@@ -316,7 +438,7 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
       `SELECT * FROM math_packages
        WHERE id = ? AND is_active = 1
          AND (parent_id = ? OR (is_global = 1 AND grade_level IN (${childGrades.map(() => '?').join(',')})))`,
-      [req.params.id, req.user!.id, ...childGrades]
+      [req.params.id, parentId, ...childGrades]
     );
 
     if (!pkg) {
@@ -328,8 +450,11 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
     db.run(
       `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, hints_allowed)
        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-      [assignmentId, req.user!.id, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id, hintsAllowed ? 1 : 0]
+      [assignmentId, parentId, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id, hintsAllowed ? 1 : 0]
     );
+
+    // Invalidate packages cache (assignment status changed for this package)
+    await invalidatePackagesCache(parentId);
 
     res.status(201).json({ id: assignmentId });
   } catch (error) {
@@ -338,16 +463,67 @@ router.post('/:id/assign', authenticateParent, (req, res) => {
   }
 });
 
+// Get OCR job status (for polling async OCR processing)
+// Returns job state, progress, and result when completed
+router.get('/jobs/:jobId', authenticateParent, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    const job = await ocrQueue.getJob(jobId);
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    const state = await job.getState();
+    const progress = job.progress;
+
+    // Build response based on job state
+    const response: {
+      jobId: string;
+      status: string;
+      progress?: number | string | object;
+      result?: unknown;
+      error?: string;
+      failedReason?: string;
+    } = {
+      jobId: jobId,
+      status: state,
+    };
+
+    // Include progress if available (can be number, string, or object)
+    if (progress !== undefined && progress !== null) {
+      response.progress = progress as number | string | object;
+    }
+
+    // Include result if job completed successfully
+    if (state === 'completed') {
+      response.result = job.returnvalue;
+    }
+
+    // Include error details if job failed
+    if (state === 'failed') {
+      response.failedReason = job.failedReason || 'Unknown error';
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.error('Get job status error:', error);
+    res.status(500).json({ error: 'Failed to get job status' });
+  }
+});
+
 // Delete package (owner only) - cascades to assignments
-router.delete('/:id', authenticateParent, (req, res) => {
+router.delete('/:id', authenticateParent, async (req, res) => {
   try {
     const db = getDb();
     const packageId = req.params.id;
+    const parentId = req.user!.id;
 
     // Verify ownership first
     const pkg = db.get<{ id: string }>(
       'SELECT id FROM math_packages WHERE id = ? AND parent_id = ? AND is_active = 1',
-      [packageId, req.user!.id]
+      [packageId, parentId]
     );
 
     if (!pkg) {
@@ -369,6 +545,9 @@ router.delete('/:id', authenticateParent, (req, res) => {
       // Soft-delete the package
       db.run('UPDATE math_packages SET is_active = 0 WHERE id = ?', [packageId]);
     });
+
+    // Invalidate packages cache (package deleted)
+    await invalidatePackagesCache(parentId);
 
     res.json({ success: true });
   } catch (error) {
