@@ -9,41 +9,52 @@ import { getChildStats, getChildStatsByDate, type PeriodType } from '../services
 const router = Router();
 
 // List children for logged-in parent
+// Optimized: Single query with JOINs and GROUP BY replaces N+1 query pattern
+// (previously: 1 query to get children + N queries for brainrot stats)
 router.get('/', authenticateParent, (req, res) => {
   try {
     const db = getDb();
-    const children = db.all<Child & { coins: number }>(
-      `SELECT c.*, COALESCE(cc.balance, 0) as coins
+
+    // Single query fetches children with coins AND brainrot stats using LEFT JOINs and GROUP BY
+    const children = db.all<{
+      id: string;
+      name: string;
+      birthdate: string | null;
+      grade_level: number;
+      pin_hash: string | null;
+      coins: number;
+      brainrotCount: number;
+      brainrotValue: number;
+    }>(
+      `SELECT
+         c.id,
+         c.name,
+         c.birthdate,
+         c.grade_level,
+         c.pin_hash,
+         COALESCE(cc.balance, 0) as coins,
+         COUNT(chc.collectible_id) as brainrotCount,
+         COALESCE(SUM(col.price), 0) as brainrotValue
        FROM children c
        LEFT JOIN child_coins cc ON c.id = cc.child_id
+       LEFT JOIN child_collectibles chc ON c.id = chc.child_id
+       LEFT JOIN collectibles col ON chc.collectible_id = col.id
        WHERE c.parent_id = ?
+       GROUP BY c.id, c.name, c.birthdate, c.grade_level, c.pin_hash, cc.balance
        ORDER BY c.name`,
       [req.user!.id]
     );
 
-    // Get brainrot (collectible) stats for each child
-    const childrenWithBrainrots = children.map(c => {
-      const brainrotStats = db.get<{ count: number; totalValue: number }>(
-        `SELECT
-           COUNT(chc.collectible_id) as count,
-           COALESCE(SUM(col.price), 0) as totalValue
-         FROM child_collectibles chc
-         JOIN collectibles col ON chc.collectible_id = col.id
-         WHERE chc.child_id = ?`,
-        [c.id]
-      ) || { count: 0, totalValue: 0 };
-
-      return {
-        id: c.id,
-        name: c.name,
-        birthdate: c.birthdate,
-        grade_level: c.grade_level,
-        coins: c.coins,
-        hasPin: !!c.pin_hash,
-        brainrotCount: brainrotStats.count,
-        brainrotValue: brainrotStats.totalValue
-      };
-    });
+    const childrenWithBrainrots = children.map(c => ({
+      id: c.id,
+      name: c.name,
+      birthdate: c.birthdate,
+      grade_level: c.grade_level,
+      coins: c.coins,
+      hasPin: !!c.pin_hash,
+      brainrotCount: c.brainrotCount,
+      brainrotValue: c.brainrotValue
+    }));
 
     res.json(childrenWithBrainrots);
   } catch (error) {

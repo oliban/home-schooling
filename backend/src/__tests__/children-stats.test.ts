@@ -765,4 +765,296 @@ describe('GET /children - brainrot (collectible) stats', () => {
     expect(childWithoutBrainrots?.brainrotCount).toBe(0);
     expect(childWithoutBrainrots?.brainrotValue).toBe(0);
   });
+
+  it('should fetch children with brainrot stats using optimized single query with JOINs and GROUP BY', () => {
+    const db = getDb();
+
+    // This test verifies the optimized query pattern (1 query instead of N+1)
+    // The optimized query uses LEFT JOINs and GROUP BY to fetch all data at once
+    const children = db.all<{
+      id: string;
+      name: string;
+      coins: number;
+      brainrotCount: number;
+      brainrotValue: number;
+    }>(
+      `SELECT
+         c.id,
+         c.name,
+         COALESCE(cc.balance, 0) as coins,
+         COUNT(chc.collectible_id) as brainrotCount,
+         COALESCE(SUM(col.price), 0) as brainrotValue
+       FROM children c
+       LEFT JOIN child_coins cc ON c.id = cc.child_id
+       LEFT JOIN child_collectibles chc ON c.id = chc.child_id
+       LEFT JOIN collectibles col ON chc.collectible_id = col.id
+       WHERE c.parent_id = ?
+       GROUP BY c.id, c.name, cc.balance
+       ORDER BY c.name`,
+      [parentId]
+    );
+
+    expect(children.length).toBe(2);
+
+    // Child with brainrots should have count 2 and positive value
+    const childWithBrainrots = children.find(c => c.name === 'Child With Brainrots');
+    expect(childWithBrainrots?.brainrotCount).toBe(2);
+    expect(childWithBrainrots?.brainrotValue).toBeGreaterThan(0);
+
+    // Child without brainrots should have count 0 and value 0
+    const childWithoutBrainrots = children.find(c => c.name === 'Child Without Brainrots');
+    expect(childWithoutBrainrots?.brainrotCount).toBe(0);
+    expect(childWithoutBrainrots?.brainrotValue).toBe(0);
+  });
+});
+
+/**
+ * Comprehensive test for GET /children endpoint with brainrot stats
+ * This test validates the optimized single query pattern handles:
+ * 1) Multiple children with varying collectible counts (0, 1, 3+)
+ * 2) Correct aggregation of count and value
+ * 3) Complete response format matching the API contract
+ */
+describe('GET /children - optimized brainrot query comprehensive test', () => {
+  let parentId: string;
+  let childNoCollectiblesId: string;
+  let childOneCollectibleId: string;
+  let childMultipleCollectiblesId: string;
+  let collectibleIds: string[] = [];
+  let collectiblePrices: number[] = [];
+  const testEmail = `test-brainrot-comprehensive-${Date.now()}@example.com`;
+
+  beforeAll(async () => {
+    parentId = uuidv4();
+    childNoCollectiblesId = uuidv4();
+    childOneCollectibleId = uuidv4();
+    childMultipleCollectiblesId = uuidv4();
+
+    const db = getDb();
+    const passwordHash = await bcrypt.hash('test1234', 10);
+    const pinHash = await bcrypt.hash('1234', 10);
+
+    // Create parent
+    db.run(
+      'INSERT INTO parents (id, email, password_hash, name) VALUES (?, ?, ?, ?)',
+      [parentId, testEmail, passwordHash, 'Test Parent']
+    );
+
+    // Create three children with different collectible counts
+    // Child 1: No collectibles (should show 0/0)
+    db.run(
+      'INSERT INTO children (id, parent_id, name, birthdate, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?, ?)',
+      [childNoCollectiblesId, parentId, 'Alice No Collectibles', '2015-03-15', 3, null]
+    );
+    db.run('INSERT INTO child_coins (child_id, balance) VALUES (?, ?)', [childNoCollectiblesId, 50]);
+
+    // Child 2: One collectible
+    db.run(
+      'INSERT INTO children (id, parent_id, name, birthdate, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?, ?)',
+      [childOneCollectibleId, parentId, 'Bob One Collectible', '2014-07-20', 4, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id, balance) VALUES (?, ?)', [childOneCollectibleId, 100]);
+
+    // Child 3: Multiple collectibles (3)
+    db.run(
+      'INSERT INTO children (id, parent_id, name, birthdate, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?, ?)',
+      [childMultipleCollectiblesId, parentId, 'Charlie Multiple Collectibles', null, 5, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id, balance) VALUES (?, ?)', [childMultipleCollectiblesId, 200]);
+
+    // Get 4 collectibles with known prices for predictable testing
+    const collectibles = db.all<{ id: string; price: number }>(
+      'SELECT id, price FROM collectibles LIMIT 4'
+    );
+
+    if (collectibles.length < 4) {
+      throw new Error('Not enough collectibles in database for test');
+    }
+
+    collectibleIds = collectibles.map(c => c.id);
+    collectiblePrices = collectibles.map(c => c.price);
+
+    // Give child 2 one collectible
+    db.run(
+      'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
+      [childOneCollectibleId, collectibleIds[0]]
+    );
+
+    // Give child 3 three collectibles
+    db.run(
+      'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
+      [childMultipleCollectiblesId, collectibleIds[1]]
+    );
+    db.run(
+      'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
+      [childMultipleCollectiblesId, collectibleIds[2]]
+    );
+    db.run(
+      'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
+      [childMultipleCollectiblesId, collectibleIds[3]]
+    );
+  });
+
+  afterAll(() => {
+    const db = getDb();
+    db.run('DELETE FROM child_collectibles WHERE child_id IN (?, ?, ?)',
+      [childNoCollectiblesId, childOneCollectibleId, childMultipleCollectiblesId]);
+    db.run('DELETE FROM child_coins WHERE child_id IN (?, ?, ?)',
+      [childNoCollectiblesId, childOneCollectibleId, childMultipleCollectiblesId]);
+    db.run('DELETE FROM children WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM parents WHERE id = ?', [parentId]);
+  });
+
+  it('should return all children with correct brainrot stats using optimized single query', () => {
+    const db = getDb();
+
+    // Execute the exact optimized query pattern used in the GET /children endpoint
+    const children = db.all<{
+      id: string;
+      name: string;
+      birthdate: string | null;
+      grade_level: number;
+      pin_hash: string | null;
+      coins: number;
+      brainrotCount: number;
+      brainrotValue: number;
+    }>(
+      `SELECT
+         c.id,
+         c.name,
+         c.birthdate,
+         c.grade_level,
+         c.pin_hash,
+         COALESCE(cc.balance, 0) as coins,
+         COUNT(chc.collectible_id) as brainrotCount,
+         COALESCE(SUM(col.price), 0) as brainrotValue
+       FROM children c
+       LEFT JOIN child_coins cc ON c.id = cc.child_id
+       LEFT JOIN child_collectibles chc ON c.id = chc.child_id
+       LEFT JOIN collectibles col ON chc.collectible_id = col.id
+       WHERE c.parent_id = ?
+       GROUP BY c.id, c.name, c.birthdate, c.grade_level, c.pin_hash, cc.balance
+       ORDER BY c.name`,
+      [parentId]
+    );
+
+    // Transform to match endpoint response format
+    const response = children.map(c => ({
+      id: c.id,
+      name: c.name,
+      birthdate: c.birthdate,
+      grade_level: c.grade_level,
+      coins: c.coins,
+      hasPin: !!c.pin_hash,
+      brainrotCount: c.brainrotCount,
+      brainrotValue: c.brainrotValue
+    }));
+
+    // Validate we got all 3 children
+    expect(response.length).toBe(3);
+
+    // Children should be sorted by name
+    expect(response[0].name).toBe('Alice No Collectibles');
+    expect(response[1].name).toBe('Bob One Collectible');
+    expect(response[2].name).toBe('Charlie Multiple Collectibles');
+
+    // Validate child with no collectibles (Alice)
+    const alice = response[0];
+    expect(alice.id).toBe(childNoCollectiblesId);
+    expect(alice.birthdate).toBe('2015-03-15');
+    expect(alice.grade_level).toBe(3);
+    expect(alice.coins).toBe(50);
+    expect(alice.hasPin).toBe(false);
+    expect(alice.brainrotCount).toBe(0);
+    expect(alice.brainrotValue).toBe(0);
+
+    // Validate child with one collectible (Bob)
+    const bob = response[1];
+    expect(bob.id).toBe(childOneCollectibleId);
+    expect(bob.birthdate).toBe('2014-07-20');
+    expect(bob.grade_level).toBe(4);
+    expect(bob.coins).toBe(100);
+    expect(bob.hasPin).toBe(true);
+    expect(bob.brainrotCount).toBe(1);
+    expect(bob.brainrotValue).toBe(collectiblePrices[0]);
+
+    // Validate child with multiple collectibles (Charlie)
+    const charlie = response[2];
+    expect(charlie.id).toBe(childMultipleCollectiblesId);
+    expect(charlie.birthdate).toBeNull();
+    expect(charlie.grade_level).toBe(5);
+    expect(charlie.coins).toBe(200);
+    expect(charlie.hasPin).toBe(true);
+    expect(charlie.brainrotCount).toBe(3);
+    const expectedCharlieValue = collectiblePrices[1] + collectiblePrices[2] + collectiblePrices[3];
+    expect(charlie.brainrotValue).toBe(expectedCharlieValue);
+  });
+
+  it('should correctly aggregate total value from collectible prices', () => {
+    const db = getDb();
+
+    // Query to verify the SUM aggregation works correctly
+    const result = db.get<{ count: number; totalValue: number }>(
+      `SELECT
+         COUNT(chc.collectible_id) as count,
+         COALESCE(SUM(col.price), 0) as totalValue
+       FROM child_collectibles chc
+       JOIN collectibles col ON chc.collectible_id = col.id
+       WHERE chc.child_id = ?`,
+      [childMultipleCollectiblesId]
+    );
+
+    // Child with 3 collectibles should have sum of their prices
+    expect(result?.count).toBe(3);
+    const expectedTotal = collectiblePrices[1] + collectiblePrices[2] + collectiblePrices[3];
+    expect(result?.totalValue).toBe(expectedTotal);
+  });
+
+  it('should handle edge case where child_coins table has no entry', () => {
+    const db = getDb();
+    const childNoCoinRowId = uuidv4();
+    const pinHash = '$2a$10$testpinhash';
+
+    // Create child without child_coins entry (edge case)
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+      [childNoCoinRowId, parentId, 'Dana No Coins Row', 2, pinHash]
+    );
+
+    try {
+      // Query should still work with LEFT JOIN - coins should default to 0
+      const children = db.all<{
+        id: string;
+        name: string;
+        coins: number;
+        brainrotCount: number;
+        brainrotValue: number;
+      }>(
+        `SELECT
+           c.id,
+           c.name,
+           COALESCE(cc.balance, 0) as coins,
+           COUNT(chc.collectible_id) as brainrotCount,
+           COALESCE(SUM(col.price), 0) as brainrotValue
+         FROM children c
+         LEFT JOIN child_coins cc ON c.id = cc.child_id
+         LEFT JOIN child_collectibles chc ON c.id = chc.child_id
+         LEFT JOIN collectibles col ON chc.collectible_id = col.id
+         WHERE c.parent_id = ?
+         GROUP BY c.id, c.name, cc.balance
+         ORDER BY c.name`,
+        [parentId]
+      );
+
+      // Find the child with no coins row
+      const dana = children.find(c => c.name === 'Dana No Coins Row');
+      expect(dana).toBeDefined();
+      expect(dana?.coins).toBe(0); // COALESCE handles NULL
+      expect(dana?.brainrotCount).toBe(0);
+      expect(dana?.brainrotValue).toBe(0);
+    } finally {
+      // Cleanup
+      db.run('DELETE FROM children WHERE id = ?', [childNoCoinRowId]);
+    }
+  });
 });
