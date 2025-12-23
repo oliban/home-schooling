@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+// Use relative path in production (when env var not set), absolute path in development
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 type FetchOptions = {
   method?: string;

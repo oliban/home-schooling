@@ -247,7 +247,7 @@ describe('Curriculum Coverage Calculation', () => {
       const coveredViaExercises = db.all<{ objective_id: number }>(
         `SELECT DISTINCT ecm.objective_id
          FROM exercise_curriculum_mapping ecm
-         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
          LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
            AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
          WHERE aa.id IS NOT NULL`,
@@ -281,7 +281,7 @@ describe('Curriculum Coverage Calculation', () => {
       const coveredViaExercises = db.all<{ objective_id: number }>(
         `SELECT DISTINCT ecm.objective_id
          FROM exercise_curriculum_mapping ecm
-         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
          LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
            AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
          WHERE aa.id IS NOT NULL`,
@@ -302,11 +302,11 @@ describe('Curriculum Coverage Calculation', () => {
         [assignmentId, parentId, childId, 'Pending Test', 3, packageId]
       );
 
-      // Query objectives covered via exercises (should only count completed assignments)
+      // Query objectives covered via exercises (should only count completed/in_progress)
       const coveredViaExercises = db.all<{ objective_id: number }>(
         `SELECT DISTINCT ecm.objective_id
          FROM exercise_curriculum_mapping ecm
-         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
          LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
            AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
          WHERE aa.id IS NOT NULL`,
@@ -315,6 +315,40 @@ describe('Curriculum Coverage Calculation', () => {
 
       // Should have 0 objectives covered (assignment is pending)
       expect(coveredViaExercises.length).toBe(0);
+    });
+
+    it('should count objectives from in_progress assignments', () => {
+      const db = getDb();
+
+      // Create an in_progress assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [assignmentId, parentId, childId, 'In Progress Test', 3, packageId]
+      );
+
+      // Add correct answers for first 2 problems
+      for (let i = 0; i < 2; i++) {
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          [uuidv4(), assignmentId, problemIds[i], String(i * 2), 1]
+        );
+      }
+
+      // Query objectives covered via exercises (should count in_progress)
+      const coveredViaExercises = db.all<{ objective_id: number }>(
+        `SELECT DISTINCT ecm.objective_id
+         FROM exercise_curriculum_mapping ecm
+         JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
+         LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
+           AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
+         WHERE aa.id IS NOT NULL`,
+        [childId]
+      );
+
+      // Should have 2 objectives covered (for the 2 correct answers in in_progress assignment)
+      expect(coveredViaExercises.length).toBe(2);
     });
 
     it('should combine coverage from child_curriculum_progress and exercise mappings', () => {
@@ -353,7 +387,7 @@ describe('Curriculum Coverage Calculation', () => {
       const exerciseProgress = db.all<{ objective_id: number }>(
         `SELECT DISTINCT ecm.objective_id
          FROM exercise_curriculum_mapping ecm
-         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
          LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
            AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
          WHERE aa.id IS NOT NULL`,
@@ -908,7 +942,7 @@ describe('Curriculum Recommendations', () => {
       const coveredViaExercises = db.all<{ objective_id: number }>(
         `SELECT DISTINCT ecm.objective_id
          FROM exercise_curriculum_mapping ecm
-         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
          LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
            AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
          WHERE aa.id IS NOT NULL`,

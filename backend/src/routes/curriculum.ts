@@ -96,7 +96,7 @@ router.get('/coverage/:childId', authenticateParent, (req, res) => {
                 WHEN rq.id IS NOT NULL THEN rq.id
               END) as total_count
        FROM exercise_curriculum_mapping ecm
-       JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+       JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
        LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id
          AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
        LEFT JOIN math_problems mp ON mp.assignment_id = a.id
@@ -243,7 +243,7 @@ router.get('/gaps/:childId', authenticateParent, (req, res) => {
     const coveredViaExercises = db.all<{ objective_id: number }>(
       `SELECT DISTINCT ecm.objective_id
        FROM exercise_curriculum_mapping ecm
-       JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+       JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
        LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
          AND COALESCE(aa.hint_purchased, 0) = 0
          AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
@@ -348,7 +348,7 @@ router.get('/recommendations/:childId', authenticateParent, (req, res) => {
     const coveredViaExercises = db.all<{ objective_id: number }>(
       `SELECT DISTINCT ecm.objective_id
        FROM exercise_curriculum_mapping ecm
-       JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+       JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
        LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
          AND COALESCE(aa.hint_purchased, 0) = 0
          AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
@@ -559,7 +559,7 @@ router.get('/generation-suggestions/:childId', authenticateParent, (req, res) =>
     const coveredViaExercises = db.all<{ objective_id: number }>(
       `SELECT DISTINCT ecm.objective_id
        FROM exercise_curriculum_mapping ecm
-       JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+       JOIN assignments a ON a.status IN ('completed', 'in_progress') AND a.child_id = ?
        LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id AND aa.is_correct = 1
          AND COALESCE(aa.hint_purchased, 0) = 0
          AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
