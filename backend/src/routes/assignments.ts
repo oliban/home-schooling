@@ -348,8 +348,14 @@ router.post('/:id/submit', authenticateChild, (req, res) => {
     }
 
     // Helper to normalize number answers
+    // Handles: coordinates "(5,6)", "5,6", "5.6", decimals "3,5", percentages "50%"
     const normalizeNumber = (val: string) =>
-      val.trim().toLowerCase().replace(',', '.').replace(/\s*%$/, '');
+      val.trim()
+        .toLowerCase()
+        .replace(/\s+/g, '')      // Remove all whitespace (e.g., "5, 6" -> "5,6")
+        .replace(/[()]/g, '')     // Remove parentheses (e.g., "(5,6)" -> "5,6")
+        .replace(/,/g, '.')       // Replace all commas with periods (e.g., "5,6" -> "5.6")
+        .replace(/%/g, '');       // Remove percentage signs (e.g., "50%" -> "50")
 
     // Reading assignments use single-attempt logic (no retries)
     const isReadingAssignment = assignment.assignment_type === 'reading';
