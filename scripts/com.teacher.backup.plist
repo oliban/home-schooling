@@ -23,6 +23,8 @@
     <dict>
         <key>PATH</key>
         <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>FLY_API_TOKEN</key>
+        <string>FlyV1 fm2_lJPECAAAAAAAEBhKxBB41s6xweA1Gml4aeXNQqQ4wrVodHRwczovL2FwaS5mbHkuaW8vdjGWAJLOABUSDh8Lk7lodHRwczovL2FwaS5mbHkuaW8vYWFhL3YxxDx1wCg+ASnsrs5Lc2Fki8FEYXOUHBCUW/sdiBVCo2ED9XTfJOsSsiyy8gBPVHOX1NGs97M6nuLyOUZ4GS3ETpHyfVBv98LqApJNk8nySxgeuLDCvEUi3MpttRCFOsMnC0tN4dtnt6W4QpczPCmlLEX5HUVjA9agfXj0HblwCVUkc6UekHw2qv9smG1//g2SlAORgc4AvQHsHwWRgqdidWlsZGVyH6J3Zx8BxCAFKSdoWWSa8knjvK+MWoCW4hjJxLMfjXVYazfUVKI2eA==,fm2_lJPETpHyfVBv98LqApJNk8nySxgeuLDCvEUi3MpttRCFOsMnC0tN4dtnt6W4QpczPCmlLEX5HUVjA9agfXj0HblwCVUkc6UekHw2qv9smG1//sQQvHe8j0X4Uj5gMIQ0CO2snsO5aHR0cHM6Ly9hcGkuZmx5LmlvL2FhYS92MZgEks5pSmITzo7iaDEXzgAUPHoKkc4AFDx6DMQQ1HVmb0uKyF6hdaDpJBje+MQg5fkpgWcblh47DWQd5NHxzENmllPmajWTuSTKBPuhYRU=</string>
     </dict>
 
     <!-- Logging -->

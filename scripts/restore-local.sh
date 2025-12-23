@@ -12,15 +12,21 @@ BACKUP_FILE="${1:-$BACKUP_DIR/latest.db}"
 LOCAL_DB="$PROJECT_DIR/data/teacher.db"
 
 # Resolve symlink if latest.db
+ORIGINAL_BACKUP_FILE="$BACKUP_FILE"
 if [ -L "$BACKUP_FILE" ]; then
-    BACKUP_FILE="$(cd "$(dirname "$BACKUP_FILE")" && pwd)/$(readlink "$BACKUP_FILE")"
+    ACTUAL_FILE=$(readlink "$BACKUP_FILE")
+    BACKUP_FILE="$(cd "$(dirname "$BACKUP_FILE")" && pwd)/$ACTUAL_FILE"
+    echo "Using most recent backup: $ACTUAL_FILE"
 fi
 
 if [ ! -f "$BACKUP_FILE" ]; then
     echo "Error: Backup file not found: $BACKUP_FILE"
     echo ""
     echo "Available backups:"
-    ls -la "$BACKUP_DIR"/*.db 2>/dev/null || echo "  No backups found in $BACKUP_DIR"
+    ls -lht "$BACKUP_DIR"/teacher-*.db 2>/dev/null | head -10 || echo "  No backups found in $BACKUP_DIR"
+    echo ""
+    echo "Symlinks:"
+    ls -lh "$BACKUP_DIR"/latest*.db 2>/dev/null || true
     exit 1
 fi
 
