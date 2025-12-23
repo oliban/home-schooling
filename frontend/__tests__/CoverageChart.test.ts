@@ -11,15 +11,23 @@ import { describe, it, expect } from 'vitest';
 
 // Coverage color functions (extracted from component)
 const getCoverageColor = (coverage: number): string => {
-  if (coverage === 100) return '#10b981'; // green-500 - fully covered
-  if (coverage > 0) return '#fbbf24';     // yellow-400 - partial
-  return '#ef4444';                        // red-500 - not covered
+  if (coverage === 0) return '#ef4444';   // red-500 - not covered
+  if (coverage < 20) return '#fca5a5';    // red-300 - minimal coverage
+  if (coverage < 40) return '#fde047';    // yellow-300 - low coverage
+  if (coverage < 60) return '#bef264';    // lime-300 - moderate coverage
+  if (coverage < 80) return '#4ade80';    // green-400 - good coverage
+  if (coverage < 100) return '#22c55e';   // green-500 - high coverage
+  return '#15803d';                        // green-700 - fully covered
 };
 
 const getCoverageColorLight = (coverage: number): string => {
-  if (coverage === 100) return '#d1fae5'; // green-100
-  if (coverage > 0) return '#fef3c7';     // yellow-100
-  return '#fee2e2';                        // red-100
+  if (coverage === 0) return '#fee2e2';   // red-100 - not covered
+  if (coverage < 20) return '#fecaca';    // red-200 - minimal coverage
+  if (coverage < 40) return '#fef3c7';    // yellow-100 - low coverage
+  if (coverage < 60) return '#ecfccb';    // lime-100 - moderate coverage
+  if (coverage < 80) return '#dcfce7';    // green-100 - good coverage
+  if (coverage < 100) return '#bbf7d0';   // green-200 - high coverage
+  return '#86efac';                        // green-300 - fully covered
 };
 
 // API response types
@@ -81,14 +89,17 @@ function transformToObjectiveView(data: CoverageData) {
 
 describe('CoverageChart - Color Coding', () => {
   describe('getCoverageColor', () => {
-    it('should return green for 100% coverage', () => {
-      expect(getCoverageColor(100)).toBe('#10b981');
+    it('should return darkest green for 100% coverage', () => {
+      expect(getCoverageColor(100)).toBe('#15803d');
     });
 
-    it('should return yellow for partial coverage (1-99%)', () => {
-      expect(getCoverageColor(50)).toBe('#fbbf24');
-      expect(getCoverageColor(1)).toBe('#fbbf24');
-      expect(getCoverageColor(99)).toBe('#fbbf24');
+    it('should return gradient colors based on coverage percentage', () => {
+      expect(getCoverageColor(0)).toBe('#ef4444');    // red - not covered
+      expect(getCoverageColor(10)).toBe('#fca5a5');   // light red - minimal
+      expect(getCoverageColor(30)).toBe('#fde047');   // yellow - low
+      expect(getCoverageColor(50)).toBe('#bef264');   // lime - moderate
+      expect(getCoverageColor(70)).toBe('#4ade80');   // light green - good
+      expect(getCoverageColor(90)).toBe('#22c55e');   // green - high
     });
 
     it('should return red for 0% coverage', () => {
@@ -97,12 +108,12 @@ describe('CoverageChart - Color Coding', () => {
   });
 
   describe('getCoverageColorLight', () => {
-    it('should return light green for 100% coverage', () => {
-      expect(getCoverageColorLight(100)).toBe('#d1fae5');
+    it('should return darkest green for 100% coverage', () => {
+      expect(getCoverageColorLight(100)).toBe('#86efac');
     });
 
-    it('should return light yellow for partial coverage', () => {
-      expect(getCoverageColorLight(50)).toBe('#fef3c7');
+    it('should return lime for 50% coverage', () => {
+      expect(getCoverageColorLight(50)).toBe('#ecfccb');
     });
 
     it('should return light red for 0% coverage', () => {

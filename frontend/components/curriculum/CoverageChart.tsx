@@ -60,6 +60,7 @@ interface TreemapCategoryItem {
   coverage: number;
   totalObjectives: number;
   coveredObjectives: number;
+  isSelected?: boolean;
   size?: number;
   [key: string]: string | number | boolean | TreemapItem[] | undefined;
 }
@@ -88,17 +89,25 @@ const getPercentageColor = (correctCount: number, totalCount: number): string =>
   return '#15803d';                          // green-700 - 90-100%
 };
 
-// For categories: still use percentage-based coloring
+// For categories: use gradient based on coverage percentage
 const getCoverageColor = (coverage: number): string => {
-  if (coverage === 100) return '#15803d'; // green-700 - fully covered
-  if (coverage > 0) return '#22c55e';     // green-500 - partial
-  return '#ef4444';                        // red-500 - not covered
+  if (coverage === 0) return '#ef4444';   // red-500 - not covered
+  if (coverage < 20) return '#fca5a5';    // red-300 - minimal coverage
+  if (coverage < 40) return '#fde047';    // yellow-300 - low coverage
+  if (coverage < 60) return '#bef264';    // lime-300 - moderate coverage
+  if (coverage < 80) return '#4ade80';    // green-400 - good coverage
+  if (coverage < 100) return '#22c55e';   // green-500 - high coverage
+  return '#15803d';                        // green-700 - fully covered
 };
 
 const getCoverageColorLight = (coverage: number): string => {
-  if (coverage === 100) return '#bbf7d0'; // green-200
-  if (coverage > 0) return '#dcfce7';     // green-100
-  return '#fee2e2';                        // red-100
+  if (coverage === 0) return '#fee2e2';   // red-100 - not covered
+  if (coverage < 20) return '#fecaca';    // red-200 - minimal coverage
+  if (coverage < 40) return '#fef3c7';    // yellow-100 - low coverage
+  if (coverage < 60) return '#ecfccb';    // lime-100 - moderate coverage
+  if (coverage < 80) return '#dcfce7';    // green-100 - good coverage
+  if (coverage < 100) return '#bbf7d0';   // green-200 - high coverage
+  return '#86efac';                        // green-300 - fully covered
 };
 
 // Custom content renderer for Treemap
@@ -116,10 +125,11 @@ interface CustomContentProps {
   totalCount?: number;
   totalObjectives?: number;
   coveredObjectives?: number;
+  onClick?: (name: string, position: {x: number, y: number, width: number, height: number}) => void;
 }
 
 const CustomContent = (props: CustomContentProps) => {
-  const { x, y, width, height, name, coverage, depth, isCategory, code, correctCount, totalCount, totalObjectives, coveredObjectives } = props;
+  const { x, y, width, height, name, coverage, depth, isCategory, code, correctCount, totalCount, totalObjectives, coveredObjectives, onClick } = props;
 
   // Don't render if too small
   if (width < 20 || height < 20) return null;
@@ -168,7 +178,8 @@ const CustomContent = (props: CustomContentProps) => {
         stroke="#ffffff"
         strokeWidth={1}
         rx={depth === 1 ? 4 : 2}
-        style={{ cursor: 'pointer' }}
+        style={{ cursor: isCategory ? 'pointer' : 'default' }}
+        onClick={() => isCategory && onClick && onClick(name, {x, y, width, height})}
       />
       {/* Inner border for depth (only for objectives with attempts) */}
       {!isCategory && total > 0 && width > 30 && height > 30 && (
@@ -307,6 +318,8 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'categories' | 'objectives'>('categories');
+  const [selectedCategories, setSelectedCategories] = useState<Map<string, {x: number, y: number, width: number, height: number}>>(new Map());
+  const [flippingCategories, setFlippingCategories] = useState<Set<string>>(new Set());
 
   const fetchCoverage = useCallback(async () => {
     if (!childId) return;
@@ -346,22 +359,69 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
     fetchCoverage();
   }, [fetchCoverage]);
 
+  // Handle category click - toggle overlay for that category
+  const handleCategoryClick = (categoryName: string, position: {x: number, y: number, width: number, height: number}) => {
+    setFlippingCategories(prev => new Set(prev).add(categoryName));
+
+    setTimeout(() => {
+      setSelectedCategories(prev => {
+        const newMap = new Map(prev);
+        if (newMap.has(categoryName)) {
+          newMap.delete(categoryName);
+        } else {
+          newMap.set(categoryName, position);
+        }
+        return newMap;
+      });
+
+      setTimeout(() => {
+        setFlippingCategories(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(categoryName);
+          return newSet;
+        });
+      }, 50);
+    }, 300);
+  };
+
+  // Handle objective click - close its parent category
+  const handleObjectiveClick = (categoryName: string) => {
+    setFlippingCategories(prev => new Set(prev).add(categoryName));
+
+    setTimeout(() => {
+      setSelectedCategories(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(categoryName);
+        return newMap;
+      });
+
+      setTimeout(() => {
+        setFlippingCategories(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(categoryName);
+          return newSet;
+        });
+      }, 50);
+    }, 300);
+  };
+
+  // Handle back to categories with flip animation
+  const handleBackToCategories = () => {
+    const allCategories = Array.from(selectedCategories.keys());
+    setFlippingCategories(new Set(allCategories));
+
+    setTimeout(() => {
+      setSelectedCategories(new Map());
+      setViewMode('categories');
+      setTimeout(() => setFlippingCategories(new Set()), 50);
+    }, 300);
+  };
+
   // Transform API data to Treemap format
+  // ALWAYS include all objectives to keep layout stable
   const getTreemapData = (): TreemapCategoryItem[] => {
     if (!coverageData) return [];
 
-    if (viewMode === 'categories') {
-      // Show only categories as top-level items
-      return coverageData.categories.map(category => ({
-        name: category.categoryName,
-        children: [],
-        coverage: category.coveragePercentage,
-        totalObjectives: category.totalObjectives,
-        coveredObjectives: category.coveredObjectives,
-      }));
-    }
-
-    // Show categories with nested objectives
     return coverageData.categories.map(category => ({
       name: category.categoryName,
       coverage: category.coveragePercentage,
@@ -369,7 +429,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       coveredObjectives: category.coveredObjectives,
       children: category.objectives.map(obj => ({
         name: obj.code,
-        size: 100, // Equal size for all objectives
+        size: 100,
         coverage: obj.isCovered ? 100 : 0,
         code: obj.code,
         description: obj.description,
@@ -430,16 +490,23 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   }
 
   const treemapData = getTreemapData();
-  const flatData = viewMode === 'categories'
-    ? treemapData.map(item => ({
-        name: item.name,
-        size: item.totalObjectives * 100,
-        coverage: item.coverage,
-        totalObjectives: item.totalObjectives,
-        coveredObjectives: item.coveredObjectives,
-        isCategory: true,
-      }))
-    : treemapData;
+
+  // Always show categories as base layer
+  const categoryData = treemapData.map(item => ({
+    name: item.name,
+    size: item.totalObjectives * 100,
+    coverage: item.coverage,
+    totalObjectives: item.totalObjectives,
+    coveredObjectives: item.coveredObjectives,
+    isCategory: true,
+  }));
+
+  // Base grid: always show categories, OR all objectives when "All Objectives" clicked
+  // When category is clicked, show overlay instead of changing base grid
+  const showCategoriesBase = viewMode === 'categories' || selectedCategories.size > 0;
+  const displayData = showCategoriesBase
+    ? categoryData
+    : treemapData.flatMap(category => category.children);
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -450,33 +517,45 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
           {childName && (
             <p className="text-sm text-gray-600">
               Grade {coverageData.childGradeLevel} - {childName}
+              {selectedCategories.size > 0 && ` - ${selectedCategories.size} ${selectedCategories.size === 1 ? 'category' : 'categories'} selected`}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-4">
-          {/* View mode toggle */}
-          <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setViewMode('categories');
+              setSelectedCategories(new Map());
+            }}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'categories'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Categories
+          </button>
+          <button
+            onClick={() => {
+              setViewMode('objectives');
+              setSelectedCategories(new Map());
+            }}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'objectives' && selectedCategories.size === 0
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All Objectives
+          </button>
+          {selectedCategories.size > 0 && (
             <button
-              onClick={() => setViewMode('categories')}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === 'categories'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
+              onClick={handleBackToCategories}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Categories
+              ← Close All
             </button>
-            <button
-              onClick={() => setViewMode('objectives')}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === 'objectives'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Objectives
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
@@ -510,20 +589,86 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         </div>
       </div>
 
-      {/* Treemap */}
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <Treemap
-            data={viewMode === 'categories' ? flatData : treemapData}
-            dataKey="size"
-            aspectRatio={4 / 3}
-            stroke="#fff"
-            fill="#8884d8"
-            content={<CustomContent x={0} y={0} width={0} height={0} name="" coverage={0} depth={0} />}
-          >
-            <Tooltip content={<CustomTooltip />} />
-          </Treemap>
-        </ResponsiveContainer>
+      {/* Treemap with objectives overlay */}
+      <div className="relative h-80">
+        {/* Categories grid - ALWAYS rendered, never changes */}
+        {showCategoriesBase && (
+          <div className="absolute inset-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <Treemap
+                data={categoryData}
+                dataKey="size"
+                aspectRatio={4 / 3}
+                stroke="#fff"
+                fill="#8884d8"
+                content={(props: any) => (
+                  <CustomContent {...props} onClick={handleCategoryClick} />
+                )}
+              >
+                <Tooltip content={<CustomTooltip />} />
+              </Treemap>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* All objectives grid - shown when "All Objectives" clicked */}
+        {!showCategoriesBase && (
+          <div className="absolute inset-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <Treemap
+                data={treemapData.flatMap(category => category.children)}
+                dataKey="size"
+                aspectRatio={4 / 3}
+                stroke="#fff"
+                fill="#8884d8"
+                content={(props: any) => <CustomContent {...props} />}
+              >
+                <Tooltip content={<CustomTooltip />} />
+              </Treemap>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Objectives overlays - shown for each selected category */}
+        {Array.from(selectedCategories.entries()).map(([categoryName, position]) => {
+          const categoryData = treemapData.find(c => c.name === categoryName);
+          const objectives = categoryData?.children || [];
+          const isFlipping = flippingCategories.has(categoryName);
+
+          return (
+            <div
+              key={categoryName}
+              className="absolute bg-white rounded-lg shadow-xl border-2 border-green-600 overflow-hidden"
+              style={{
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                width: `${position.width}px`,
+                height: `${position.height}px`,
+                transform: isFlipping ? 'rotateY(90deg)' : 'rotateY(0deg)',
+                transformStyle: 'preserve-3d',
+                transition: 'transform 0.6s ease-in-out',
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <Treemap
+                  data={objectives}
+                  dataKey="size"
+                  aspectRatio={position.width / position.height}
+                  stroke="#fff"
+                  fill="#8884d8"
+                  content={(props: any) => (
+                    <CustomContent
+                      {...props}
+                      onClick={() => handleObjectiveClick(categoryName)}
+                    />
+                  )}
+                >
+                  <Tooltip content={<CustomTooltip />} />
+                </Treemap>
+              </ResponsiveContainer>
+            </div>
+          );
+        })}
       </div>
 
       {/* Legend */}
