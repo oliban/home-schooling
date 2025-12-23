@@ -16,7 +16,6 @@ interface PackageData {
   id: string;
   name: string;
   grade_level: number;
-  assignment_type: 'math' | 'reading';
   category_id: string | null;
   category_name: string | null;
   problem_count: number;
