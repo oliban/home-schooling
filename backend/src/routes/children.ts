@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../data/database.js';
 import { authenticateParent, authenticateChild } from '../middleware/auth.js';
 import type { Child, ChildCoins, CreateChildRequest } from '../types/index.js';
+import { getChildStats, getChildStatsByDate, type PeriodType } from '../services/stats-queries.js';
 
 const router = Router();
 
@@ -108,15 +109,7 @@ router.post('/', authenticateParent, async (req, res) => {
 router.get('/stats-by-date', authenticateParent, (req, res) => {
   try {
     const db = getDb();
-    const period = req.query.period as string || '7d';
-
-    // Build date filter based on period
-    let dateFilter = '';
-    if (period === '7d') {
-      dateFilter = "AND answered_at >= datetime('now', '-7 days')";
-    } else if (period === '30d') {
-      dateFilter = "AND answered_at >= datetime('now', '-30 days')";
-    }
+    const period = (req.query.period as PeriodType) || '7d';
 
     // Get all children for this parent
     const childrenList = db.all<{ id: string; name: string }>(
@@ -135,100 +128,12 @@ router.get('/stats-by-date', authenticateParent, (req, res) => {
     }> = [];
 
     for (const child of childrenList) {
-      // Math stats from package-based assignments by date
-      const mathPackageByDate = db.all<{ date: string; correct: number; incorrect: number }>(`
-        SELECT
-          date(aa.answered_at) as date,
-          SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) as correct,
-          SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END) as incorrect
-        FROM assignments a
-        JOIN assignment_answers aa ON a.id = aa.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'math'
-          AND a.package_id IS NOT NULL
-          AND aa.answered_at IS NOT NULL
-          ${dateFilter.replace('answered_at', 'aa.answered_at')}
-        GROUP BY date(aa.answered_at)
-      `, [child.id]);
-
-      // Math stats from legacy embedded problems by date
-      const mathLegacyByDate = db.all<{ date: string; correct: number; incorrect: number }>(`
-        SELECT
-          date(mp.answered_at) as date,
-          SUM(CASE WHEN mp.is_correct = 1 THEN 1 ELSE 0 END) as correct,
-          SUM(CASE WHEN mp.is_correct = 0 THEN 1 ELSE 0 END) as incorrect
-        FROM assignments a
-        JOIN math_problems mp ON a.id = mp.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'math'
-          AND a.package_id IS NULL
-          AND mp.answered_at IS NOT NULL
-          ${dateFilter.replace('answered_at', 'mp.answered_at')}
-        GROUP BY date(mp.answered_at)
-      `, [child.id]);
-
-      // Reading stats from package-based assignments by date
-      const readingPackageByDate = db.all<{ date: string; correct: number; incorrect: number }>(`
-        SELECT
-          date(aa.answered_at) as date,
-          SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) as correct,
-          SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END) as incorrect
-        FROM assignments a
-        JOIN assignment_answers aa ON a.id = aa.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'reading'
-          AND a.package_id IS NOT NULL
-          AND aa.answered_at IS NOT NULL
-          ${dateFilter.replace('answered_at', 'aa.answered_at')}
-        GROUP BY date(aa.answered_at)
-      `, [child.id]);
-
-      // Reading stats from legacy embedded questions by date
-      const readingLegacyByDate = db.all<{ date: string; correct: number; incorrect: number }>(`
-        SELECT
-          date(rq.answered_at) as date,
-          SUM(CASE WHEN rq.is_correct = 1 THEN 1 ELSE 0 END) as correct,
-          SUM(CASE WHEN rq.is_correct = 0 THEN 1 ELSE 0 END) as incorrect
-        FROM assignments a
-        JOIN reading_questions rq ON a.id = rq.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'reading'
-          AND a.package_id IS NULL
-          AND rq.answered_at IS NOT NULL
-          ${dateFilter.replace('answered_at', 'rq.answered_at')}
-        GROUP BY date(rq.answered_at)
-      `, [child.id]);
-
-      // Merge math stats by date
-      const mathByDate = new Map<string, { correct: number; incorrect: number }>();
-      for (const row of mathPackageByDate) {
-        mathByDate.set(row.date, { correct: row.correct, incorrect: row.incorrect });
-      }
-      for (const row of mathLegacyByDate) {
-        const existing = mathByDate.get(row.date) || { correct: 0, incorrect: 0 };
-        mathByDate.set(row.date, {
-          correct: existing.correct + row.correct,
-          incorrect: existing.incorrect + row.incorrect
-        });
-      }
-
-      // Merge reading stats by date
-      const readingByDate = new Map<string, { correct: number; incorrect: number }>();
-      for (const row of readingPackageByDate) {
-        readingByDate.set(row.date, { correct: row.correct, incorrect: row.incorrect });
-      }
-      for (const row of readingLegacyByDate) {
-        const existing = readingByDate.get(row.date) || { correct: 0, incorrect: 0 };
-        readingByDate.set(row.date, {
-          correct: existing.correct + row.correct,
-          incorrect: existing.incorrect + row.incorrect
-        });
-      }
+      const childStats = getChildStatsByDate(db, child.id, period);
 
       // Add math entries
-      for (const [date, stats] of mathByDate) {
+      for (const stats of childStats.math) {
         result.push({
-          date,
+          date: stats.date,
           childId: child.id,
           childName: child.name,
           subject: 'math',
@@ -238,9 +143,9 @@ router.get('/stats-by-date', authenticateParent, (req, res) => {
       }
 
       // Add reading entries
-      for (const [date, stats] of readingByDate) {
+      for (const stats of childStats.reading) {
         result.push({
-          date,
+          date: stats.date,
           childId: child.id,
           childName: child.name,
           subject: 'reading',
@@ -271,15 +176,7 @@ router.get('/stats-by-date', authenticateParent, (req, res) => {
 router.get('/stats', authenticateParent, (req, res) => {
   try {
     const db = getDb();
-    const period = req.query.period as string || 'all';
-
-    // Build date filter based on period
-    let dateFilter = '';
-    if (period === '7d') {
-      dateFilter = "AND answered_at >= datetime('now', '-7 days')";
-    } else if (period === '30d') {
-      dateFilter = "AND answered_at >= datetime('now', '-30 days')";
-    }
+    const period = (req.query.period as PeriodType) || 'all';
 
     // Get all children for this parent with their stats
     const childrenList = db.all<{ id: string; name: string }>(
@@ -288,69 +185,13 @@ router.get('/stats', authenticateParent, (req, res) => {
     );
 
     const stats = childrenList.map(child => {
-      // Math stats - package-based assignments
-      const mathPackage = db.get<{ correct: number; incorrect: number }>(`
-        SELECT
-          COALESCE(SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
-          COALESCE(SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
-        FROM assignments a
-        JOIN assignment_answers aa ON a.id = aa.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'math'
-          AND a.package_id IS NOT NULL
-          ${dateFilter.replace('answered_at', 'aa.answered_at')}
-      `, [child.id]) || { correct: 0, incorrect: 0 };
-
-      // Math stats - legacy embedded problems
-      const mathLegacy = db.get<{ correct: number; incorrect: number }>(`
-        SELECT
-          COALESCE(SUM(CASE WHEN mp.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
-          COALESCE(SUM(CASE WHEN mp.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
-        FROM assignments a
-        JOIN math_problems mp ON a.id = mp.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'math'
-          AND a.package_id IS NULL
-          ${dateFilter.replace('answered_at', 'mp.answered_at')}
-      `, [child.id]) || { correct: 0, incorrect: 0 };
-
-      // Reading stats - package-based assignments
-      const readingPackage = db.get<{ correct: number; incorrect: number }>(`
-        SELECT
-          COALESCE(SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
-          COALESCE(SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
-        FROM assignments a
-        JOIN assignment_answers aa ON a.id = aa.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'reading'
-          AND a.package_id IS NOT NULL
-          ${dateFilter.replace('answered_at', 'aa.answered_at')}
-      `, [child.id]) || { correct: 0, incorrect: 0 };
-
-      // Reading stats - legacy embedded questions
-      const readingLegacy = db.get<{ correct: number; incorrect: number }>(`
-        SELECT
-          COALESCE(SUM(CASE WHEN rq.is_correct = 1 THEN 1 ELSE 0 END), 0) as correct,
-          COALESCE(SUM(CASE WHEN rq.is_correct = 0 THEN 1 ELSE 0 END), 0) as incorrect
-        FROM assignments a
-        JOIN reading_questions rq ON a.id = rq.assignment_id
-        WHERE a.child_id = ?
-          AND a.assignment_type = 'reading'
-          AND a.package_id IS NULL
-          ${dateFilter.replace('answered_at', 'rq.answered_at')}
-      `, [child.id]) || { correct: 0, incorrect: 0 };
+      const childStats = getChildStats(db, child.id, period);
 
       return {
         childId: child.id,
         childName: child.name,
-        math: {
-          correct: mathPackage.correct + mathLegacy.correct,
-          incorrect: mathPackage.incorrect + mathLegacy.incorrect
-        },
-        reading: {
-          correct: readingPackage.correct + readingLegacy.correct,
-          incorrect: readingPackage.incorrect + readingLegacy.incorrect
-        }
+        math: childStats.math,
+        reading: childStats.reading
       };
     });
 

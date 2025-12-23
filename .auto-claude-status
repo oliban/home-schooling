@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "005-restrict-cors-configuration",
+  "spec": "009-extract-duplicated-stats-query-logic-in-children-r",
   "state": "building",
   "subtasks": {
-    "completed": 5,
-    "total": 8,
+    "completed": 9,
+    "total": 12,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Environment Configuration Updates",
-    "id": 2,
-    "total": 3
+    "current": "Refactor Children Routes",
+    "id": null,
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 7,
-    "started_at": "2025-12-22T16:08:21.981680"
+    "number": 11,
+    "started_at": "2025-12-23T00:44:49.304706"
   },
-  "last_update": "2025-12-22T16:22:25.425851"
+  "last_update": "2025-12-23T01:20:40.313021"
 }
