@@ -113,18 +113,54 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
       return res.status(400).json({ error: 'Not enough coins' });
     }
 
-    // Purchase
-    db.transaction(() => {
-      db.run(
+    // Purchase transaction with validation
+    // CRITICAL FIX: Validate that INSERT succeeded
+    // Background: Harry's purchase of "Brainiac Thinkertino" failed silently because
+    // we didn't check db.run().changes. The PRIMARY KEY (child_id, collectible_id)
+    // constraint can cause INSERT to fail if duplicate purchase attempted.
+    // We must verify changes === 1 to ensure ownership record was created.
+    const purchaseResult = db.transaction(() => {
+      // 1. Deduct coins
+      const updateResult = db.run(
         'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
         [collectible.price, req.child!.id]
       );
 
-      db.run(
+      // Verify UPDATE affected exactly 1 row
+      if (updateResult.changes !== 1) {
+        throw new Error('Failed to deduct coins');
+      }
+
+      // 2. Create ownership record
+      const insertResult = db.run(
         'INSERT INTO child_collectibles (child_id, collectible_id) VALUES (?, ?)',
         [req.child!.id, req.params.id]
       );
+
+      // CRITICAL: Verify INSERT succeeded (changes === 1)
+      if (insertResult.changes !== 1) {
+        throw new Error('Failed to create ownership record');
+      }
+
+      return insertResult;
     });
+
+    // 3. Verify ownership record exists in database (belt-and-suspenders check)
+    const verifyOwnership = db.get<{ child_id: string }>(
+      'SELECT child_id FROM child_collectibles WHERE child_id = ? AND collectible_id = ?',
+      [req.child!.id, req.params.id]
+    );
+
+    if (!verifyOwnership) {
+      // This should never happen if transaction worked, but fail-safe
+      console.error('CRITICAL: Ownership record missing after successful transaction', {
+        childId: req.child!.id,
+        collectibleId: req.params.id
+      });
+      return res.status(500).json({
+        error: 'Purchase failed - ownership record not created. Please contact support.'
+      });
+    }
 
     const newBalance = db.get<{ balance: number }>(
       'SELECT balance FROM child_coins WHERE child_id = ?',
@@ -138,6 +174,22 @@ router.post('/:id/buy', authenticateChild, (req, res) => {
     });
   } catch (error) {
     console.error('Purchase collectible error:', error);
+
+    // Better error messages for specific failures
+    if (error instanceof Error) {
+      if (error.message.includes('UNIQUE constraint') ||
+          error.message.includes('ownership record')) {
+        return res.status(400).json({
+          error: 'You already own this collectible'
+        });
+      }
+      if (error.message.includes('deduct coins')) {
+        return res.status(500).json({
+          error: 'Failed to process payment'
+        });
+      }
+    }
+
     res.status(500).json({ error: 'Failed to purchase collectible' });
   }
 });
