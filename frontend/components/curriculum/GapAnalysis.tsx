@@ -64,7 +64,7 @@ export default function GapAnalysis({ childId, childName }: GapAnalysisProps) {
         return;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6001/api';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
       // Fetch recommendations (includes gaps data)
       const response = await fetch(`${API_URL}/curriculum/recommendations/${childId}`, {
