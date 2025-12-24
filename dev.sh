@@ -10,11 +10,19 @@ kill_port() {
         echo "Killing existing process on port $port (PID: $pid)"
         kill $pid 2>/dev/null
         sleep 1
+
+        # Check if still running, force kill if needed
+        if lsof -ti :$port 2>/dev/null >/dev/null; then
+            echo "Process still running, force killing..."
+            kill -9 $(lsof -ti :$port 2>/dev/null) 2>/dev/null
+            sleep 0.5
+        fi
     fi
 }
 
 kill_port 6001
 kill_port 5001
+kill_port 3000
 
 cleanup() {
     echo "Stopping servers..."
