@@ -3,7 +3,7 @@ import './globals.css';
 import { LanguageProvider } from '@/lib/LanguageContext';
 
 export const metadata: Metadata = {
-  title: 'Skolan - Läxor för barn',
+  title: 'Brainrot-skolan - Läxor för barn',
   description: 'Matte och läsförståelse baserat på LGR 22',
 };
 

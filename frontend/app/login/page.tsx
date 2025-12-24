@@ -77,7 +77,7 @@ export default function ChildLogin() {
       <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white">
         <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
           <div className="text-4xl mb-4">🎒</div>
-          <h1 className="text-2xl font-bold mb-2">Välkommen till Skolan!</h1>
+          <h1 className="text-2xl font-bold mb-2">Välkommen till Brainrot-skolan!</h1>
           <p className="text-gray-600 mb-6">Ange din familjekod</p>
 
           {error && (
@@ -122,7 +122,7 @@ export default function ChildLogin() {
     <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
         <h1 className="text-3xl font-bold text-center mb-2">
-          Välkommen till Skolan!
+          Välkommen till Brainrot-skolan!
         </h1>
         <p className="text-gray-600 text-center mb-8">Vem är du?</p>
 

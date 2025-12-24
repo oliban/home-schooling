@@ -1,4 +1,4 @@
-# Home Schooling - Educational Portal for Kids
+# Brainrot-skolan - Educational Portal for Kids
 
 A gamified educational platform for children based on the Swedish curriculum (LGR 22), featuring math exercises and reading comprehension with a collectible reward system.
 
