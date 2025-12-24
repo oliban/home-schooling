@@ -564,7 +564,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
         );
 
         const answeredProblems = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND is_correct = 1',
+          'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND child_answer IS NOT NULL',
           [req.params.id]
         );
 
@@ -699,7 +699,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
         );
 
         const solvedProblems = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND is_correct = 1',
+          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND child_answer IS NOT NULL',
           [req.params.id]
         );
 

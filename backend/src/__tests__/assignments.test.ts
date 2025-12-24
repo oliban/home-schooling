@@ -368,6 +368,83 @@ describe('Assignment Scores', () => {
     });
   });
 
+  describe('Assignment Completion Logic', () => {
+    it('should mark assignment as completed when all problems are answered, even if some are wrong', () => {
+      const db = getDb();
+      const assignmentId = uuidv4();
+
+      // Create an in_progress assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [assignmentId, parentId, childId, 'Completion Test', 3, packageId]
+      );
+
+      // Answer all 5 problems: 2 correct, 3 wrong
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[0], '2', 1]  // correct
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[1], '5', 0]  // wrong
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[2], '13', 0] // wrong
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[3], '17', 1] // correct
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problemIds[4], '50', 0] // wrong
+      );
+
+      // Simulate the completion check logic that happens in the submit endpoint
+      const totalProblems = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
+        [packageId]
+      );
+
+      const answeredProblems = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND child_answer IS NOT NULL',
+        [assignmentId]
+      );
+
+      // Should mark as completed when all are answered
+      if (answeredProblems && totalProblems && answeredProblems.count === totalProblems.count) {
+        db.run(
+          "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+          [assignmentId]
+        );
+      }
+
+      // Verify assignment is now completed
+      const assignment = db.get<{ status: string; completed_at: string | null }>(
+        'SELECT status, completed_at FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+
+      expect(assignment).toBeDefined();
+      expect(assignment?.status).toBe('completed');
+      expect(assignment?.completed_at).not.toBeNull();
+
+      // Verify we still have the correct answer counts
+      const correctCount = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND is_correct = 1',
+        [assignmentId]
+      );
+      expect(correctCount?.count).toBe(2); // Only 2 correct out of 5
+    });
+  });
+
   describe('Assignment Reordering', () => {
     let reorderAssignmentIds: string[] = [];
 
