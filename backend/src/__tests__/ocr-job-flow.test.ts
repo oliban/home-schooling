@@ -410,7 +410,10 @@ describe('OCR Job Flow - Performance Criteria', () => {
   it('should have retry mechanism for failed OCR processing', () => {
     const opts = ocrQueue.defaultJobOptions;
     expect(opts?.attempts).toBe(3);
-    expect(opts?.backoff?.type).toBe('exponential');
-    expect(opts?.backoff?.delay).toBe(1000);
+    expect(typeof opts?.backoff).toBe('object');
+    if (typeof opts?.backoff === 'object') {
+      expect(opts.backoff.type).toBe('exponential');
+      expect(opts.backoff.delay).toBe(1000);
+    }
   });
 });

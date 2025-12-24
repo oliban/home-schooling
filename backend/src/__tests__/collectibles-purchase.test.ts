@@ -45,6 +45,10 @@ describe('Collectibles Purchase Transaction', () => {
 
   afterAll(() => {
     const db = getDb();
+    // Delete in correct order to respect FK constraints
+    db.run('DELETE FROM child_collectibles WHERE child_id = ?', [childId]);
+    db.run('DELETE FROM child_coins WHERE child_id = ?', [childId]);
+    db.run('DELETE FROM children WHERE id = ?', [childId]);
     db.run('DELETE FROM collectibles WHERE id = ?', [collectibleId]);
     db.run('DELETE FROM parents WHERE id = ?', [parentId]);
   });
