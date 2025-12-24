@@ -712,14 +712,48 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
         }
       }
 
-      // Award coins if correct and not reading
+      // Award coins and update streak if correct and not reading
       if (coinsEarned > 0) {
         db.run(
-          'UPDATE children SET coins = coins + ? WHERE id = ?',
-          [coinsEarned, req.child!.id]
+          'UPDATE child_coins SET balance = balance + ?, total_earned = total_earned + ?, current_streak = current_streak + 1 WHERE child_id = ?',
+          [coinsEarned, coinsEarned, req.child!.id]
+        );
+      }
+
+      // Reset streak if question complete and wrong
+      if (questionComplete && !isCorrect && !isReadingAssignment) {
+        db.run(
+          'UPDATE child_coins SET current_streak = 0 WHERE child_id = ?',
+          [req.child!.id]
         );
       }
     });
+
+    // Get updated child coins and streak
+    const childCoins = db.get<{ balance: number; current_streak: number }>(
+      'SELECT balance, current_streak FROM child_coins WHERE child_id = ?',
+      [req.child!.id]
+    );
+
+    const totalCoins = childCoins?.balance || 0;
+    const streak = childCoins?.current_streak || 0;
+
+    // Calculate multi-attempt fields
+    const maxAttempts = isReadingAssignment ? 1 : MAX_ATTEMPTS;
+    const canRetry = !isCorrect && !questionComplete && attemptNumber < maxAttempts && !isReadingAssignment;
+
+    // Calculate potential reward for next attempt (if applicable)
+    let potentialReward = 0;
+    if (canRetry && attemptNumber < MAX_ATTEMPTS) {
+      const nextMultiplier = ATTEMPT_MULTIPLIERS[attemptNumber] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
+      potentialReward = Math.round(10 * nextMultiplier);
+    }
+
+    // Calculate hint availability and cost
+    const hasHint = hint !== null && hint !== '';
+    const hintsAllowed = assignment.hints_allowed === 1;
+    const canBuyHint = !isCorrect && hasHint && !hintPurchased && hintsAllowed && canRetry && attemptNumber >= 2;
+    const hintCost = canBuyHint ? Math.max(1, Math.floor(potentialReward / 2)) : 0;
 
     // Invalidate cache after submission
     await invalidateAssignmentsCache(assignment.parent_id, req.child!.id, req.params.id);
@@ -728,10 +762,16 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
       isCorrect,
       correctAnswer,
       coinsEarned,
+      totalCoins,
+      streak,
       attemptNumber,
-      questionComplete,
-      explanation: isCorrect ? explanation : null,
-      hint: !hintPurchased && hint ? hint : null
+      canRetry,
+      maxAttempts,
+      potentialReward,
+      canBuyHint,
+      hintCost,
+      explanation: questionComplete ? explanation : null,
+      questionComplete
     });
   } catch (error) {
     console.error('Submit answer error:', error);
@@ -771,19 +811,19 @@ router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
       const hintCost = problem.hint_cost || 5;
 
       // Check coins
-      const child = db.get<{ coins: number }>(
-        'SELECT coins FROM children WHERE id = ?',
+      const child = db.get<{ balance: number }>(
+        'SELECT balance FROM child_coins WHERE child_id = ?',
         [req.child!.id]
       );
 
-      if (!child || child.coins < hintCost) {
+      if (!child || child.balance < hintCost) {
         return res.status(400).json({ error: 'Insufficient coins' });
       }
 
       db.transaction(() => {
         // Deduct coins
         db.run(
-          'UPDATE children SET coins = coins - ? WHERE id = ?',
+          'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
           [hintCost, req.child!.id]
         );
 
@@ -807,10 +847,16 @@ router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
         }
       });
 
+      // Get updated balance
+      const updatedChild = db.get<{ balance: number }>(
+        'SELECT balance FROM child_coins WHERE child_id = ?',
+        [req.child!.id]
+      );
+
       // Invalidate cache
       await invalidateAssignmentsCache(assignment.parent_id, req.child!.id, assignmentId);
 
-      res.json({ hint: problem.hint, coinsSpent: hintCost });
+      res.json({ hint: problem.hint, coinsSpent: hintCost, newBalance: updatedChild?.balance || 0 });
     } else {
       // Legacy assignment
       const problem = db.get<MathProblem & { hint_cost?: number }>(
@@ -824,18 +870,18 @@ router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
 
       const hintCost = problem.hint_cost || 5;
 
-      const child = db.get<{ coins: number }>(
-        'SELECT coins FROM children WHERE id = ?',
+      const child = db.get<{ balance: number }>(
+        'SELECT balance FROM child_coins WHERE child_id = ?',
         [req.child!.id]
       );
 
-      if (!child || child.coins < hintCost) {
+      if (!child || child.balance < hintCost) {
         return res.status(400).json({ error: 'Insufficient coins' });
       }
 
       db.transaction(() => {
         db.run(
-          'UPDATE children SET coins = coins - ? WHERE id = ?',
+          'UPDATE child_coins SET balance = balance - ? WHERE child_id = ?',
           [hintCost, req.child!.id]
         );
 
@@ -845,10 +891,16 @@ router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
         );
       });
 
+      // Get updated balance
+      const updatedChild = db.get<{ balance: number }>(
+        'SELECT balance FROM child_coins WHERE child_id = ?',
+        [req.child!.id]
+      );
+
       // Invalidate cache
       await invalidateAssignmentsCache(assignment.parent_id, req.child!.id, assignmentId);
 
-      res.json({ hint: problem.hint, coinsSpent: hintCost });
+      res.json({ hint: problem.hint, coinsSpent: hintCost, newBalance: updatedChild?.balance || 0 });
     }
   } catch (error) {
     console.error('Purchase hint error:', error);

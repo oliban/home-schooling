@@ -151,10 +151,19 @@ router.post('/child-login', async (req, res) => {
     const token = generateChildToken({ id: child.id, parent_id: child.parent_id });
 
     // Get coins and shop unlock info
-    const coins = db.get<{ balance: number; current_streak: number }>(
+    let coins = db.get<{ balance: number; current_streak: number }>(
       'SELECT balance, current_streak FROM child_coins WHERE child_id = ?',
       [child.id]
     );
+
+    // If no coins entry exists (legacy child), create one
+    if (!coins) {
+      db.run(
+        'INSERT INTO child_coins (child_id, balance, total_earned, current_streak) VALUES (?, 0, 0, 0)',
+        [child.id]
+      );
+      coins = { balance: 0, current_streak: 0 };
+    }
 
     // Check if this is a new day login - unlock more shop items
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD

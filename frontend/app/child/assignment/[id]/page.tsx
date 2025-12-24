@@ -412,9 +412,6 @@ export default function AssignmentPage() {
               {!feedback.isCorrect && feedback.canRetry && (
                 <div className="mt-2 text-gray-600">
                   <span>{t('assignment.attempt', { current: feedback.attemptNumber, max: feedback.maxAttempts })}</span>
-                  <span className="ml-2 text-sm text-gray-500">
-                    ({t('assignment.nextReward', { coins: feedback.potentialReward })})
-                  </span>
                 </div>
               )}
 

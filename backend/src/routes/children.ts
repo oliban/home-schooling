@@ -229,6 +229,14 @@ router.get('/:id', authenticateParent, (req, res) => {
       return res.status(404).json({ error: 'Child not found' });
     }
 
+    // If no coins entry exists (legacy child), create one
+    if (child.balance === null || child.balance === undefined) {
+      db.run(
+        'INSERT INTO child_coins (child_id, balance, total_earned, current_streak) VALUES (?, 0, 0, 0)',
+        [child.id]
+      );
+    }
+
     res.json({
       id: child.id,
       name: child.name,
@@ -383,15 +391,24 @@ router.get('/:id/coins', authenticateChild, (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const coins = db.get<{ balance: number; current_streak: number; total_earned: number }>(
+    let coins = db.get<{ balance: number; current_streak: number; total_earned: number }>(
       'SELECT balance, current_streak, total_earned FROM child_coins WHERE child_id = ?',
       [req.params.id]
     );
 
+    // If no coins entry exists (legacy child), create one
+    if (!coins) {
+      db.run(
+        'INSERT INTO child_coins (child_id, balance, total_earned, current_streak) VALUES (?, 0, 0, 0)',
+        [req.params.id]
+      );
+      coins = { balance: 0, current_streak: 0, total_earned: 0 };
+    }
+
     res.json({
-      balance: coins?.balance || 0,
-      current_streak: coins?.current_streak || 0,
-      total_earned: coins?.total_earned || 0
+      balance: coins.balance || 0,
+      current_streak: coins.current_streak || 0,
+      total_earned: coins.total_earned || 0
     });
   } catch (error) {
     console.error('Get coins error:', error);

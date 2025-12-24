@@ -228,7 +228,7 @@ export const assignments = {
       hint: string;
       coinsCost: number;
       newBalance: number;
-    }>(`/assignments/${assignmentId}/questions/${questionId}/buy-hint`, { method: 'POST', token }),
+    }>(`/assignments/${assignmentId}/hint/${questionId}`, { method: 'POST', token }),
 
   delete: (token: string, id: string) =>
     fetchApi<{ success: boolean }>(`/assignments/${id}`, { method: 'DELETE', token }),
