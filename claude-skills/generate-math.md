@@ -251,6 +251,7 @@ For `answer_type: "multiple_choice"`:
 4. Use Swedish number format (comma for decimals: 3,5 not 3.5)
 5. Currency is always "kr" (kronor)
 6. **Always include `lgr22_codes`** - an array of objective codes for curriculum tracking
+7. **Always save generated files to `/data/generated/` directory** - use descriptive filenames like `math-arskurs3-geometri-YYYY-MM-DD.json`
 
 ## LGR 22 Objective Codes Reference
 
