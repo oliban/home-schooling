@@ -1,8 +1,8 @@
 {
-  "name": "homeschooling-backend",
+  "name": "brainrot-skolan-backend",
   "version": "1.0.0",
   "type": "module",
-  "description": "Home Schooling - Educational assignment platform backend API",
+  "description": "Brainrot-skolan - Educational assignment platform backend API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

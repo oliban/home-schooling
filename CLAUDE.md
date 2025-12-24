@@ -1,4 +1,4 @@
-# Home Schooling - Educational Assignment Platform
+# Brainrot-skolan - Educational Assignment Platform
 
 ## Overview
 A web portal for serving math and reading comprehension (läsförståelse) assignments to children, based on Swedish curriculum LGR 22.
