@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter - Kapitel 6: Resan från perrong nio och trekvart (Del 2)",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om Harrys resa till Hogwarts och mötet med familjen Weasley",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vilket husdjur hade Ron med sig på tåget?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: En grå råtta som hette Scabbers",
+            "B: En brun uggla som hette Errol",
+            "C: En svart katt som hette Crookshanks",
+            "D: En padda som han tappat bort"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad var Percy i familjen Weasley?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Den yngste sonen i familjen",
+            "B: En av tvillingarna Fred och George",
+            "C: Den äldste sonen som var prefekt",
+            "D: Den mellerste brodern som spelade quidditch"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför slutade familjen Dursley att prata med Harry under hans sista dagar hemma?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De var upptagna med att förbereda Dudleys operation",
+            "B: De var rädda för vad Harry kunde göra med magi",
+            "C: De ville straffa honom för att ha fått brevet från Hogwarts",
+            "D: De hade bestämt sig för att ignorera allt som hade med magi att göra"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Hur kände sig Ron när han berättade att han fått Scabbers istället för en uggla?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han var mest besviken över att Scabbers var så lat",
+            "B: Han var arg på sina föräldrar för att de inte hade råd",
+            "C: Han var stolt över att ha hand-me-downs från Percy",
+            "D: Han blev generad och hans öron blev röda av skam"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Hur reagerade Harry när han skulle springa genom barriären till perrong nio och trekvart?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han blev nervös och rädd att krascha in i väggen",
+            "B: Han kände sig modig och sprang utan att tveka",
+            "C: Han blev upprymd och ivrig att komma igenom snabbt",
+            "D: Han var lugn eftersom han litat helt på Mrs Weasley"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad betyder det att Harry var 'nervös och rädd' när han skulle gå igenom barriären?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att han var mest irriterad över hela situationen",
+            "B: Att han var stressad över att hinna med tåget",
+            "C: Att han var orolig och osäker på vad som skulle hända",
+            "D: Att han var upprörd över att behöva lämna Dursleys"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilket budskap förmedlas genom Rons känslor om att ha fått hand-me-downs och behöva leva upp till sina bröder?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att pengar och dyra saker är viktigast för att lyckas i livet",
+            "B: Att det kan vara svårt att hitta sin egen identitet i skuggan av andra",
+            "C: Att familjetraditioner alltid skapar press på yngre syskon att prestera",
+            "D: Att äldre syskon har ansvar att hjälpa de yngre att klara sig bättre"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför öppnade sig Harry så snabbt för Ron och berättade om sitt liv hos mugglarna?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han ville imponera på Ron med sin tragiska bakgrund",
+            "B: Han behövde ventilera efter alla år av dålig behandling",
+            "C: Han kände gemenskap med Ron som också kände sig underlägsen",
+            "D: Han ville förklara varför han inte visste något om trollkarlsvärlden"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

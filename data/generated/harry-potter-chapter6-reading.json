@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter - Kapitel 6: Resan från perrong nio och trekvart",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om Harrys resa till Hogwarts och mötet med familjen Weasley",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad heter Harrys uggla?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Scabbers",
+            "B: Errol",
+            "C: Hedwig",
+            "D: Pigwidgeon"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vilken perrong skulle Harry ta tåget från till Hogwarts?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Perrong åtta och en halv",
+            "B: Perrong nio och trekvart",
+            "C: Perrong tio och en fjärdedel",
+            "D: Perrong elva och en halv"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Hur kände sig Harry när han inte kunde hitta perrong nio och trekvart?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han blev irriterad på vakten som inte kunde hjälpa honom",
+            "B: Han blev mest arg på morbror Vernon för dåliga instruktioner",
+            "C: Han kände sig mest förvirrad över hela situationen",
+            "D: Han blev desperat och visste inte vad han skulle göra"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför hjälpte Mrs Weasley Harry att ta sig till perrongen?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon såg att Harry var ny och behövde vägledning",
+            "B: Hon hade fått i uppdrag av Hagrid att hjälpa Harry",
+            "C: Harry bad henne själv om hjälp eftersom han var förtvivlad",
+            "D: Fred och George bad henne att ta hand om Harry"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför kände Ron att han hade mycket att leva upp till?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hans mamma hade höga förväntningar på honom från början",
+            "B: Han var äldst i familjen och skulle visa vägen för de andra",
+            "C: Hans äldre bröder hade redan utmärkt sig på olika sätt",
+            "D: Han var tvungen att klara sig bättre än Harry Potter"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'desperat' i sammanhanget när Harry söker efter perrongen?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att vara arg och frustrerad över situationen",
+            "B: Att vara förtvivlad och inte veta vad man ska göra",
+            "C: Att vara rädd för att missa tåget till skolan",
+            "D: Att vara stressad och ha bråttom någonstans"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilket huvudtema utforskas i detta kapitel om Harrys övergång från mugglarvärlden till trollkarlsvärlden?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att hitta sin plats och få hjälp av vänliga främlingar",
+            "B: Att lära sig stå upp för sig själv mot sina fiender",
+            "C: Att acceptera sitt öde som den utvalde trollkarlen",
+            "D: Att lämna det förflutna bakom sig utan att se tillbaka"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Hur reagerade Harry när Fred och George upptäckte vem han var genom att se hans blixtärr?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han blev stolt och glad över att bli erkänd som berömd",
+            "B: Han blev arg eftersom han ville hålla sin identitet hemlig",
+            "C: Han blev rädd att alla skulle behandla honom annorlunda nu",
+            "D: Han blev generad och rodnade när de gapade mot honom"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "package": {
+    "name": "Geometri och Problemlösning - Årskurs 3",
+    "grade_level": 3,
+    "category_id": null,
+    "description": "Geometriska objekt och problemlösning med tema toaletter, Karlatornet, stickning och Helena Weiland",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "Helena Weiland stickar en halsduk. Halsduken har 4 hörn och alla sidor är lika långa. Vilken form har halsduken?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: kvadrat", "B: cirkel", "C: triangel", "D: rektangel"],
+      "explanation": "En form med 4 hörn och alla sidor lika långa är en kvadrat.",
+      "difficulty": "easy",
+      "hint": "Tänk på hur många sidor och hörn formen har",
+      "lgr22_codes": ["MA-GEO-01"]
+    },
+    {
+      "question_text": "På toalettdörren på Karlatornet finns en skylt som är rund. Vilken geometrisk form är skylten?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": ["A: kvadrat", "B: cirkel", "C: triangel", "D: rektangel"],
+      "explanation": "En rund form är en cirkel.",
+      "difficulty": "easy",
+      "hint": "Vilken form har inga hörn?",
+      "lgr22_codes": ["MA-GEO-01"]
+    },
+    {
+      "question_text": "Helena Weiland tittar på toalettdörren i Karlatornet. Dörren har 4 hörn. De två kortsidorna är 80 cm och de två långsidorna är 200 cm. Vilken form har dörren?",
+      "correct_answer": "rektangel",
+      "answer_type": "text",
+      "explanation": "En form med 4 hörn där motsatta sidor är lika långa är en rektangel.",
+      "difficulty": "medium",
+      "hint": "Tänk på vilken form som har 4 hörn men olika långa sidor",
+      "lgr22_codes": ["MA-GEO-01"]
+    },
+    {
+      "question_text": "Rita en kvadrat som är lika stor som toalettplattan på bilden. Varje sida ska vara 4 rutor lång. Hur många rutor behöver du rita för att göra en kvadrat med sida 4 rutor?",
+      "correct_answer": "16",
+      "answer_type": "number",
+      "explanation": "En kvadrat med sida 4 rutor innehåller 4 × 4 = 16 rutor totalt.",
+      "difficulty": "medium",
+      "hint": "Räkna hur många rutor som behövs för att fylla hela kvadraten",
+      "lgr22_codes": ["MA-GEO-02"]
+    },
+    {
+      "question_text": "Helena Weiland stickar en trekant att sätta på väggen i sitt rum på Karlatornet. Hon börjar i ett hörn och stickar till nästa hörn. Hur många hörn har triangeln totalt?",
+      "correct_answer": "3",
+      "answer_type": "number",
+      "explanation": "En triangel har alltid 3 hörn.",
+      "difficulty": "easy",
+      "hint": "Tänk på namnet - 'tri' betyder tre",
+      "lgr22_codes": ["MA-GEO-02"]
+    },
+    {
+      "question_text": "Du ska rita konturen av en toalettrullshållare som är rund. Vilken geometrisk figur behöver du konstruera?",
+      "correct_answer": "C",
+      "answer_type": "multiple_choice",
+      "options": ["A: kvadrat", "B: triangel", "C: cirkel", "D: rektangel"],
+      "explanation": "En rund form ritas som en cirkel.",
+      "difficulty": "easy",
+      "hint": "Vilken form är rund?",
+      "lgr22_codes": ["MA-GEO-02"]
+    },
+    {
+      "question_text": "I toaletten på Karlatornet finns 3 handdukar. I köket finns dubbelt så många handdukar. Hur många handdukar finns det i köket?",
+      "correct_answer": "6",
+      "answer_type": "number",
+      "explanation": "Dubbelt så många som 3 är 3 × 2 = 6 handdukar.",
+      "difficulty": "easy",
+      "hint": "Dubbelt betyder två gånger så många",
+      "lgr22_codes": ["MA-PRO-02", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Helena Weiland stickar kuddar. Hon har redan stickat 5 kuddar och vill sticka 8 kuddar totalt. Hur många kuddar behöver hon sticka till?",
+      "correct_answer": "3",
+      "answer_type": "number",
+      "explanation": "Hon vill ha 8 kuddar totalt och har 5. Då behöver hon sticka 8 - 5 = 3 kuddar till.",
+      "difficulty": "easy",
+      "hint": "Hur många saknas för att komma till 8?",
+      "lgr22_codes": ["MA-PRO-02", "MA-TAL-01"]
+    },
+    {
+      "question_text": "På varje våning i Karlatornet finns 2 toaletter. Det finns 4 våningar. Hur många toaletter finns det totalt?",
+      "correct_answer": "8",
+      "answer_type": "number",
+      "explanation": "4 våningar med 2 toaletter på varje våning ger 4 × 2 = 8 toaletter totalt.",
+      "difficulty": "medium",
+      "hint": "Hur många gånger 2 behöver du lägga ihop?",
+      "lgr22_codes": ["MA-PRO-02", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Helena Weiland köper garn för att sticka. Ett nystan kostar 12 kr och hon köper 3 nystan. Hur mycket betalar hon totalt?",
+      "correct_answer": "36",
+      "answer_type": "number",
+      "explanation": "3 nystan à 12 kr kostar 3 × 12 = 36 kr totalt.",
+      "difficulty": "medium",
+      "hint": "Lägg ihop 12 kr tre gånger, eller multiplicera",
+      "lgr22_codes": ["MA-PRO-02", "MA-TAL-01"]
+    }
+  ]
+}

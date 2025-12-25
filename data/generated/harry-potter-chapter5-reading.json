@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter och De Vises Sten - Kapitel 5: Diagongränden",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om Harrys första besök i Diagongränden med Hagrid",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad behövde Hagrid göra åt sin paraply på tågresan till London?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han dolde paraplyet eftersom det var hans hemliga trollstav",
+            "B: Han använde det för att skydda Harry från regnet hela vägen",
+            "C: Han visade Harry hur man kastar trollformler med paraplyet",
+            "D: Han lämnade kvar det på Dursleys eftersom det var trasigt"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vilken butik besökte Harry och Hagrid för att köpa Harrys trollstav?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Flourish och Blotts bokhandel som sålde alla magiska böcker",
+            "B: Ollivanders stavaffär som sålde trollstavar sedan år 382 f Kr",
+            "C: Madam Malkins butik där man köpte kläder och tillbehör",
+            "D: Apoteket där Hagrid handlade ingredienser till trolldrycker"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Hur reagerade Harry när han såg guldhögen i sitt föräldrars valv?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han blev genast girig och ville ta med sig så mycket som möjligt",
+            "B: Han grät av sorg när han tänkte på sina döda föräldrar",
+            "C: Han hade svårt att tro att allt detta tillhörde honom själv",
+            "D: Han blev besviken för han hade förväntat sig mycket mer pengar"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad kan man dra för slutsats om Hagrids uppdrag i Gringotts?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han skulle sätta in pengar på sitt eget konto i banken",
+            "B: Han skulle låna pengar för att kunna köpa Harrys skolsaker",
+            "C: Han skulle öppna ett nytt bankkonto åt Harry Potter",
+            "D: Han hämtade något hemligt och viktigt åt Dumbledore på Hogwarts"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför blev mr Ollivander så intresserad när Harrys trollstav valde honom?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Stavens systertrullstav tillhörde den person som gav Harry ärret",
+            "B: Staven var den dyraste som någonsin sålts i hela butiken",
+            "C: Harry var den yngste köparen som någonsin fått en trollstav",
+            "D: Staven hade tillhört Harrys egen pappa James Potter tidigare"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad betyder det när mr Ollivander säger att 'staven väljer trollkarlen'?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att varje trollkarl själv måste tillverka sin egen trollstav",
+            "B: Att rätt stav känner av vilken trollkarl den passar för",
+            "C: Att alla stavar fungerar lika bra oavsett vilken man väljer",
+            "D: Att man bara kan köpa en stav om mr Ollivander godkänner"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför tror du Hagrid gav Harry en uggla som födelsedagspresent?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Eftersom ugglor är de enda husdjur som är tillåtna på Hogwarts",
+            "B: För att ersätta den fågel som Dursleys förbjöd Harry att ha",
+            "C: För att Harry behöver en vän och ugglor används för postutskick",
+            "D: Eftersom Hagrid själv redan hade en uggla och ville dela med sig"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vilket budskap om Harrys framtid förmedlas genom kapitlet?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Harry kommer att bli rik och kunna köpa precis allt han vill ha",
+            "B: Harry har ett unikt öde kopplat till viktiga och mystiska händelser",
+            "C: Harry kommer att få det svårt på Hogwarts eftersom han är berömd",
+            "D: Harry behöver lära sig hantera pengar och ekonomi på egen hand"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

@@ -3,9 +3,44 @@
 You are creating reading comprehension questions for Swedish children.
 Questions are MULTIPLE CHOICE ONLY. Do NOT include text extracts in the output.
 
+## Workflow Options
+
+### Option 1: Reuse Existing Text (Recommended for multiple question sets)
+
+If you already have extracted text from a previous OCR run:
+
+1. **Check for existing text**: Look in `data/generated/` for files like `{book-name}-chapter{N}-text.txt`
+2. **Read the text file**: Use the existing text directly
+3. **Generate new questions**: Create questions based on the saved text
+4. **Save questions**: Save to `data/generated/{book-name}-chapter{N}-reading-v{N}.json`
+
+**Example:**
+```bash
+# Check if text already exists
+ls data/generated/harry-potter-chapter6-text.txt
+
+# If it exists, just read it and generate new questions
+# No need to run OCR again!
+```
+
+### Option 2: New OCR Run (For first-time processing)
+
+If processing a new chapter/book:
+
+1. **Run OCR**: Use `process-zip-ocr.ts` or `test-video-ocr.ts` (see process-book skill)
+2. **Copy text to data/generated**: Save chapter text for future reuse
+   ```bash
+   cp backend/best-frames/chapters/chapter_01.txt data/generated/{book-name}-chapter{N}-text.txt
+   ```
+3. **Generate questions**: Create questions from the chapter text
+4. **Save everything**: Both text and questions are now saved in `data/generated/`
+
+**IMPORTANT**: Always save a copy of the chapter text to `data/generated/` after OCR so it can be reused for generating multiple question sets without re-running OCR.
+
 ## Input Required
-- **chapters_dir**: Path to chapters (e.g., `backend/best-frames/chapters/`)
+- **text_file** OR **chapters_dir**: Path to saved text file (e.g., `data/generated/harry-potter-chapter6-text.txt`) OR path to chapters directory (e.g., `backend/best-frames/chapters/`)
 - **book_title**: Name of the book
+- **chapter_number**: Chapter number (for naming output files)
 - **grade_level**: 1-9 (årskurs)
 
 ## Output Format (JSON)

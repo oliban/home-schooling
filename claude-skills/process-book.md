@@ -64,7 +64,19 @@ Output: `test-frames/ocr_output.txt`
 The `ocr_output.txt` file contains the raw text ready for cleanup below.
 
 ### Output location
-Save generated reading question JSON files to `data/generated/`
+- **Chapter text files**: Save to `data/generated/` for reuse
+  - Format: `{book-name}-chapter{N}-text.txt`
+  - Example: `data/generated/harry-potter-chapter6-text.txt`
+- **Reading question JSON files**: Save to `data/generated/`
+  - Format: `{book-name}-chapter{N}-reading.json`
+  - For multiple question sets: `{book-name}-chapter{N}-reading-v2.json`, etc.
+
+**After running OCR, always copy the chapter text to data/generated:**
+```bash
+cp backend/best-frames/chapters/chapter_01.txt data/generated/{book-name}-chapter{N}-text.txt
+```
+
+This allows generating multiple question sets without re-running OCR.
 
 ---
 

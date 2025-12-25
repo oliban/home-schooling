@@ -1,0 +1,119 @@
+{
+  "package": {
+    "name": "Algebra och Sannolikhet - Årskurs 3, Tema: Toaletter",
+    "grade_level": 3,
+    "category_id": null,
+    "description": "Blandade uppgifter om algebra och sannolikhet med temat toaletter",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "På skolan finns det 3 toaletter på bottenvåningen och 3 toaletter på övervåningen. Skriv två olika sätt att räkna ut hur många toaletter det finns totalt.",
+      "correct_answer": "3 + 3 = 6 eller 2 × 3 = 6",
+      "answer_type": "text",
+      "explanation": "Det finns 3 + 3 = 6 toaletter totalt. Man kan också räkna 2 × 3 = 6 eftersom det finns 3 toaletter på varje våning och 2 våningar.",
+      "difficulty": "easy",
+      "hint": "Tänk på addition eller multiplikation. Hur många våningar finns det?",
+      "lgr22_codes": ["MA-ALG-01", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Om 4 toaletter + 2 toaletter = 6 toaletter, vad blir då 2 toaletter + 4 toaletter?",
+      "correct_answer": "6",
+      "answer_type": "number",
+      "explanation": "2 + 4 = 6. Det spelar ingen roll vilken ordning vi adderar i, summan blir densamma (kommutativa lagen).",
+      "difficulty": "easy",
+      "hint": "Addition ger samma svar oavsett ordning",
+      "lgr22_codes": ["MA-ALG-01"]
+    },
+    {
+      "question_text": "Lisa städar toaletterna enligt ett mönster: måndag, onsdag, fredag, måndag, onsdag... Vilken dag kommer efter fredag i mönstret?",
+      "correct_answer": "måndag",
+      "answer_type": "text",
+      "explanation": "Mönstret upprepar sig: måndag, onsdag, fredag, och sedan börjar det om igen med måndag.",
+      "difficulty": "easy",
+      "hint": "Mönstret upprepar tre dagar och börjar sedan om",
+      "lgr22_codes": ["MA-ALG-02"]
+    },
+    {
+      "question_text": "På toalettdörrarna finns symboler i detta mönster: stjärna, cirkel, stjärna, cirkel, stjärna... Vilken symbol kommer på den sjätte dörren?",
+      "correct_answer": "cirkel",
+      "answer_type": "text",
+      "explanation": "Mönstret är: 1-stjärna, 2-cirkel, 3-stjärna, 4-cirkel, 5-stjärna, 6-cirkel.",
+      "difficulty": "easy",
+      "hint": "Räkna fram till den sjätte platsen i mönstret",
+      "lgr22_codes": ["MA-ALG-02"]
+    },
+    {
+      "question_text": "Toalettdörrarna är målade i mönstret: blå, blå, röd, blå, blå, röd... Vilken färg har den 8:e dörren?",
+      "correct_answer": "blå",
+      "answer_type": "text",
+      "explanation": "Mönstret upprepar sig var tredje dörr: blå, blå, röd (1-3), blå, blå, röd (4-6), blå, blå, röd (7-9). Position 8 hamnar på den andra platsen i det tredje upprepningen, vilket är blå.",
+      "difficulty": "medium",
+      "hint": "Mönstret upprepar sig var tredje dörr",
+      "lgr22_codes": ["MA-ALG-02"]
+    },
+    {
+      "question_text": "I en korg finns 4 blå handdukar och 2 röda handdukar. Du tar en handduk utan att titta. Vilken färg är mest sannolik?",
+      "correct_answer": "blå",
+      "answer_type": "text",
+      "explanation": "Det finns fler blå handdukar (4 stycken) än röda (2 stycken), så det är större chans att dra en blå handduk.",
+      "difficulty": "easy",
+      "hint": "Vilken färg finns det flest av?",
+      "lgr22_codes": ["MA-SAN-01"]
+    },
+    {
+      "question_text": "Du kastar en tärning för att se vilken toalett du ska städa först (toalett 1-6). Kan du få siffran 7?",
+      "correct_answer": "nej",
+      "answer_type": "text",
+      "explanation": "En vanlig tärning har bara siffrorna 1, 2, 3, 4, 5 och 6. Det går inte att få siffran 7.",
+      "difficulty": "easy",
+      "hint": "Vilka siffror finns på en tärning?",
+      "lgr22_codes": ["MA-SAN-01"]
+    },
+    {
+      "question_text": "I en påse finns 3 gröna tvålar och 3 gula tvålar. Du tar en tvål utan att titta. Är det lika stor chans att få grön som gul?",
+      "correct_answer": "ja",
+      "answer_type": "text",
+      "explanation": "Ja, eftersom det finns lika många gröna (3) som gula (3) tvålar, är chansen lika stor.",
+      "difficulty": "medium",
+      "hint": "Jämför antalet gröna och gula tvålar",
+      "lgr22_codes": ["MA-SAN-01"]
+    },
+    {
+      "question_text": "Tabellen visar hur många barn som använde toaletten under rasten:\n\nMåndag: 12 barn\nTisdag: 8 barn\nOnsdag: 15 barn\n\nVilken dag använde flest barn toaletten?",
+      "correct_answer": "onsdag",
+      "answer_type": "text",
+      "explanation": "Onsdag hade 15 barn, vilket är fler än måndag (12) och tisdag (8).",
+      "difficulty": "easy",
+      "hint": "Jämför siffrorna och hitta den största",
+      "lgr22_codes": ["MA-SAN-02"]
+    },
+    {
+      "question_text": "Diagrammet visar toalettpapper som använts:\n\nVecka 1: 5 rullar\nVecka 2: 7 rullar\nVecka 3: 4 rullar\n\nHur många rullar användes totalt?",
+      "correct_answer": "16",
+      "answer_type": "number",
+      "explanation": "5 + 7 + 4 = 16 rullar totalt.",
+      "difficulty": "easy",
+      "hint": "Addera alla rullar från de tre veckorna",
+      "lgr22_codes": ["MA-SAN-02", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Tabellen visar hur många som använde olika toaletter:\n\nToalett A: 8 personer\nToalett B: 12 personer\nToalett C: 8 personer\n\nHur många fler personer använde toalett B än toalett A?",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "12 - 8 = 4. Toalett B hade 4 fler personer än toalett A.",
+      "difficulty": "medium",
+      "hint": "Subtrahera antalet för toalett A från toalett B",
+      "lgr22_codes": ["MA-SAN-02", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Om 5 + 3 = 8 barn använder toaletten på förmiddagen, hur många barn använder då toaletten om vi vet att 3 + 5 = ? barn?",
+      "correct_answer": "8",
+      "answer_type": "number",
+      "explanation": "3 + 5 = 8. Additionen ger samma resultat oavsett ordning på talen.",
+      "difficulty": "easy",
+      "hint": "Tänk på att ordningen inte spelar någon roll vid addition",
+      "lgr22_codes": ["MA-ALG-01", "MA-TAL-01"]
+    }
+  ]
+}
