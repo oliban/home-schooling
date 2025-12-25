@@ -125,15 +125,19 @@ export default function AssignmentPage() {
     try {
       const question = assignment.questions[currentIndex];
 
-      // Capture scratch pad image for math assignments (only if not empty)
-      const scratchPadImage = assignment.assignment_type === 'math'
-        ? sketchPadRef.current?.getImage()
-        : undefined;
+      // For math assignments: save current sketch and get all sketches for this question
+      let scratchPadImages: string[] | undefined;
+      if (assignment.assignment_type === 'math' && sketchPadRef.current) {
+        // Save snapshot of current canvas before submitting
+        sketchPadRef.current.saveSnapshot();
+        // Get all sketches (including current)
+        scratchPadImages = sketchPadRef.current.getAllSketches();
+      }
 
       const result = await assignments.submit(token, assignmentId, {
         questionId: question.id,
         answer: answer.trim(),
-        ...(scratchPadImage && { scratchPadImage }),
+        ...(scratchPadImages && scratchPadImages.length > 0 && { scratchPadImages }),
       });
 
       setTotalCoins(result.totalCoins);
@@ -219,7 +223,9 @@ export default function AssignmentPage() {
     setFeedback(null);
     setAnswer('');
     setPurchasedHint(null);
-    sketchPadRef.current?.clear();
+
+    // Reset sketch pad for new question (clears saved sketches array)
+    sketchPadRef.current?.resetForNewQuestion();
 
     // Find next incomplete question (unanswered OR wrong with retries left for MATH only)
     // Reading assignments are single-attempt, so wrong answers are NOT incomplete

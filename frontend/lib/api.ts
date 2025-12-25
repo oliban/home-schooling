@@ -204,7 +204,7 @@ export const assignments = {
     }
   ) => fetchApi<{ id: string }>('/assignments', { method: 'POST', body: data, token }),
 
-  submit: (token: string, assignmentId: string, data: { questionId: string; answer: string; scratchPadImage?: string | null }) =>
+  submit: (token: string, assignmentId: string, data: { questionId: string; answer: string; scratchPadImages?: string[]; scratchPadImage?: string | null }) =>
     fetchApi<{
       isCorrect: boolean;
       correctAnswer?: string;

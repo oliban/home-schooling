@@ -1,0 +1,240 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Robin Hood - Kapitel 8: Den modige mjölnaren",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om när Robin Hood möter en stark mjölnare",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför var mjölnaren berömd?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han kunde baka det bästa brödet i hela landet",
+            "B: Han var känd för att vara väldigt stark",
+            "C: Han var den enda mjölnaren i Sherwood-skogen",
+            "D: Han hade den största kvarnen i hela byn"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad gjorde Robin Hood när han såg mjölnaren på vägen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han bjöd mjölnaren på middag i skogen",
+            "B: Han hjälpte mjölnaren att bära mjölsäcken hem",
+            "C: Han låtsades råna mjölnaren för att ge honom silver",
+            "D: Han ville köpa mjöl av mjölnaren för att baka bröd"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Hur försvarade sig mjölnaren mot Robin och hans män?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han ropade på vakter som kom och hjälpte honom",
+            "B: Han sprang iväg så fort han kunde in i skogen",
+            "C: Han gav dem alla sina pengar så de lät honom vara",
+            "D: Han kastade mjöl i ögonen på dem och slog med sin stav"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'berömd' i texten när det står att mjölnaren var berömd?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att många människor känner till honom och vet vem han är",
+            "B: Att han alltid berömmer andra och säger snälla saker",
+            "C: Att han har rest till många olika länder och städer",
+            "D: Att han tycker mycket om sig själv och skryter ofta"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Varför började Robin Hood skratta efter att mjölnaren hade slagit dem?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han var arg på sina män och skrattade åt dem",
+            "B: Han tyckte situationen var rolig trots att han förlorat",
+            "C: Mjölnaren berättade en väldigt rolig skämthistoria",
+            "D: Han var så arg att han skrattade istället för att gråta"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vilket smeknamn hade mjölnaren?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han kallades för Björnen för att han var så stor",
+            "B: Han kallades för Mjölmannen för att han jobbade med mjöl",
+            "C: Han kallades för Myggan trots att han var stark",
+            "D: Han kallades för Staven för att han var bra med sin stav"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL", "SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vad hände i slutet av kapitlet?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Mjölnaren följde med Robin och de hade en fest tillsammans",
+            "B: Robin bad om ursäkt och betalade för allt förstört mjöl",
+            "C: Mjölnaren gick hem och berättade för alla om Robin Hood",
+            "D: Robin blev arg och jagade bort mjölnaren från skogen"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vad kan man lära sig om Robin Hoods karaktär i detta kapitel?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han blir ledsen och arg när någon besegrar honom",
+            "B: Han tycker inte om starka personer som står emot honom",
+            "C: Han ger alltid upp när något blir för svårt för honom",
+            "D: Han respekterar mod och styrka och kan skratta åt sig själv"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Robin Hood - Kapitel 9: Sångaren som hade hjärtesorg",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om när Robin Hood möter den ledsne sångaren Allan",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför ville Robin Hood att hans män skulle hitta någon rik?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han ville bjuda alla rika människor på middag",
+            "B: Skattkistan började bli tom och de behövde pengar",
+            "C: Han ville ge bort pengar till alla fattiga i skogen",
+            "D: Han ville visa hur rik han själv var för andra"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL", "SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vilka personer hittade männen på vägen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Många rika köpmän som reste genom Sherwood-skogen",
+            "B: Riddare och adelsmän som var på väg till slottet",
+            "C: Bara fattiga smeder, tjänare och bönder utan pengar",
+            "D: En grupp tjuvar som också letade efter rika att råna"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Var hittade Robins män den ledsna pojken?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han låg och grät vid bäcken med sin harpa i trädet",
+            "B: Han satt ensam på vägen och spelade ledsen musik",
+            "C: Han gömde sig i buskarna och ville inte komma fram",
+            "D: Han stod vid eken och frågade efter Robin Hood"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'hjärtesorg' i kapitlets titel?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att någon har ont i hjärtat och behöver en läkare",
+            "B: Att någon har tappat bort sitt hjärta någonstans",
+            "C: Att någon är arg på sitt hjärta som slår för fort",
+            "D: Att någon är väldigt ledsen och olycklig på insidan"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vem var Allan från Dalen?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: En fattig bonde som hade förlorat hela sin gård",
+            "B: En berömd sångare som kunde tjusa folk med sin sång",
+            "C: En rik köpman som reste runt och sålde smycken",
+            "D: En ung riddare som tränade för att bli krigare"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad hade Allan och Ellen gjort för att visa sin kärlek?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De hade gift sig i hemlighet vid bäcken i skogen",
+            "B: De hade köpt två guldsmycken som de bar runt halsen",
+            "C: De delade ett silvermynt och bar varsin halva som halsband",
+            "D: De planterade ett träd tillsammans som skulle växa för evigt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL", "SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Varför tog Röde Will med Allan till Robin Hood?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han tyckte synd om pojken och trodde Robin kunde hjälpa",
+            "B: Han ville att Robin skulle ta Allans harpa och pengar",
+            "C: Han var arg på Allan och ville att Robin skulle straffa honom",
+            "D: Han ville att Allan skulle sjunga för att roa alla männen"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad handlar detta kapitel om?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hur Robin Hood blev den rikaste mannen i hela landet",
+            "B: Hur Robin möter en ledsen sångare som har förlorat sin kärlek",
+            "C: Hur Allan från Dalen blev den bästa sångaren i världen",
+            "D: Hur Röde Will lärde sig att spela harpa av en ung pojke"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    }
+  ]
+}

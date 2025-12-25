@@ -576,4 +576,185 @@ describe('Assignment Scores', () => {
       }
     });
   });
+
+  describe('Reading Assignment Coin Awards', () => {
+    it('should award coins for correct reading assignment answers', () => {
+      const db = getDb();
+      const readingAssignmentId = uuidv4();
+      const readingPackageId = uuidv4();
+      const testChildId = uuidv4();
+      const testParentId = uuidv4();
+
+      // Create test parent and child with coins
+      db.run(
+        'INSERT INTO parents (id, email, password_hash, name) VALUES (?, ?, ?, ?)',
+        [testParentId, `test-reading-${Date.now()}@example.com`, 'hash', 'Reading Test Parent']
+      );
+      db.run(
+        'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+        [testChildId, testParentId, 'Reading Test Child', 3, 'pinhash']
+      );
+      db.run(
+        'INSERT INTO child_coins (child_id, balance, total_earned) VALUES (?, ?, ?)',
+        [testChildId, 0, 0]
+      );
+
+      // Create a reading package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, assignment_type, problem_count, is_global)
+         VALUES (?, ?, ?, ?, 'reading', ?, ?)`,
+        [readingPackageId, testParentId, 'Reading Test Package', 3, 2, 0]
+      );
+
+      // Insert reading problems
+      const problemId1 = uuidv4();
+      const problemId2 = uuidv4();
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options)
+         VALUES (?, ?, ?, ?, ?, 'multiple_choice', ?)`,
+        [problemId1, readingPackageId, 1, 'Question 1?', 'A', '["A: Correct","B: Wrong","C: Wrong","D: Wrong"]']
+      );
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options)
+         VALUES (?, ?, ?, ?, ?, 'multiple_choice', ?)`,
+        [problemId2, readingPackageId, 2, 'Question 2?', 'B', '["A: Wrong","B: Correct","C: Wrong","D: Wrong"]']
+      );
+
+      // Create reading assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'reading', ?, ?, 'in_progress', ?)`,
+        [readingAssignmentId, testParentId, testChildId, 'Reading Coin Test', 3, readingPackageId]
+      );
+
+      // Simulate correct answer submission (like the submit endpoint does)
+      // First correct answer: should award 10 coins
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, attempts_count)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [uuidv4(), readingAssignmentId, problemId1, 'A', 1, 1]
+      );
+      db.run(
+        'UPDATE child_coins SET balance = balance + 10, total_earned = total_earned + 10, current_streak = current_streak + 1 WHERE child_id = ?',
+        [testChildId]
+      );
+
+      // Check coins after first correct answer
+      let coins = db.get<{ balance: number; total_earned: number; current_streak: number }>(
+        'SELECT balance, total_earned, current_streak FROM child_coins WHERE child_id = ?',
+        [testChildId]
+      );
+      expect(coins?.balance).toBe(10);
+      expect(coins?.total_earned).toBe(10);
+      expect(coins?.current_streak).toBe(1);
+
+      // Second correct answer: should award another 10 coins
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, attempts_count)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [uuidv4(), readingAssignmentId, problemId2, 'B', 1, 1]
+      );
+      db.run(
+        'UPDATE child_coins SET balance = balance + 10, total_earned = total_earned + 10, current_streak = current_streak + 1 WHERE child_id = ?',
+        [testChildId]
+      );
+
+      // Check final coins
+      coins = db.get<{ balance: number; total_earned: number; current_streak: number }>(
+        'SELECT balance, total_earned, current_streak FROM child_coins WHERE child_id = ?',
+        [testChildId]
+      );
+      expect(coins?.balance).toBe(20);
+      expect(coins?.total_earned).toBe(20);
+      expect(coins?.current_streak).toBe(2);
+
+      // Cleanup
+      db.run('DELETE FROM assignment_answers WHERE assignment_id = ?', [readingAssignmentId]);
+      db.run('DELETE FROM assignments WHERE id = ?', [readingAssignmentId]);
+      db.run('DELETE FROM package_problems WHERE package_id = ?', [readingPackageId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [readingPackageId]);
+      db.run('DELETE FROM child_coins WHERE child_id = ?', [testChildId]);
+      db.run('DELETE FROM children WHERE id = ?', [testChildId]);
+      db.run('DELETE FROM parents WHERE id = ?', [testParentId]);
+    });
+
+    it('should reset streak for wrong reading assignment answers', () => {
+      const db = getDb();
+      const readingAssignmentId = uuidv4();
+      const readingPackageId = uuidv4();
+      const testChildId = uuidv4();
+      const testParentId = uuidv4();
+
+      // Create test parent and child with coins and streak
+      db.run(
+        'INSERT INTO parents (id, email, password_hash, name) VALUES (?, ?, ?, ?)',
+        [testParentId, `test-streak-${Date.now()}@example.com`, 'hash', 'Streak Test Parent']
+      );
+      db.run(
+        'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+        [testChildId, testParentId, 'Streak Test Child', 3, 'pinhash']
+      );
+      db.run(
+        'INSERT INTO child_coins (child_id, balance, total_earned, current_streak) VALUES (?, ?, ?, ?)',
+        [testChildId, 20, 20, 2]
+      );
+
+      // Create a reading package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, assignment_type, problem_count, is_global)
+         VALUES (?, ?, ?, ?, 'reading', ?, ?)`,
+        [readingPackageId, testParentId, 'Streak Test Package', 3, 1, 0]
+      );
+
+      // Insert one reading problem
+      const problemId = uuidv4();
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options)
+         VALUES (?, ?, ?, ?, ?, 'multiple_choice', ?)`,
+        [problemId, readingPackageId, 1, 'Question 1?', 'A', '["A: Correct","B: Wrong","C: Wrong","D: Wrong"]']
+      );
+
+      // Create reading assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'reading', ?, ?, 'in_progress', ?)`,
+        [readingAssignmentId, testParentId, testChildId, 'Streak Reset Test', 3, readingPackageId]
+      );
+
+      // Submit wrong answer (questionComplete = true, isCorrect = false)
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, attempts_count)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [uuidv4(), readingAssignmentId, problemId, 'B', 0, 1]
+      );
+
+      // Mark assignment as completed (all questions answered)
+      db.run(
+        "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [readingAssignmentId]
+      );
+
+      // Reset streak (as the submit endpoint does)
+      db.run(
+        'UPDATE child_coins SET current_streak = 0 WHERE child_id = ?',
+        [testChildId]
+      );
+
+      // Check that streak was reset
+      const coins = db.get<{ current_streak: number }>(
+        'SELECT current_streak FROM child_coins WHERE child_id = ?',
+        [testChildId]
+      );
+      expect(coins?.current_streak).toBe(0);
+
+      // Cleanup
+      db.run('DELETE FROM assignment_answers WHERE assignment_id = ?', [readingAssignmentId]);
+      db.run('DELETE FROM assignments WHERE id = ?', [readingAssignmentId]);
+      db.run('DELETE FROM package_problems WHERE package_id = ?', [readingPackageId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [readingPackageId]);
+      db.run('DELETE FROM child_coins WHERE child_id = ?', [testChildId]);
+      db.run('DELETE FROM children WHERE id = ?', [testChildId]);
+      db.run('DELETE FROM parents WHERE id = ?', [testParentId]);
+    });
+  });
 });

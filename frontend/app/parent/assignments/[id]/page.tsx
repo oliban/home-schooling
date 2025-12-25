@@ -332,19 +332,48 @@ export default function AssignmentPreview() {
                     </div>
                   )}
 
-                  {problem.scratch_pad_image && (
-                    <div className="mt-4">
-                      <div className="text-sm text-gray-500 mb-2">
-                        {t('parent.assignmentPreview.scratchPad')}:
+                  {problem.scratch_pad_image && (() => {
+                    // Parse scratch pad images (support both single string and JSON array)
+                    const parseScratchImages = (data: string): string[] => {
+                      if (data.startsWith('[')) {
+                        try {
+                          return JSON.parse(data);
+                        } catch {
+                          return [data];
+                        }
+                      }
+                      return [data];
+                    };
+
+                    const sketches = parseScratchImages(problem.scratch_pad_image);
+
+                    return (
+                      <div className="mt-4">
+                        <div className="text-sm text-gray-500 mb-2">
+                          {sketches.length > 1
+                            ? `${t('parent.assignmentPreview.scratchPad')} (${sketches.length})`
+                            : t('parent.assignmentPreview.scratchPad')}:
+                        </div>
+                        <div className={`grid gap-2 ${sketches.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                          {sketches.map((sketch, idx) => (
+                            <div key={idx} className="border rounded-lg bg-white p-2">
+                              <img
+                                src={`${process.env.NEXT_PUBLIC_API_URL}${sketch}`}
+                                alt={`${t('parent.assignmentPreview.scratchPadAlt')} ${idx + 1}`}
+                                className="w-full h-auto rounded"
+                                style={{ maxHeight: '300px', objectFit: 'contain' }}
+                              />
+                              {sketches.length > 1 && (
+                                <p className="text-xs text-gray-500 mt-1 text-center">
+                                  Sketch {idx + 1}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${problem.scratch_pad_image}`}
-                        alt={t('parent.assignmentPreview.scratchPadAlt')}
-                        className="max-w-full h-auto border rounded-lg bg-white"
-                        style={{ maxHeight: '300px' }}
-                      />
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             })}

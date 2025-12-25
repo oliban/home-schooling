@@ -74,7 +74,7 @@ if (!fs.existsSync(SCRATCH_IMAGES_DIR)) {
 }
 
 // Helper to save base64 image to disk
-function saveScratchPadImage(assignmentId: string, questionId: string, dataUrl: string): string | null {
+function saveScratchPadImage(assignmentId: string, questionId: string, dataUrl: string, index: number = 0): string | null {
   try {
     // dataUrl format: "data:image/png;base64,<base64data>"
     const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
@@ -84,7 +84,9 @@ function saveScratchPadImage(assignmentId: string, questionId: string, dataUrl: 
     const base64Data = matches[2];
     const buffer = Buffer.from(base64Data, 'base64');
 
-    const filename = `${assignmentId}_${questionId}.${ext}`;
+    const filename = index > 0
+      ? `${assignmentId}_${questionId}_${index}.${ext}`
+      : `${assignmentId}_${questionId}.${ext}`;
     const filepath = path.join(SCRATCH_IMAGES_DIR, filename);
 
     fs.writeFileSync(filepath, buffer);
@@ -95,6 +97,20 @@ function saveScratchPadImage(assignmentId: string, questionId: string, dataUrl: 
     console.error('Failed to save scratch pad image:', error);
     return null;
   }
+}
+
+// Helper to save multiple scratch pad images
+function saveScratchPadImages(assignmentId: string, questionId: string, dataUrls: string[]): string[] {
+  const savedPaths: string[] = [];
+
+  for (let i = 0; i < dataUrls.length; i++) {
+    const path = saveScratchPadImage(assignmentId, questionId, dataUrls[i], i + 1);
+    if (path) {
+      savedPaths.push(path);
+    }
+  }
+
+  return savedPaths;
 }
 
 const router = Router();
@@ -413,16 +429,27 @@ router.post('/', authenticateParent, async (req, res) => {
 // Submit answer (child only) - with multi-attempt support for math
 router.post('/:id/submit', authenticateChild, async (req, res) => {
   try {
-    const { questionId, answer, scratchPadImage } = req.body;
+    const { questionId, answer, scratchPadImages, scratchPadImage } = req.body;
 
     if (!questionId || answer === undefined) {
       return res.status(400).json({ error: 'questionId and answer are required' });
     }
 
-    // Save scratch pad image if provided (math assignments only)
-    let scratchPadPath: string | null = null;
-    if (scratchPadImage && typeof scratchPadImage === 'string') {
-      scratchPadPath = saveScratchPadImage(req.params.id, questionId, scratchPadImage);
+    // Save scratch pad images if provided (math assignments only)
+    // Support both new array format and legacy single image format
+    let scratchPadData: string | null = null;
+    if (scratchPadImages && Array.isArray(scratchPadImages) && scratchPadImages.length > 0) {
+      // New format: array of images
+      const savedPaths = saveScratchPadImages(req.params.id, questionId, scratchPadImages);
+      if (savedPaths.length > 0) {
+        scratchPadData = JSON.stringify(savedPaths);
+      }
+    } else if (scratchPadImage && typeof scratchPadImage === 'string') {
+      // Legacy format: single image (backward compatibility)
+      const savedPath = saveScratchPadImage(req.params.id, questionId, scratchPadImage, 0);
+      if (savedPath) {
+        scratchPadData = savedPath;
+      }
     }
 
     const db = getDb();
@@ -520,8 +547,8 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
         }
 
-        // Calculate coins earned (for math only)
-        if (!isReadingAssignment && isCorrect) {
+        // Calculate coins earned
+        if (isCorrect) {
           const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
           coinsEarned = Math.round(10 * multiplier);
         }
@@ -535,7 +562,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
               answer as string,
               isCorrect ? 1 : 0,
               attemptNumber,
-              scratchPadPath || existingAnswer.scratch_pad_image,
+              scratchPadData || existingAnswer.scratch_pad_image,
               req.params.id,
               questionId
             ]
@@ -552,7 +579,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
               answer as string,
               isCorrect ? 1 : 0,
               attemptNumber,
-              scratchPadPath
+              scratchPadData
             ]
           );
         }
@@ -686,7 +713,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
             answer as string,
             isCorrect ? 1 : 0,
             attemptNumber,
-            scratchPadPath || problem.scratch_pad_image || null,
+            scratchPadData || problem.scratch_pad_image || null,
             questionId,
             req.params.id
           ]
@@ -712,7 +739,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
         }
       }
 
-      // Award coins and update streak if correct and not reading
+      // Award coins and update streak if correct
       if (coinsEarned > 0) {
         db.run(
           'UPDATE child_coins SET balance = balance + ?, total_earned = total_earned + ?, current_streak = current_streak + 1 WHERE child_id = ?',
@@ -721,7 +748,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
       }
 
       // Reset streak if question complete and wrong
-      if (questionComplete && !isCorrect && !isReadingAssignment) {
+      if (questionComplete && !isCorrect) {
         db.run(
           'UPDATE child_coins SET current_streak = 0 WHERE child_id = ?',
           [req.child!.id]

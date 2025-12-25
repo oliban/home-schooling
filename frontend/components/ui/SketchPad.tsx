@@ -1,33 +1,21 @@
 'use client';
 
 import { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { Stage, Layer, Line, Text, Group } from 'react-konva';
-import { KonvaEventObject } from 'konva/lib/Node';
-import Konva from 'konva';
 import { useTranslation } from '@/lib/LanguageContext';
 
-type Tool = 'pen' | 'text' | 'select' | 'eraser';
+type Tool = 'pen' | 'select' | 'eraser';
 
-interface PathObject {
-  id: string;
-  type: 'path';
-  segments: number[][]; // Array of point arrays - each segment is drawn separately
-  color: string;
+interface Point {
   x: number;
   y: number;
 }
 
-interface TextObject {
-  id: string;
-  type: 'text';
-  text: string;
-  color: string;
-  x: number;
-  y: number;
-  fontSize: number;
+interface ContentBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
 }
-
-type DrawingObject = PathObject | TextObject;
 
 interface SketchPadProps {
   height?: string;
@@ -36,7 +24,10 @@ interface SketchPadProps {
 
 export interface SketchPadHandle {
   clear: () => void;
-  getImage: () => string | null; // Returns PNG data URL or null if empty
+  getImage: () => string | null;
+  saveSnapshot: () => void;
+  getAllSketches: () => string[];
+  resetForNewQuestion: () => void;
 }
 
 const COLORS = [
@@ -48,54 +39,100 @@ const COLORS = [
 
 const TOOLS: { id: Tool; icon: string; labelKey: string }[] = [
   { id: 'pen', icon: '✏️', labelKey: 'sketchPad.pen' },
-  { id: 'text', icon: 'T', labelKey: 'sketchPad.text' },
   { id: 'select', icon: '✋', labelKey: 'sketchPad.move' },
 ];
 
-// Distance threshold for connecting strokes (in pixels)
-const CONNECT_THRESHOLD = 20;
+const ERASER_RADIUS = 15;
+const STROKE_WIDTH = 2;
 
 export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
   ({ height = '300px', className = '' }, ref) => {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
-    const stageRef = useRef<Konva.Stage>(null);
-    const [stageSize, setStageSize] = useState({ width: 400, height: 300 });
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+    // Offscreen buffer for actual drawing (double buffering for pan/zoom)
+    const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const bufferCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
     // Drawing state
-    const [objects, setObjects] = useState<DrawingObject[]>([]);
     const [currentTool, setCurrentTool] = useState<Tool>('pen');
     const [currentColor, setCurrentColor] = useState(COLORS[0].value);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [currentPath, setCurrentPath] = useState<number[]>([]);
-    const [hoveredId, setHoveredId] = useState<string | null>(null);
-    const objectsRef = useRef<DrawingObject[]>([]);
+    const [lastPoint, setLastPoint] = useState<Point | null>(null);
 
-    // Helper to update objects and keep ref in sync (ref updated synchronously)
-    const updateObjects = (updater: DrawingObject[] | ((prev: DrawingObject[]) => DrawingObject[])) => {
-      const newObjects = typeof updater === 'function' ? updater(objectsRef.current) : updater;
-      objectsRef.current = newObjects;
-      setObjects(newObjects);
-    };
+    // Panning state
+    const [isPanning, setIsPanning] = useState(false);
+    const [lastPanPoint, setLastPanPoint] = useState<Point | null>(null);
+    const [panX, setPanX] = useState(0);
+    const [panY, setPanY] = useState(0);
 
-    // Text editing state
-    const [editingText, setEditingText] = useState<{
-      x: number;
-      y: number;
-      value: string;
-    } | null>(null);
-    const textInputRef = useRef<HTMLInputElement>(null);
+    // Content bounds (for pan constraints)
+    const [contentBounds, setContentBounds] = useState<ContentBounds>({
+      minX: Infinity,
+      minY: Infinity,
+      maxX: -Infinity,
+      maxY: -Infinity,
+    });
+
+    // Multi-sketch state
+    const [savedSketches, setSavedSketches] = useState<string[]>([]);
 
     // Parse height value
     const heightNum = parseInt(height.replace('px', ''), 10) || 300;
 
-    // Update stage size on container resize
+    // Initialize canvas and context
     useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctxRef.current = ctx;
+
+      // Create offscreen buffer canvas for actual drawing
+      const bufferCanvas = document.createElement('canvas');
+      const bufferCtx = bufferCanvas.getContext('2d');
+      if (!bufferCtx) return;
+
+      bufferCanvasRef.current = bufferCanvas;
+      bufferCtxRef.current = bufferCtx;
+
+      // Set up canvas size
       const updateSize = () => {
-        if (containerRef.current) {
-          const width = containerRef.current.offsetWidth;
-          setStageSize({ width, height: heightNum });
+        if (!containerRef.current || !canvas) return;
+
+        const displayWidth = containerRef.current.offsetWidth;
+        const displayHeight = heightNum;
+
+        // Handle device pixel ratio for crisp rendering
+        const dpr = window.devicePixelRatio || 1;
+
+        // Save buffer content before resize
+        const oldBuffer = bufferCtx.getImageData(0, 0, bufferCanvas.width, bufferCanvas.height);
+
+        // Set display canvas size (with DPR for crisp rendering)
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+        ctx.scale(dpr, dpr);
+
+        // Set buffer canvas size (no DPR scaling - work in display coordinates)
+        bufferCanvas.width = displayWidth;
+        bufferCanvas.height = displayHeight;
+        // No scaling on buffer - work in CSS pixels
+
+        // Set display size via CSS
+        canvas.style.width = `${displayWidth}px`;
+        canvas.style.height = `${displayHeight}px`;
+
+        // Restore buffer content if it existed
+        if (oldBuffer.width > 0 && oldBuffer.height > 0) {
+          bufferCtx.putImageData(oldBuffer, 0, 0);
         }
+
+        // Render to display
+        renderFrame();
       };
 
       updateSize();
@@ -103,185 +140,340 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
       return () => window.removeEventListener('resize', updateSize);
     }, [heightNum]);
 
-    // Focus text input when editing
-    useEffect(() => {
-      if (editingText && textInputRef.current) {
-        textInputRef.current.focus();
-      }
-    }, [editingText]);
+    // Render frame: copy buffer to visible canvas with pan offset
+    const renderFrame = () => {
+      const canvas = canvasRef.current;
+      const ctx = ctxRef.current;
+      const bufferCanvas = bufferCanvasRef.current;
 
+      if (!canvas || !ctx || !bufferCanvas) return;
+
+      // Clear and reset visible canvas
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Apply DPR scaling for crisp rendering
+      const dpr = window.devicePixelRatio || 1;
+      ctx.scale(dpr, dpr);
+
+      // Draw buffer with pan offset (buffer is in CSS pixels, pan is in CSS pixels)
+      ctx.drawImage(bufferCanvas, panX, panY);
+      ctx.restore();
+    };
+
+    // Re-render when pan changes
+    useEffect(() => {
+      renderFrame();
+    }, [panX, panY]);
+
+    // Convert screen coordinates to canvas coordinates
+    const screenToCanvas = (screenX: number, screenY: number): Point => {
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0 };
+
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: screenX - rect.left - panX,
+        y: screenY - rect.top - panY,
+      };
+    };
+
+    // Update content bounds
+    const updateContentBounds = (x: number, y: number) => {
+      const margin = 50;
+      setContentBounds(prev => ({
+        minX: Math.min(prev.minX, x - margin),
+        minY: Math.min(prev.minY, y - margin),
+        maxX: Math.max(prev.maxX, x + margin),
+        maxY: Math.max(prev.maxY, y + margin),
+      }));
+    };
+
+    // Reset content bounds
+    const resetContentBounds = () => {
+      setContentBounds({
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity,
+      });
+    };
+
+    // Constrain pan to keep content visible
+    const constrainPan = (value: number, axis: 'x' | 'y'): number => {
+      const canvas = canvasRef.current;
+      if (!canvas) return value;
+
+      const viewport = axis === 'x'
+        ? canvas.getBoundingClientRect().width
+        : canvas.getBoundingClientRect().height;
+
+      const contentSize = axis === 'x'
+        ? (contentBounds.maxX - contentBounds.minX)
+        : (contentBounds.maxY - contentBounds.minY);
+
+      // If no content drawn yet, don't constrain
+      if (!isFinite(contentSize)) return value;
+
+      // Prevent panning beyond content boundaries
+      const minPan = -(contentSize - viewport / 2);
+      const maxPan = viewport / 2;
+
+      return Math.max(minPan, Math.min(maxPan, value));
+    };
+
+    // Draw a line
+    const drawLine = (from: Point, to: Point) => {
+      const ctx = bufferCtxRef.current;
+      if (!ctx) return;
+
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = STROKE_WIDTH;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalCompositeOperation = 'source-over';
+
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+
+      renderFrame();
+    };
+
+    // Erase at point
+    const eraseAt = (point: Point) => {
+      const ctx = bufferCtxRef.current;
+      if (!ctx) return;
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, ERASER_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      renderFrame();
+    };
+
+    // Mouse/touch event handlers
+    const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+      const point = getEventPoint(e);
+      if (!point) return;
+
+      const canvasPoint = screenToCanvas(point.x, point.y);
+
+      if (currentTool === 'pen') {
+        setIsDrawing(true);
+        setLastPoint(canvasPoint);
+        updateContentBounds(canvasPoint.x, canvasPoint.y);
+      } else if (currentTool === 'select') {
+        setIsPanning(true);
+        setLastPanPoint(point);
+      } else if (currentTool === 'eraser') {
+        setIsDrawing(true);
+        eraseAt(canvasPoint);
+        setLastPoint(canvasPoint);
+      }
+    };
+
+    const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+      const point = getEventPoint(e);
+      if (!point) return;
+
+      if (isDrawing && currentTool === 'pen') {
+        const canvasPoint = screenToCanvas(point.x, point.y);
+        if (lastPoint) {
+          drawLine(lastPoint, canvasPoint);
+        }
+        setLastPoint(canvasPoint);
+        updateContentBounds(canvasPoint.x, canvasPoint.y);
+      } else if (isDrawing && currentTool === 'eraser') {
+        const canvasPoint = screenToCanvas(point.x, point.y);
+        eraseAt(canvasPoint);
+
+        // Smooth eraser trail: erase intermediate points
+        if (lastPoint) {
+          const distance = Math.sqrt(
+            Math.pow(canvasPoint.x - lastPoint.x, 2) +
+            Math.pow(canvasPoint.y - lastPoint.y, 2)
+          );
+
+          const steps = Math.ceil(distance / (ERASER_RADIUS / 2));
+          for (let i = 1; i < steps; i++) {
+            const t = i / steps;
+            const intermediatePoint = {
+              x: lastPoint.x + (canvasPoint.x - lastPoint.x) * t,
+              y: lastPoint.y + (canvasPoint.y - lastPoint.y) * t,
+            };
+            eraseAt(intermediatePoint);
+          }
+        }
+
+        setLastPoint(canvasPoint);
+      } else if (isPanning && currentTool === 'select') {
+        if (!lastPanPoint) return;
+
+        const dx = point.x - lastPanPoint.x;
+        const dy = point.y - lastPanPoint.y;
+
+        const newPanX = constrainPan(panX + dx, 'x');
+        const newPanY = constrainPan(panY + dy, 'y');
+
+        setPanX(newPanX);
+        setPanY(newPanY);
+        setLastPanPoint(point);
+      }
+    };
+
+    const handlePointerUp = () => {
+      setIsDrawing(false);
+      setIsPanning(false);
+      setLastPoint(null);
+      setLastPanPoint(null);
+    };
+
+    // Get point from mouse or touch event
+    const getEventPoint = (e: React.MouseEvent | React.TouchEvent): Point | null => {
+      if ('touches' in e) {
+        const touch = e.touches[0] || e.changedTouches[0];
+        return touch ? { x: touch.clientX, y: touch.clientY } : null;
+      } else {
+        return { x: e.clientX, y: e.clientY };
+      }
+    };
+
+    // Get cursor style based on current tool
+    const getCursorStyle = (): string => {
+      switch (currentTool) {
+        case 'pen':
+          return 'crosshair';
+        case 'select':
+          return isPanning ? 'grabbing' : 'grab';
+        case 'eraser':
+          return 'pointer';
+        default:
+          return 'default';
+      }
+    };
+
+    // Public API methods
     useImperativeHandle(ref, () => ({
       clear: () => {
-        updateObjects([]);
-        setEditingText(null);
-        setCurrentPath([]);
-        setIsDrawing(false);
+        // Save snapshot before clearing (if not empty)
+        saveSnapshot();
+
+        // Clear buffer canvas (no DPR - buffer is in CSS pixels)
+        const bufferCanvas = bufferCanvasRef.current;
+        const bufferCtx = bufferCtxRef.current;
+        if (!bufferCanvas || !bufferCtx) return;
+
+        bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
+
+        // Reset state
+        resetContentBounds();
+        setPanX(0);
+        setPanY(0);
+
+        // Render to display
+        renderFrame();
       },
+
       getImage: () => {
-        // Return null if no objects drawn
-        if (objectsRef.current.length === 0) {
-          return null;
+        const bufferCanvas = bufferCanvasRef.current;
+        const bufferCtx = bufferCtxRef.current;
+        if (!bufferCanvas || !bufferCtx) return null;
+
+        // Check if canvas is blank (buffer is in CSS pixels, no DPR)
+        const imageData = bufferCtx.getImageData(0, 0, bufferCanvas.width, bufferCanvas.height);
+        const isBlank = imageData.data.every((val, idx) =>
+          idx % 4 !== 3 || val === 0
+        );
+
+        if (isBlank) return null;
+
+        return bufferCanvas.toDataURL('image/png');
+      },
+
+      saveSnapshot: () => {
+        const image = getImage();
+        if (image) {
+          setSavedSketches(prev => [...prev, image]);
         }
-        // Export stage as PNG data URL
-        if (stageRef.current) {
-          return stageRef.current.toDataURL({ pixelRatio: 1 });
-        }
-        return null;
+      },
+
+      getAllSketches: () => {
+        const current = getImage();
+        return current ? [...savedSketches, current] : savedSketches;
+      },
+
+      resetForNewQuestion: () => {
+        // Clear saved sketches
+        setSavedSketches([]);
+
+        // Clear buffer canvas without saving (no DPR - buffer is in CSS pixels)
+        const bufferCanvas = bufferCanvasRef.current;
+        const bufferCtx = bufferCtxRef.current;
+        if (!bufferCanvas || !bufferCtx) return;
+
+        bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
+
+        // Reset state
+        resetContentBounds();
+        setPanX(0);
+        setPanY(0);
+
+        // Render to display
+        renderFrame();
       },
     }));
 
-    const generateId = () => `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Helper function for getImage (used in saveSnapshot and getAllSketches)
+    const getImage = (): string | null => {
+      const bufferCanvas = bufferCanvasRef.current;
+      const bufferCtx = bufferCtxRef.current;
+      if (!bufferCanvas || !bufferCtx) return null;
 
-    const getPointerPosition = (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-      const stage = e.target.getStage();
-      const pos = stage?.getPointerPosition();
-      return pos || { x: 0, y: 0 };
-    };
-
-    // Find a path that has any point close to any point in the given points array (same color only)
-    const findIntersectingPath = (points: number[], color: string): PathObject | null => {
-      // Use ref to get current objects (avoids stale closure)
-      for (const obj of objectsRef.current) {
-        if (obj.type !== 'path' || obj.color !== color) continue;
-
-        // Check if any point in the new path is near any point in any segment of the existing path
-        for (let i = 0; i < points.length; i += 2) {
-          const newX = points[i];
-          const newY = points[i + 1];
-
-          for (const segment of obj.segments) {
-            for (let j = 0; j < segment.length; j += 2) {
-              const existingX = segment[j] + obj.x;
-              const existingY = segment[j + 1] + obj.y;
-              const distance = Math.sqrt((newX - existingX) ** 2 + (newY - existingY) ** 2);
-              if (distance <= CONNECT_THRESHOLD) {
-                return obj;
-              }
-            }
-          }
-        }
-      }
-      return null;
-    };
-
-    // Pen tool handlers
-    const handleMouseDown = (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-      if (currentTool !== 'pen') return;
-
-      const pos = getPointerPosition(e);
-      setIsDrawing(true);
-      setCurrentPath([pos.x, pos.y]);
-    };
-
-    const handleMouseMove = (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-      if (!isDrawing || currentTool !== 'pen') return;
-
-      const pos = getPointerPosition(e);
-      setCurrentPath(prev => [...prev, pos.x, pos.y]);
-    };
-
-    const handleMouseUp = () => {
-      if (!isDrawing || currentTool !== 'pen') return;
-
-      if (currentPath.length >= 4) {
-        // Check if this new path intersects with any existing path of the same color
-        const intersectingPath = findIntersectingPath(currentPath, currentColor);
-
-        if (intersectingPath) {
-          // Add as new segment to existing path
-          updateObjects(prev =>
-            prev.map(obj => {
-              if (obj.id === intersectingPath.id && obj.type === 'path') {
-                // Adjust new points relative to the path's position
-                const adjustedNewSegment = currentPath.map((val, i) =>
-                  i % 2 === 0 ? val - obj.x : val - obj.y
-                );
-                return {
-                  ...obj,
-                  segments: [...obj.segments, adjustedNewSegment],
-                };
-              }
-              return obj;
-            })
-          );
-        } else {
-          // Create new path with single segment
-          const newPath: PathObject = {
-            id: generateId(),
-            type: 'path',
-            segments: [currentPath],
-            color: currentColor,
-            x: 0,
-            y: 0,
-          };
-          updateObjects(prev => [...prev, newPath]);
-        }
-      }
-
-      setIsDrawing(false);
-      setCurrentPath([]);
-    };
-
-    // Stage click handler for text tool
-    const handleStageClick = (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-      // Only handle clicks on the stage itself (empty area)
-      if (e.target !== e.target.getStage()) return;
-
-      if (currentTool === 'text') {
-        const pos = getPointerPosition(e);
-        setEditingText({ x: pos.x, y: pos.y, value: '' });
-      }
-    };
-
-    // Commit text input
-    const commitText = () => {
-      if (editingText && editingText.value.trim()) {
-        const newText: TextObject = {
-          id: generateId(),
-          type: 'text',
-          text: editingText.value,
-          color: currentColor,
-          x: editingText.x,
-          y: editingText.y,
-          fontSize: 20,
-        };
-        updateObjects(prev => [...prev, newText]);
-      }
-      setEditingText(null);
-    };
-
-    // Object click handler (for eraser)
-    const handleObjectClick = (objectId: string) => {
-      if (currentTool === 'eraser') {
-        updateObjects(prev => prev.filter(obj => obj.id !== objectId));
-      }
-    };
-
-    // Drag handler
-    const handleDragEnd = (objectId: string, e: KonvaEventObject<DragEvent>) => {
-      updateObjects(prev =>
-        prev.map(obj =>
-          obj.id === objectId
-            ? { ...obj, x: e.target.x(), y: e.target.y() }
-            : obj
-        )
+      // Check if canvas is blank (buffer is in CSS pixels, no DPR)
+      const imageData = bufferCtx.getImageData(0, 0, bufferCanvas.width, bufferCanvas.height);
+      const isBlank = imageData.data.every((val, idx) =>
+        idx % 4 !== 3 || val === 0
       );
+
+      if (isBlank) return null;
+
+      return bufferCanvas.toDataURL('image/png');
     };
 
     const handleColorSelect = (color: string) => {
       setCurrentColor(color);
-      if (currentTool === 'eraser') {
-        setCurrentTool('pen');
-      }
+      // Always switch to pen when selecting a color
+      setCurrentTool('pen');
     };
 
     const handleClear = () => {
-      updateObjects([]);
-      setEditingText(null);
-    };
+      // Save snapshot before clearing (if not empty)
+      const image = getImage();
+      if (image) {
+        setSavedSketches(prev => [...prev, image]);
+      }
 
-    const isDraggable = currentTool === 'select';
-    const isEraserHover = currentTool === 'eraser';
+      // Clear buffer canvas (no DPR - buffer is in CSS pixels)
+      const bufferCanvas = bufferCanvasRef.current;
+      const bufferCtx = bufferCtxRef.current;
+      if (!bufferCanvas || !bufferCtx) return;
+
+      bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
+
+      // Reset state
+      resetContentBounds();
+      setPanX(0);
+      setPanY(0);
+
+      // Render to display
+      renderFrame();
+    };
 
     return (
       <div className={`flex flex-col ${className}`}>
@@ -325,9 +517,7 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
               aria-label={t(tool.labelKey)}
               title={t(tool.labelKey)}
             >
-              <span className={tool.id === 'text' ? 'text-lg font-bold' : 'text-lg'}>
-                {tool.icon}
-              </span>
+              <span className="text-lg">{tool.icon}</span>
             </button>
           ))}
 
@@ -344,7 +534,7 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
             aria-label={t('sketchPad.eraser')}
             title={t('sketchPad.eraser')}
           >
-            <span className="text-lg">🧹</span>
+            <span className="text-lg">⬜</span>
           </button>
 
           {/* Clear button */}
@@ -364,118 +554,20 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
           className="border-2 border-gray-200 rounded-b-xl overflow-hidden bg-white relative"
           style={{ height, touchAction: 'none' }}
         >
-          <Stage
-            ref={stageRef}
-            width={stageSize.width}
-            height={stageSize.height}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onTouchStart={handleMouseDown}
-            onTouchMove={handleMouseMove}
-            onTouchEnd={handleMouseUp}
-            onClick={handleStageClick}
-            onTap={handleStageClick}
+          <canvas
+            ref={canvasRef}
+            onMouseDown={handlePointerDown}
+            onMouseMove={handlePointerMove}
+            onMouseUp={handlePointerUp}
+            onMouseLeave={handlePointerUp}
+            onTouchStart={handlePointerDown}
+            onTouchMove={handlePointerMove}
+            onTouchEnd={handlePointerUp}
             style={{
-              cursor: currentTool === 'pen' ? 'crosshair' :
-                      currentTool === 'text' ? 'text' :
-                      currentTool === 'select' ? 'grab' :
-                      currentTool === 'eraser' ? 'pointer' : 'default'
+              cursor: getCursorStyle(),
+              display: 'block',
             }}
-          >
-            <Layer>
-              {/* Render all saved objects */}
-              {objects.map((obj) => {
-                if (obj.type === 'path') {
-                  return (
-                    <Group
-                      key={obj.id}
-                      x={obj.x}
-                      y={obj.y}
-                      draggable={isDraggable}
-                      onDragEnd={(e) => handleDragEnd(obj.id, e)}
-                      onClick={() => handleObjectClick(obj.id)}
-                      onTap={() => handleObjectClick(obj.id)}
-                      onMouseEnter={() => setHoveredId(obj.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      opacity={hoveredId === obj.id && isEraserHover ? 0.5 : 1}
-                    >
-                      {obj.segments.map((segment, idx) => (
-                        <Line
-                          key={idx}
-                          points={segment}
-                          stroke={hoveredId === obj.id && isEraserHover ? '#ff0000' : obj.color}
-                          strokeWidth={4}
-                          hitStrokeWidth={20}
-                          lineCap="round"
-                          lineJoin="round"
-                        />
-                      ))}
-                    </Group>
-                  );
-                } else {
-                  return (
-                    <Text
-                      key={obj.id}
-                      text={obj.text}
-                      x={obj.x}
-                      y={obj.y}
-                      fontSize={obj.fontSize}
-                      fill={hoveredId === obj.id && isEraserHover ? '#ff0000' : obj.color}
-                      padding={10}
-                      draggable={isDraggable}
-                      onDragEnd={(e) => handleDragEnd(obj.id, e)}
-                      onClick={() => handleObjectClick(obj.id)}
-                      onTap={() => handleObjectClick(obj.id)}
-                      onMouseEnter={() => setHoveredId(obj.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      opacity={hoveredId === obj.id && isEraserHover ? 0.5 : 1}
-                    />
-                  );
-                }
-              })}
-
-              {/* Current drawing path */}
-              {isDrawing && currentPath.length >= 2 && (
-                <Line
-                  points={currentPath}
-                  stroke={currentColor}
-                  strokeWidth={4}
-                  lineCap="round"
-                  lineJoin="round"
-                />
-              )}
-            </Layer>
-          </Stage>
-
-          {/* Text input overlay */}
-          {editingText && (
-            <input
-              ref={textInputRef}
-              type="text"
-              value={editingText.value}
-              onChange={(e) => setEditingText({ ...editingText, value: e.target.value })}
-              onBlur={commitText}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  commitText();
-                } else if (e.key === 'Escape') {
-                  setEditingText(null);
-                }
-              }}
-              className="absolute bg-transparent outline-none"
-              style={{
-                left: editingText.x,
-                top: editingText.y,
-                fontSize: '20px',
-                color: currentColor,
-                border: '1px dashed #999',
-                padding: '2px 4px',
-                minWidth: '100px',
-              }}
-              placeholder={t('sketchPad.typeHere') || 'Type here...'}
-            />
-          )}
+          />
         </div>
       </div>
     );

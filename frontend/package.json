@@ -15,12 +15,10 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "canvas-confetti": "^1.9.3",
-    "konva": "^10.0.12",
     "next": "^15.0.3",
     "next-intl": "^4.6.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-konva": "^19.2.1",
     "recharts": "^3.6.0"
   },
   "devDependencies": {
