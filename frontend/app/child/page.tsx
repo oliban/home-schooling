@@ -77,12 +77,15 @@ export default function ChildDashboard() {
 
   const loadAssignments = async (token: string) => {
     try {
-      // Load both pending and in_progress assignments
-      const [pending, inProgress] = await Promise.all([
-        assignments.list(token, { status: 'pending' }),
-        assignments.list(token, { status: 'in_progress' }),
-      ]);
-      setAssignmentList([...inProgress, ...pending]);
+      // Load all assignments (backend sorts by display_order)
+      const allAssignments = await assignments.list(token);
+
+      // Filter to only active assignments (exclude completed)
+      const activeAssignments = allAssignments.filter(
+        a => a.status === 'pending' || a.status === 'in_progress'
+      );
+
+      setAssignmentList(activeAssignments);
     } catch (err) {
       console.error('Failed to load assignments:', err);
     } finally {
@@ -127,11 +130,9 @@ export default function ChildDashboard() {
     );
   }
 
-  // Separate in_progress and pending assignments
-  const mathInProgress = assignmentList.filter((a) => a.assignment_type === 'math' && a.status === 'in_progress');
-  const mathPending = assignmentList.filter((a) => a.assignment_type === 'math' && a.status === 'pending');
-  const readingInProgress = assignmentList.filter((a) => a.assignment_type === 'reading' && a.status === 'in_progress');
-  const readingPending = assignmentList.filter((a) => a.assignment_type === 'reading' && a.status === 'pending');
+  // Filter assignments by type (already sorted by display_order from backend)
+  const mathActive = assignmentList.filter((a) => a.assignment_type === 'math');
+  const readingActive = assignmentList.filter((a) => a.assignment_type === 'reading');
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -209,21 +210,21 @@ export default function ChildDashboard() {
               <span className="text-3xl">📐</span>
               <h3 className="text-xl font-bold">{t('childDashboard.math')}</h3>
             </div>
-            {mathInProgress.length > 0 ? (
+            {mathActive.length > 0 ? (
               <>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
                     {t('childDashboard.inProgress')}
                   </span>
                 </div>
-                <p className="text-gray-600 mb-4">{mathInProgress[0].title}</p>
+                <p className="text-gray-600 mb-4">{mathActive[0].title}</p>
                 <Link
-                  href={`/child/assignment/${mathInProgress[0].id}`}
+                  href={`/child/assignment/${mathActive[0].id}`}
                   className="block w-full py-3 bg-orange-500 text-white text-center rounded-xl font-semibold hover:bg-orange-600 transition-colors"
                 >
                   {t('childDashboard.continueButton')} →
                 </Link>
-                {mathPending.length > 0 && (
+                {mathActive.length > 1 && (
                   <div className="mt-3">
                     <button
                       onClick={() => setMathPendingExpanded(!mathPendingExpanded)}
@@ -232,39 +233,25 @@ export default function ChildDashboard() {
                       <span className={`transform transition-transform ${mathPendingExpanded ? 'rotate-90' : ''}`}>
                         ▶
                       </span>
-                      + {mathPending.length > 1
-                        ? t('childDashboard.tasksCountPlural', { count: mathPending.length })
-                        : t('childDashboard.tasksCount', { count: mathPending.length })}
+                      + {mathActive.length - 1 > 1
+                        ? t('childDashboard.tasksCountPlural', { count: mathActive.length - 1 })
+                        : t('childDashboard.tasksCount', { count: mathActive.length - 1 })}
                     </button>
                     {mathPendingExpanded && (
                       <div className="mt-2 space-y-1">
-                        {mathPending.map((assignment, index) => (
+                        {mathActive.slice(1).map((assignment, index) => (
                           <Link
                             key={assignment.id}
                             href={`/child/assignment/${assignment.id}`}
                             className="block text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
                           >
-                            {index + 1}. {assignment.title}
+                            {index + 2}. {assignment.title}
                           </Link>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
-              </>
-            ) : mathPending.length > 0 ? (
-              <>
-                <p className="text-gray-600 mb-4">
-                  {mathPending.length > 1
-                    ? t('childDashboard.tasksCountPlural', { count: mathPending.length })
-                    : t('childDashboard.tasksCount', { count: mathPending.length })}
-                </p>
-                <Link
-                  href={`/child/assignment/${mathPending[0].id}`}
-                  className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  {t('childDashboard.startButton')}
-                </Link>
               </>
             ) : (
               <p className="text-green-600">✅ {t('childDashboard.doneForToday')}</p>
@@ -277,21 +264,21 @@ export default function ChildDashboard() {
               <span className="text-3xl">📖</span>
               <h3 className="text-xl font-bold">{t('childDashboard.reading')}</h3>
             </div>
-            {readingInProgress.length > 0 ? (
+            {readingActive.length > 0 ? (
               <>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
                     {t('childDashboard.inProgress')}
                   </span>
                 </div>
-                <p className="text-gray-600 mb-4">{readingInProgress[0].title}</p>
+                <p className="text-gray-600 mb-4">{readingActive[0].title}</p>
                 <Link
-                  href={`/child/assignment/${readingInProgress[0].id}`}
+                  href={`/child/assignment/${readingActive[0].id}`}
                   className="block w-full py-3 bg-orange-500 text-white text-center rounded-xl font-semibold hover:bg-orange-600 transition-colors"
                 >
                   {t('childDashboard.continueButton')} →
                 </Link>
-                {readingPending.length > 0 && (
+                {readingActive.length > 1 && (
                   <div className="mt-3">
                     <button
                       onClick={() => setReadingPendingExpanded(!readingPendingExpanded)}
@@ -300,36 +287,25 @@ export default function ChildDashboard() {
                       <span className={`transform transition-transform ${readingPendingExpanded ? 'rotate-90' : ''}`}>
                         ▶
                       </span>
-                      + {readingPending.length > 1
-                        ? t('childDashboard.tasksCountPlural', { count: readingPending.length })
-                        : t('childDashboard.tasksCount', { count: readingPending.length })}
+                      + {readingActive.length - 1 > 1
+                        ? t('childDashboard.tasksCountPlural', { count: readingActive.length - 1 })
+                        : t('childDashboard.tasksCount', { count: readingActive.length - 1 })}
                     </button>
                     {readingPendingExpanded && (
                       <div className="mt-2 space-y-1">
-                        {readingPending.map((assignment, index) => (
+                        {readingActive.slice(1).map((assignment, index) => (
                           <Link
                             key={assignment.id}
                             href={`/child/assignment/${assignment.id}`}
                             className="block text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
                           >
-                            {index + 1}. {assignment.title}
+                            {index + 2}. {assignment.title}
                           </Link>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
-              </>
-            ) : readingPending.length > 0 ? (
-              <>
-                <p className="text-gray-600 mb-2">{readingPending[0].title}</p>
-                <p className="text-gray-500 text-sm mb-4">{t('childDashboard.questions', { count: 5 })}</p>
-                <Link
-                  href={`/child/assignment/${readingPending[0].id}`}
-                  className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  {t('childDashboard.startButton')}
-                </Link>
               </>
             ) : (
               <p className="text-green-600">✅ {t('childDashboard.doneForToday')}</p>

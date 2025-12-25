@@ -911,7 +911,7 @@ router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
 // Reorder assignments (parent only)
 router.patch('/reorder', authenticateParent, async (req, res) => {
   try {
-    const { assignmentIds } = req.body;
+    const { assignmentIds, statusUpdates } = req.body;
 
     if (!Array.isArray(assignmentIds)) {
       return res.status(400).json({ error: 'assignmentIds must be an array' });
@@ -920,11 +920,22 @@ router.patch('/reorder', authenticateParent, async (req, res) => {
     const db = getDb();
 
     db.transaction(() => {
+      // Update display_order for all assignments
       for (let i = 0; i < assignmentIds.length; i++) {
         db.run(
           'UPDATE assignments SET display_order = ? WHERE id = ? AND parent_id = ?',
           [i, assignmentIds[i], req.user!.id]
         );
+      }
+
+      // Apply status updates if provided
+      if (statusUpdates) {
+        for (const [assignmentId, newStatus] of Object.entries(statusUpdates)) {
+          db.run(
+            "UPDATE assignments SET status = ? WHERE id = ? AND parent_id = ?",
+            [newStatus, assignmentId, req.user!.id]
+          );
+        }
       }
     });
 

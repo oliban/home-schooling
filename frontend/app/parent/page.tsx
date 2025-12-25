@@ -496,38 +496,51 @@ export default function ParentDashboard() {
 
     if (!activeAssignment || !overAssignment) return;
 
-    // Only allow reordering within the same child and status
-    if (activeAssignment.child_id !== overAssignment.child_id ||
-        activeAssignment.status !== overAssignment.status) {
+    // Only allow reordering within the same child (removed status check)
+    if (activeAssignment.child_id !== overAssignment.child_id) {
       return;
     }
 
-    // Get all assignments for this child and status
-    const childStatusAssignments = assignmentsList.filter(
-      a => a.child_id === activeAssignment.child_id && a.status === activeAssignment.status
+    // Get all active assignments for this child (both pending and in_progress)
+    const childActiveAssignments = assignmentsList.filter(
+      a => a.child_id === activeAssignment.child_id &&
+           (a.status === 'pending' || a.status === 'in_progress')
     );
 
-    const oldIndex = childStatusAssignments.findIndex(a => a.id === active.id);
-    const newIndex = childStatusAssignments.findIndex(a => a.id === over.id);
+    const oldIndex = childActiveAssignments.findIndex(a => a.id === active.id);
+    const newIndex = childActiveAssignments.findIndex(a => a.id === over.id);
 
     if (oldIndex === -1 || newIndex === -1) return;
 
     // Reorder the assignments
-    const reordered = arrayMove(childStatusAssignments, oldIndex, newIndex);
+    const reordered = arrayMove(childActiveAssignments, oldIndex, newIndex);
     const orderedIds = reordered.map(a => a.id);
+
+    // Determine status updates: if pending assignment is dragged, set it to in_progress
+    const statusUpdates: Record<string, string> = {};
+    if (activeAssignment.status === 'pending') {
+      statusUpdates[active.id as string] = 'in_progress';
+    }
 
     // Optimistic UI update
     setAssignmentsList(prev => {
       const updated = [...prev];
       const otherAssignments = updated.filter(
-        a => a.child_id !== activeAssignment.child_id || a.status !== activeAssignment.status
+        a => a.child_id !== activeAssignment.child_id ||
+             (a.status !== 'pending' && a.status !== 'in_progress')
       );
-      return [...otherAssignments, ...reordered];
+      const updatedReordered = reordered.map(a => {
+        if (statusUpdates[a.id]) {
+          return { ...a, status: statusUpdates[a.id] as 'pending' | 'in_progress' | 'completed' };
+        }
+        return a;
+      });
+      return [...otherAssignments, ...updatedReordered];
     });
 
     // Persist to backend
     try {
-      await assignments.reorder(token, orderedIds);
+      await assignments.reorder(token, orderedIds, statusUpdates);
     } catch (err) {
       console.error('Failed to reorder assignments:', err);
       // Reload on error to restore correct order

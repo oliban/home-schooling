@@ -233,8 +233,8 @@ export const assignments = {
   delete: (token: string, id: string) =>
     fetchApi<{ success: boolean }>(`/assignments/${id}`, { method: 'DELETE', token }),
 
-  reorder: (token: string, orderedIds: string[]) =>
-    fetchApi<{ success: boolean }>('/assignments/reorder', { method: 'PUT', body: { orderedIds }, token }),
+  reorder: (token: string, orderedIds: string[], statusUpdates?: Record<string, string>) =>
+    fetchApi<{ success: boolean }>('/assignments/reorder', { method: 'PATCH', body: { assignmentIds: orderedIds, statusUpdates }, token }),
 };
 
 // Collectibles
