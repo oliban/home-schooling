@@ -183,7 +183,7 @@ class HomeSchoolingDatabase {
       .sort();
 
     const checkMigration = this.db.prepare('SELECT version FROM schema_migrations WHERE version = ?');
-    const recordMigration = this.db.prepare('INSERT INTO schema_migrations (version) VALUES (?)');
+    const recordMigration = this.db.prepare('INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)');
 
     let migrationsRun = 0;
 
