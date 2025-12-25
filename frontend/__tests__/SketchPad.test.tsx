@@ -156,6 +156,8 @@ describe('SketchPad', () => {
   });
 
   describe('Clear functionality', () => {
+    // Note: clear() method uses getImage() helper to save snapshot before clearing
+    // This ensures the method works correctly within useImperativeHandle
     it('should expose clear method via ref', () => {
       const ref = createRef<SketchPadHandle>();
       render(<SketchPad ref={ref} />);

@@ -362,7 +362,10 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
     useImperativeHandle(ref, () => ({
       clear: () => {
         // Save snapshot before clearing (if not empty)
-        saveSnapshot();
+        const image = getImage();
+        if (image) {
+          setSavedSketches(prev => [...prev, image]);
+        }
 
         // Clear buffer canvas (no DPR - buffer is in CSS pixels)
         const bufferCanvas = bufferCanvasRef.current;
