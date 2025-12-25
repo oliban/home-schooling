@@ -46,10 +46,12 @@ describe('Collectibles Purchase Transaction', () => {
   afterAll(() => {
     const db = getDb();
     // Delete in correct order to respect FK constraints
-    db.run('DELETE FROM child_collectibles WHERE child_id = ?', [childId]);
-    db.run('DELETE FROM child_coins WHERE child_id = ?', [childId]);
-    db.run('DELETE FROM children WHERE id = ?', [childId]);
-    db.run('DELETE FROM collectibles WHERE id = ?', [collectibleId]);
+    // Clean up ALL test data, including any test collectibles created during tests
+    db.run('DELETE FROM child_collectibles WHERE child_id IN (SELECT id FROM children WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM child_coins WHERE child_id IN (SELECT id FROM children WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM children WHERE parent_id = ?', [parentId]);
+    // Delete all test collectibles (those with 'Test' in the name or created during tests)
+    db.run("DELETE FROM collectibles WHERE name LIKE 'Test %' OR id = ?", [collectibleId]);
     db.run('DELETE FROM parents WHERE id = ?', [parentId]);
   });
 
