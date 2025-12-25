@@ -137,6 +137,7 @@
       "pending": "Pending",
       "inProgress": "In Progress",
       "completed": "Completed",
+      "activeAssignments": "Active Assignments",
       "created": "Created",
       "quickActions": "Quick Actions",
       "childLogin": "Child Login",

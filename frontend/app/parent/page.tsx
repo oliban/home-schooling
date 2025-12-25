@@ -16,6 +16,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -212,6 +214,9 @@ export default function ParentDashboard() {
 
   // Completed section collapsed state (hidden by default)
   const [completedExpanded, setCompletedExpanded] = useState(false);
+
+  // Drag and drop state
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -479,9 +484,17 @@ export default function ParentDashboard() {
     })
   );
 
+  // Handle drag start for visual feedback
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   // Handle drag end for reordering assignments
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+
+    // Reset active state
+    setActiveId(null);
 
     if (!over || active.id === over.id) {
       return;
@@ -560,8 +573,8 @@ export default function ParentDashboard() {
     );
   }
 
-  const pendingAssignments = assignmentsList.filter(a => a.status === 'pending');
-  const inProgressAssignments = assignmentsList.filter(a => a.status === 'in_progress');
+  // Combine pending and in_progress into "active" assignments
+  const activeAssignments = assignmentsList.filter(a => a.status === 'pending' || a.status === 'in_progress');
   const completedAssignments = assignmentsList.filter(a => a.status === 'completed');
 
   // Group assignments by child
@@ -579,8 +592,7 @@ export default function ParentDashboard() {
     return Object.entries(grouped).sort((a, b) => a[1].childName.localeCompare(b[1].childName));
   };
 
-  const pendingByChild = groupByChild(pendingAssignments);
-  const inProgressByChild = groupByChild(inProgressAssignments);
+  const activeByChild = groupByChild(activeAssignments);
   const completedByChild = groupByChild(completedAssignments);
 
   return (
@@ -740,17 +752,20 @@ export default function ParentDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* In Progress */}
-              {inProgressAssignments.length > 0 && (
+              {/* Active Assignments (Pending + In Progress) */}
+              {activeAssignments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.inProgress')} ({inProgressAssignments.length})</h3>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">
+                    {t('parent.dashboard.activeAssignments')} ({activeAssignments.length})
+                  </h3>
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                   >
                     <div className="space-y-4">
-                      {inProgressByChild.map(([childId, { childName, assignments: childAssignments }]) => (
+                      {activeByChild.map(([childId, { childName, assignments: childAssignments }]) => (
                         <div key={childId}>
                           <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
                           <SortableContext
@@ -765,7 +780,7 @@ export default function ParentDashboard() {
                                   deletingAssignmentId={deletingAssignmentId}
                                   onDelete={handleDeleteAssignment}
                                   t={t}
-                                  variant="in_progress"
+                                  variant={assignment.status === 'in_progress' ? 'in_progress' : 'pending'}
                                 />
                               ))}
                             </div>
@@ -773,43 +788,43 @@ export default function ParentDashboard() {
                         </div>
                       ))}
                     </div>
-                  </DndContext>
-                </div>
-              )}
+                    <DragOverlay>
+                      {activeId ? (
+                        <div className="bg-white p-4 rounded-xl shadow-lg ring-2 ring-blue-400 opacity-90">
+                          {(() => {
+                            const activeAssignment = assignmentsList.find(a => a.id === activeId);
+                            if (!activeAssignment) return null;
 
-              {/* Pending */}
-              {pendingAssignments.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{t('parent.dashboard.pending')} ({pendingAssignments.length})</h3>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <div className="space-y-4">
-                      {pendingByChild.map(([childId, { childName, assignments: childAssignments }]) => (
-                        <div key={childId}>
-                          <p className="text-xs font-medium text-gray-500 mb-2 pl-1">{childName}</p>
-                          <SortableContext
-                            items={childAssignments.map(a => a.id)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            <div className="space-y-2">
-                              {childAssignments.map((assignment) => (
-                                <SortableAssignmentCard
-                                  key={assignment.id}
-                                  assignment={assignment}
-                                  deletingAssignmentId={deletingAssignmentId}
-                                  onDelete={handleDeleteAssignment}
-                                  t={t}
-                                  variant="pending"
-                                />
-                              ))}
-                            </div>
-                          </SortableContext>
+                            const variant = activeAssignment.status === 'in_progress' ? 'in_progress' : 'pending';
+                            const borderClass = variant === 'in_progress' ? 'border-l-4 border-orange-400' : '';
+
+                            return (
+                              <div className={`flex items-center gap-3 ${borderClass}`}>
+                                <div className="p-2 text-gray-400">
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <circle cx="4" cy="3" r="1.5" />
+                                    <circle cx="12" cy="3" r="1.5" />
+                                    <circle cx="4" cy="8" r="1.5" />
+                                    <circle cx="12" cy="8" r="1.5" />
+                                    <circle cx="4" cy="13" r="1.5" />
+                                    <circle cx="12" cy="13" r="1.5" />
+                                  </svg>
+                                </div>
+                                <span className="text-2xl">
+                                  {activeAssignment.assignment_type === 'math' ? '📐' : '📖'}
+                                </span>
+                                <div>
+                                  <p className="font-medium">{activeAssignment.title}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {t('parent.dashboard.created')} {new Date(activeAssignment.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
-                      ))}
-                    </div>
+                      ) : null}
+                    </DragOverlay>
                   </DndContext>
                 </div>
               )}

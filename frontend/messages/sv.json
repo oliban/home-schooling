@@ -137,6 +137,7 @@
       "pending": "Väntande",
       "inProgress": "Pågående",
       "completed": "Klara",
+      "activeAssignments": "Aktiva uppgifter",
       "created": "Skapad",
       "quickActions": "Snabbåtgärder",
       "childLogin": "Barninloggning",
