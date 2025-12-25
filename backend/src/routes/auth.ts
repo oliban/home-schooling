@@ -176,8 +176,8 @@ router.post('/child-login', async (req, res) => {
     let unlockedShopItems = childData?.unlocked_shop_items || 3;
 
     if (childData?.last_login_date !== today) {
-      // New day - unlock another shop item
-      unlockedShopItems = (childData?.unlocked_shop_items || 3) + 1;
+      // New day - unlock 2 more shop items
+      unlockedShopItems = (childData?.unlocked_shop_items || 3) + 2;
       newItemUnlocked = true;
 
       db.run(
