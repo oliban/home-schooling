@@ -1,5 +1,11 @@
 -- Home Schooling Database Schema
 
+-- Migration tracking (records which migrations have been applied)
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version TEXT PRIMARY KEY,
+    applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Parents (main accounts)
 CREATE TABLE IF NOT EXISTS parents (
     id TEXT PRIMARY KEY,

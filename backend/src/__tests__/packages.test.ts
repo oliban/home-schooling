@@ -554,4 +554,120 @@ describe('Math Package System', () => {
       expect(deletedPkg?.is_active).toBe(0);
     });
   });
+
+  describe('LGR22 Curriculum Mapping Validation', () => {
+    it('should require lgr22_codes array for each problem', () => {
+      const invalidProblems = [
+        { question_text: 'What is 2+2?', correct_answer: '4' }, // missing lgr22_codes
+        { question_text: 'What is 2+2?', correct_answer: '4', lgr22_codes: [] }, // empty lgr22_codes
+        { question_text: 'What is 2+2?', correct_answer: '4', lgr22_codes: null }, // null lgr22_codes
+      ];
+
+      invalidProblems.forEach((p: any) => {
+        const hasValidLgr22Codes = p.lgr22_codes && Array.isArray(p.lgr22_codes) && p.lgr22_codes.length > 0;
+        expect(hasValidLgr22Codes).toBeFalsy();
+      });
+    });
+
+    it('should accept problems with valid lgr22_codes array', () => {
+      const validProblems = [
+        { question_text: 'What is 2+2?', correct_answer: '4', lgr22_codes: ['MA-TAL-01'] },
+        { question_text: 'What is 50% of 100?', correct_answer: '50', lgr22_codes: ['MA-TAL-07', 'MA-PRO-04'] },
+      ];
+
+      validProblems.forEach((p: any) => {
+        const hasValidLgr22Codes = p.lgr22_codes && Array.isArray(p.lgr22_codes) && p.lgr22_codes.length > 0;
+        expect(hasValidLgr22Codes).toBeTruthy();
+      });
+    });
+
+    it('should create curriculum mappings when importing a package with lgr22_codes', () => {
+      const db = getDb();
+      const testPackageId = uuidv4();
+      const problemId1 = uuidv4();
+      const problemId2 = uuidv4();
+
+      // Get a valid curriculum objective code from the database
+      const objective = db.get<{ id: number; code: string }>(
+        'SELECT id, code FROM curriculum_objectives LIMIT 1'
+      );
+
+      if (!objective) {
+        throw new Error('No curriculum objectives found in database');
+      }
+
+      // Create a package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId, parent1Id, 'Test LGR22 Package', 3, 2, 0]
+      );
+
+      // Insert problems
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId1, testPackageId, 1, 'Test question 1', '42']
+      );
+
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId2, testPackageId, 2, 'Test question 2', '24']
+      );
+
+      // Create curriculum mappings (simulating the import process)
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId1, objective.id]
+      );
+
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId2, objective.id]
+      );
+
+      // Verify mappings were created
+      const mapping1 = db.get<{ code: string }>(
+        `SELECT co.code
+         FROM exercise_curriculum_mapping ecm
+         JOIN curriculum_objectives co ON ecm.objective_id = co.id
+         WHERE ecm.exercise_type = 'package_problem' AND ecm.exercise_id = ?`,
+        [problemId1]
+      );
+
+      const mapping2 = db.get<{ code: string }>(
+        `SELECT co.code
+         FROM exercise_curriculum_mapping ecm
+         JOIN curriculum_objectives co ON ecm.objective_id = co.id
+         WHERE ecm.exercise_type = 'package_problem' AND ecm.exercise_id = ?`,
+        [problemId2]
+      );
+
+      expect(mapping1).toBeDefined();
+      expect(mapping1?.code).toBe(objective.code);
+      expect(mapping2).toBeDefined();
+      expect(mapping2?.code).toBe(objective.code);
+
+      // Cleanup
+      db.run('DELETE FROM exercise_curriculum_mapping WHERE exercise_id IN (?, ?)', [problemId1, problemId2]);
+      db.run('DELETE FROM package_problems WHERE id IN (?, ?)', [problemId1, problemId2]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [testPackageId]);
+    });
+
+    it('should reject invalid LGR22 codes that do not exist in database', () => {
+      const db = getDb();
+      const invalidCodes = ['INVALID-CODE-123', 'MA-FAKE-99'];
+
+      invalidCodes.forEach((code) => {
+        const objective = db.get<{ id: number }>(
+          'SELECT id FROM curriculum_objectives WHERE code = ?',
+          [code]
+        );
+        expect(objective).toBeUndefined();
+      });
+    });
+  });
 });

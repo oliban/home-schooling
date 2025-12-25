@@ -168,20 +168,53 @@ class HomeSchoolingDatabase {
       return;
     }
 
-    // Get all SQL migration files sorted by name
+    // Ensure schema_migrations table exists (created by schema.sql)
+    // This is just a safety check in case migrations run before schema
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        version TEXT PRIMARY KEY,
+        applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Get all SQL migration files sorted by name (alphabetical order = version order)
     const migrationFiles = fs.readdirSync(MIGRATIONS_DIR)
       .filter(f => f.endsWith('.sql'))
       .sort();
 
+    const checkMigration = this.db.prepare('SELECT version FROM schema_migrations WHERE version = ?');
+    const recordMigration = this.db.prepare('INSERT INTO schema_migrations (version) VALUES (?)');
+
+    let migrationsRun = 0;
+
     for (const file of migrationFiles) {
+      const version = file.replace('.sql', ''); // e.g., "007_add_missing_lgr22_mappings"
+
+      // Check if this migration has already been applied
+      const existing = checkMigration.get(version) as { version: string } | undefined;
+
+      if (existing) {
+        // Migration already applied, skip it
+        continue;
+      }
+
+      // Run the migration
       const filePath = path.join(MIGRATIONS_DIR, file);
       const sql = fs.readFileSync(filePath, 'utf-8');
+
       try {
         this.db.exec(sql);
+        recordMigration.run(version);
+        migrationsRun++;
+        console.log(`✓ Applied migration: ${version}`);
       } catch (err) {
-        // Ignore errors from INSERT OR IGNORE and CREATE IF NOT EXISTS
-        // These are expected when running migrations multiple times
+        console.error(`✗ Failed to apply migration ${version}:`, err);
+        throw err; // Don't continue if a migration fails
       }
+    }
+
+    if (migrationsRun > 0) {
+      console.log(`Applied ${migrationsRun} new migration(s)`);
     }
   }
 

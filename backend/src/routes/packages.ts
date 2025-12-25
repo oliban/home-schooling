@@ -124,6 +124,9 @@ router.post('/import', authenticateParent, async (req, res) => {
         if (!p.correct_answer || typeof p.correct_answer !== 'string' || !p.correct_answer.trim()) {
           validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: missing correct_answer`);
         }
+        if (!p.lgr22_codes || !Array.isArray(p.lgr22_codes) || p.lgr22_codes.length === 0) {
+          validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: missing lgr22_codes array. Each problem must have at least one LGR22 curriculum code.`);
+        }
         if (p.answer_type === 'multiple_choice') {
           if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
             validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: multiple_choice requires options array`);
@@ -148,6 +151,33 @@ router.post('/import', authenticateParent, async (req, res) => {
     }
 
     const db = getDb();
+
+    // Validate that all LGR22 codes exist in the database
+    const allCodes = new Set<string>();
+    packagesToImport.forEach(item => {
+      item.problems.forEach(p => {
+        if (p.lgr22_codes && Array.isArray(p.lgr22_codes)) {
+          p.lgr22_codes.forEach(code => allCodes.add(code));
+        }
+      });
+    });
+
+    if (allCodes.size > 0) {
+      const placeholders = Array.from(allCodes).map(() => '?').join(',');
+      const existingCodes = db.all<{ code: string }>(
+        `SELECT code FROM curriculum_objectives WHERE code IN (${placeholders})`,
+        Array.from(allCodes)
+      );
+      const existingCodesSet = new Set(existingCodes.map(c => c.code));
+      const invalidCodes = Array.from(allCodes).filter(code => !existingCodesSet.has(code));
+
+      if (invalidCodes.length > 0) {
+        return res.status(400).json({
+          error: 'Invalid LGR22 codes',
+          details: [`The following LGR22 codes do not exist in the database: ${invalidCodes.join(', ')}`]
+        });
+      }
+    }
     const results: { id: string; name: string; problemCount: number }[] = [];
 
     db.transaction(() => {
