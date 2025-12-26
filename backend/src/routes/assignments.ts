@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { getDb } from '../data/database.js';
 import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateParent, authenticateChild, authenticateAny } from '../middleware/auth.js';
+import { validateNumberAnswer } from '../utils/answer-validation.js';
 import type { Assignment, MathProblem, ReadingQuestion, PackageProblem, AssignmentAnswer } from '../types/index.js';
 
 // Cache TTL in seconds (shorter for active assignments that change frequently)
@@ -466,16 +467,6 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
       return res.status(404).json({ error: 'Assignment not found' });
     }
 
-    // Helper to normalize number answers
-    // Handles: coordinates "(5,6)", "5,6", "5.6", decimals "3,5", percentages "50%"
-    const normalizeNumber = (val: string) =>
-      val.trim()
-        .toLowerCase()
-        .replace(/\s+/g, '')      // Remove all whitespace (e.g., "5, 6" -> "5,6")
-        .replace(/[()]/g, '')     // Remove parentheses (e.g., "(5,6)" -> "5,6")
-        .replace(/,/g, '.')       // Replace all commas with periods (e.g., "5,6" -> "5.6")
-        .replace(/%/g, '');       // Remove percentage signs (e.g., "50%" -> "50")
-
     // Reading assignments use single-attempt logic (no retries)
     const isReadingAssignment = assignment.assignment_type === 'reading';
 
@@ -540,9 +531,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           const normalizedAnswer = (answer as string).trim().toUpperCase();
           isCorrect = normalizedAnswer === normalizedCorrect;
         } else if (problem.answer_type === 'number') {
-          const normalizedCorrect = normalizeNumber(problem.correct_answer);
-          const normalizedAnswer = normalizeNumber(answer as string);
-          isCorrect = normalizedCorrect === normalizedAnswer;
+          isCorrect = validateNumberAnswer(problem.correct_answer, answer as string);
         } else if (problem.answer_type === 'text') {
           isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
         }
@@ -692,9 +681,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           const normalizedAnswer = (answer as string).trim().toUpperCase();
           isCorrect = normalizedCorrect === normalizedAnswer;
         } else if (problem.answer_type === 'number') {
-          const normalizedCorrect = normalizeNumber(problem.correct_answer);
-          const normalizedAnswer = normalizeNumber(answer as string);
-          isCorrect = normalizedCorrect === normalizedAnswer;
+          isCorrect = validateNumberAnswer(problem.correct_answer, answer as string);
         } else if (problem.answer_type === 'text') {
           isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
         }

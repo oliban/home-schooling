@@ -121,6 +121,85 @@ For backward compatibility with direct assignment creation:
 - `multiple_choice`: Child picks from options array
 - `text`: Child types text answer
 
+## Answer Format Guidelines (For Number Answers)
+
+When setting `correct_answer` for `answer_type: "number"`, you should **store the canonical numeric value without units or currency**. The validation system automatically accepts multiple equivalent formats:
+
+### Accepted Format Variations
+
+The system will accept answers in any of these equivalent forms:
+
+**Units of Measurement:**
+- Student can answer: `5m`, `5 m`, `5 meter`, `5 meters`
+- Store in JSON: `"correct_answer": "5"`
+
+**Currency (Swedish Kronor):**
+- Student can answer: `100kr`, `100 kr`, `kr100`, `kr 100`, `100 kronor`, `100 SEK`
+- Store in JSON: `"correct_answer": "100"`
+
+**Fractions and Decimals:**
+- Student can answer: `1/2`, `0.5`, `0,5` (all equivalent)
+- Store in JSON: `"correct_answer": "0.5"` OR `"correct_answer": "1/2"`
+
+**Percentage Values:**
+- Student can answer: `35`, `35%`, `35 %` (all equivalent)
+- Store in JSON: `"correct_answer": "35"`
+- Note: % is treated as formatting, not mathematical conversion
+
+**Thousand Separators:**
+- Student can answer: `1000`, `1 000`, `1,000` (all equivalent)
+- Store in JSON: `"correct_answer": "1000"`
+
+### Examples with Explanations
+
+```json
+{
+  "question_text": "En cykel kostar 2500 kr. Med 20% rabatt, hur mycket sparar du?",
+  "correct_answer": "500",
+  "answer_type": "number",
+  "explanation": "20% av 2500 = 500 kr"
+}
+```
+Accepts: `500`, `500kr`, `500 kr`, `kr500`, `500 kronor`
+
+```json
+{
+  "question_text": "Ett rum är 5 meter långt. Hur långt är det i centimeter?",
+  "correct_answer": "500",
+  "answer_type": "number",
+  "explanation": "5 m = 500 cm"
+}
+```
+Accepts: `500`, `500cm`, `500 cm`, `500 centimeter`
+
+```json
+{
+  "question_text": "Vad är 1/4 som decimal?",
+  "correct_answer": "0.25",
+  "answer_type": "number",
+  "explanation": "1 ÷ 4 = 0,25"
+}
+```
+Accepts: `0.25`, `0,25`, `1/4`
+
+```json
+{
+  "question_text": "Hur många procent är 1/4?",
+  "correct_answer": "25",
+  "answer_type": "number",
+  "explanation": "1/4 = 0,25 = 25%"
+}
+```
+Accepts: `25`, `25%`, `25 %`, `0.25` is NOT accepted (25 ≠ 0.25)
+
+### Best Practices
+
+1. **Store canonical numeric form** - Just the number, without units
+2. **Question text provides context** - Units are in the question, not the answer
+3. **Use Swedish number format in explanations** - Comma for decimals (3,5 not 3.5)
+4. **Fraction format choice** - Store as fraction `"1/2"` or decimal `"0.5"` based on pedagogical intent
+5. **Percentage values** - Store as the numeric value (35), not decimal form (0.35)
+
 ### Multiple Choice Format (CRITICAL)
 
 For multiple choice questions, you MUST follow this exact format:
