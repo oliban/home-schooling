@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter - Kapitel 11: Quidditch",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om Harrys första quidditchmatch och mystiska händelser",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad hade hänt med Snapes ben?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han hade ramlat ner för en trappa i slottet",
+            "B: Det var blodigt och illa tilltygat efter att han försökt ta sig förbi den trehövdade hunden",
+            "C: Han hade skadats under en tidigare quidditchmatch som domare",
+            "D: En elev hade av misstag förhäxat honom under en lektion"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad hände med kvicken när Harry fångade den?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han höll upp den triumferande i luften för alla att se",
+            "B: Han tappade den direkt när han slog i marken",
+            "C: Han svalde den av misstag när han slog handen för munnen",
+            "D: Den flög iväg igen innan domaren kunde bekräfta fångsten"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför satte Hermione eld på Snapes klädnad under quidditchmatchen?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon ville skapa en distraktion så att Gryffindor kunde göra mål",
+            "B: Hon trodde att Snape mumlade en förbannelse över Harrys kvast och ville bryta ögonkontakten",
+            "C: Hon var arg på Snape för att han hade konfiskerat Harrys bok",
+            "D: Hon ville testa om en ny trollformel hon hade lärt sig fungerade"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Hur kände sig Harry på morgonen innan quidditchmatchen?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han var nervös och rastlös, kände sig hemsk till mods och ville inte äta",
+            "B: Han var ivrig och upprymd, kunde knappt vänta på att få börja spela",
+            "C: Han var ledsen och besviken över att behöva spela sin första match",
+            "D: Han var förvirrad och osäker på om han hade tränat tillräckligt mycket"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför tog Snape Harrys bok 'Quidditch genom tiderna' från honom?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Boken var stöld från biblioteket och skulle återlämnas omedelbart",
+            "B: Harry hade använt boken för att fuska på ett prov",
+            "C: Det var förbjudet att läsa om quidditch inför matcher",
+            "D: Snape hittade på en regel om att biblioteksböcker inte fick tas med utanför skolan"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad visar Hermiones handlande under quidditchmatchen om hennes karaktär?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon följer alltid regler och skulle aldrig bryta mot dem för någon anledning",
+            "B: Hon är rädd för konflikter och undviker att ta ställning i svåra situationer",
+            "C: Hon är lojal mot sina vänner och vågar agera snabbt när hon tror de är i fara",
+            "D: Hon litar blint på alla lärare och skulle aldrig ifrågasätta deras avsikter"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad kan man dra för slutsats om det som Fluffy vaktar baserat på informationen i kapitlet?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Det är troligtvis något som tillhör Snape personligen och som han vill ha tillbaka",
+            "B: Det är något mycket värdefullt som både Dumbledore och Nicolas Flamel vill hålla säkert",
+            "C: Det är en farlig varelse som måste hållas isolerad från eleverna",
+            "D: Det är skolans gamla examination som eleverna försöker stjäla"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-INFERENCE", "SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vilket centralt tema utforskas i detta kapitel?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hur man inte alltid kan lita på det som verkar uppenbart, och att situationer kan vara mer komplexa än de först verkar",
+            "B: Hur viktigt det är att träna hårt för att bli bra på sport och vinna matcher",
+            "C: Hur vänskap alltid är viktigare än att vinna tävlingar eller uppnå framgång",
+            "D: Hur lärare alltid har elevernas bästa i åtanke även när de verkar stränga"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

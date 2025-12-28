@@ -414,9 +414,9 @@ export default function PackageBrowser() {
                             <div className="mt-3 pt-3 border-t">
                               <div className="text-xs text-gray-500 mb-1">Assigned to:</div>
                               <div className="flex flex-wrap gap-1">
-                                {pkg.childAssignments.map((ca) => (
+                                {pkg.childAssignments.map((ca, index) => (
                                   <span
-                                    key={ca.childId}
+                                    key={`${ca.childId}-${index}`}
                                     className={`px-2 py-0.5 rounded text-xs ${
                                       ca.status === 'completed'
                                         ? 'bg-green-100 text-green-700'
@@ -461,8 +461,8 @@ export default function PackageBrowser() {
                   This will also remove {deleteConfirm.childAssignments.length} assignment{deleteConfirm.childAssignments.length !== 1 ? 's' : ''} from:
                 </p>
                 <ul className="mt-2 text-sm text-yellow-700">
-                  {deleteConfirm.childAssignments.map((ca) => (
-                    <li key={ca.childId}>
+                  {deleteConfirm.childAssignments.map((ca, index) => (
+                    <li key={`${ca.childId}-${index}`}>
                       {ca.childName} ({ca.status === 'completed' ? 'Done' : ca.status === 'in_progress' ? 'In progress' : 'Pending'})
                     </li>
                   ))}
