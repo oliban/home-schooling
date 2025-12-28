@@ -44,6 +44,10 @@ describe('Per-Child Shop Ordering', () => {
 
   afterAll(() => {
     const db = getDb();
+    // Clean up in reverse order of foreign key dependencies
+    db.run('DELETE FROM child_collectibles WHERE child_id IN (?, ?)', [child1Id, child2Id]);
+    db.run('DELETE FROM child_coins WHERE child_id IN (?, ?)', [child1Id, child2Id]);
+    db.run('DELETE FROM children WHERE id IN (?, ?)', [child1Id, child2Id]);
     db.run('DELETE FROM parents WHERE id = ?', [parentId]);
   });
 
