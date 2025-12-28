@@ -353,8 +353,8 @@ export default function SelectableTreemap({ childId, childGradeLevel, selectedOb
     for (const category of coverageData.categories) {
       const objective = category.objectives.find(obj => obj.id === objectiveId);
       if (objective) {
-        // Determine subject from category ID
-        const subject: 'math' | 'reading' = category.categoryId.startsWith('SV-') ? 'reading' : 'math';
+        // Determine subject from objective code (SV-* = reading, MA-* = math)
+        const subject: 'math' | 'reading' = objective.code.startsWith('SV-') ? 'reading' : 'math';
 
         const objectiveData: ObjectiveData = {
           id: objective.id,

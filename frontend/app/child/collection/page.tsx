@@ -54,6 +54,7 @@ export default function CollectionPage() {
   const [activeTab, setActiveTab] = useState<'owned' | 'shop'>('owned');
   const [totalCount, setTotalCount] = useState(0);
   const [unlockedCount, setUnlockedCount] = useState(0);
+  const [sessionError, setSessionError] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('childToken');
@@ -71,6 +72,12 @@ export default function CollectionPage() {
     loadCollectibles(token);
   }, [router]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('childToken');
+    localStorage.removeItem('childData');
+    router.push('/login');
+  };
+
   const loadCollectibles = async (token: string) => {
     try {
       const response = await collectibles.list(token);
@@ -79,6 +86,10 @@ export default function CollectionPage() {
       setUnlockedCount(response.unlockedCount);
     } catch (err) {
       console.error('Failed to load collectibles:', err);
+      // Check if it's a session/token error
+      if (err instanceof Error && (err.message.includes('Invalid token') || err.message.includes('Unauthorized'))) {
+        setSessionError(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -113,7 +124,12 @@ export default function CollectionPage() {
 
     } catch (err) {
       console.error('Failed to buy:', err);
-      alert('Could not complete purchase');
+      // Check if it's a session/token error
+      if (err instanceof Error && (err.message.includes('Invalid token') || err.message.includes('Unauthorized'))) {
+        setSessionError(true);
+      } else {
+        alert('Could not complete purchase');
+      }
     } finally {
       setBuying(null);
     }
@@ -123,6 +139,27 @@ export default function CollectionPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  // Show session error with logout option
+  if (sessionError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white">
+        <div className="max-w-md p-8 bg-white rounded-2xl shadow-lg text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Session Expired</h2>
+          <p className="text-gray-600 mb-6">
+            Your session has expired or the login token is invalid. Please log in again to continue.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Log Out & Return to Login
+          </button>
+        </div>
       </div>
     );
   }

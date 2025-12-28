@@ -79,23 +79,46 @@ export default function CurriculumDashboard() {
 
   // Handle objective selection for custom prompt builder
   const handleToggleObjective = (objectiveId: number, objective: ObjectiveData) => {
+    // If removing an objective, allow it
+    if (selectedObjectives.has(objectiveId)) {
+      setSelectedObjectives(prev => {
+        const next = new Set(prev);
+        next.delete(objectiveId);
+        return next;
+      });
+
+      setObjectiveDetails(prev => {
+        const next = new Map(prev);
+        next.delete(objectiveId);
+        return next;
+      });
+      return;
+    }
+
+    // Adding a new objective - check if it would mix subjects
+    const currentSubjects = Array.from(selectedObjectives)
+      .map(id => objectiveDetails.get(id))
+      .filter((obj): obj is ObjectiveData => obj !== undefined)
+      .map(obj => obj.subject);
+
+    const uniqueCurrentSubjects = new Set(currentSubjects);
+
+    if (uniqueCurrentSubjects.size > 0 && !uniqueCurrentSubjects.has(objective.subject)) {
+      // Would cause mixing - prevent addition
+      console.warn('[handleToggleObjective] Cannot mix subjects. Ignoring click.');
+      return;
+    }
+
+    // OK to add
     setSelectedObjectives(prev => {
       const next = new Set(prev);
-      if (next.has(objectiveId)) {
-        next.delete(objectiveId);
-      } else {
-        next.add(objectiveId);
-      }
+      next.add(objectiveId);
       return next;
     });
 
     setObjectiveDetails(prev => {
       const next = new Map(prev);
-      if (!next.has(objectiveId)) {
-        next.set(objectiveId, objective);
-      } else {
-        next.delete(objectiveId);
-      }
+      next.set(objectiveId, objective);
       return next;
     });
   };

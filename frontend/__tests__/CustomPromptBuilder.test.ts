@@ -5,7 +5,8 @@ function generateCustomPrompt(
   objectives: ObjectiveData[],
   mode: 'broad' | 'deep',
   theme: string | undefined,
-  gradeLevel: number
+  gradeLevel: number,
+  questionCount: number
 ): { prompt: string; objectiveCodes: string[]; questionCount: number; subject: 'math' | 'reading'; mode: 'broad' | 'deep' } {
   if (objectives.length === 0) {
     throw new Error('No objectives selected');
@@ -20,19 +21,12 @@ function generateCustomPrompt(
   const subject = objectives[0].subject;
   const codes = objectives.map(o => o.code);
 
-  // Calculate question count based on mode
-  let questionCount: number;
-  if (mode === 'deep') {
-    questionCount = Math.max(6, Math.min(10, objectives.length * 3));
-  } else {
-    questionCount = Math.max(10, Math.min(20, objectives.length * 4));
-  }
-
   // Build skill command
   const skillName = subject === 'math' ? 'generate-math' : 'generate-reading';
   const codesStr = codes.join(', ');
 
-  let prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} ${mode === 'deep' ? 'deep-focus' : ''} problems covering: ${codesStr}`;
+  const modeStr = mode === 'deep' ? 'deep-focus ' : '';
+  let prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} ${modeStr}problems covering: ${codesStr}`;
 
   if (theme && theme.trim()) {
     prompt += `\n\nTheme: ${theme.trim()}`;
@@ -78,35 +72,34 @@ describe('CustomPromptBuilder - generateCustomPrompt', () => {
   describe('validation', () => {
     it('should throw error when no objectives selected', () => {
       expect(() => {
-        generateCustomPrompt([], 'broad', undefined, 3);
+        generateCustomPrompt([], 'broad', undefined, 3, 10);
       }).toThrow('No objectives selected');
     });
 
     it('should throw error when mixing math and reading objectives', () => {
       expect(() => {
-        generateCustomPrompt([mathObjective1, readingObjective], 'broad', undefined, 3);
+        generateCustomPrompt([mathObjective1, readingObjective], 'broad', undefined, 3, 10);
       }).toThrow('Cannot mix math and reading objectives');
     });
   });
 
-  describe('question count calculation', () => {
-    it('should calculate correct question count for deep mode', () => {
-      const result = generateCustomPrompt([mathObjective1], 'deep', undefined, 3);
-      expect(result.questionCount).toBeGreaterThanOrEqual(6);
-      expect(result.questionCount).toBeLessThanOrEqual(10);
+  describe('question count', () => {
+    it('should use provided question count', () => {
+      const result = generateCustomPrompt([mathObjective1], 'deep', undefined, 3, 15);
+      expect(result.questionCount).toBe(15);
     });
 
-    it('should calculate correct question count for broad mode', () => {
-      const result = generateCustomPrompt([mathObjective1], 'broad', undefined, 3);
-      expect(result.questionCount).toBeGreaterThanOrEqual(10);
-      expect(result.questionCount).toBeLessThanOrEqual(20);
+    it('should use provided question count regardless of mode', () => {
+      const broadResult = generateCustomPrompt([mathObjective1], 'broad', undefined, 3, 8);
+      const deepResult = generateCustomPrompt([mathObjective1], 'deep', undefined, 3, 8);
+
+      expect(broadResult.questionCount).toBe(8);
+      expect(deepResult.questionCount).toBe(8);
     });
 
-    it('should scale question count with number of objectives', () => {
-      const single = generateCustomPrompt([mathObjective1], 'broad', undefined, 3);
-      const double = generateCustomPrompt([mathObjective1, mathObjective2], 'broad', undefined, 3);
-
-      expect(double.questionCount).toBeGreaterThanOrEqual(single.questionCount);
+    it('should include question count in prompt', () => {
+      const result = generateCustomPrompt([mathObjective1], 'broad', undefined, 3, 12);
+      expect(result.prompt).toContain('12 problems');
     });
   });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ObjectiveData, PromptMode, GeneratedPrompt } from '@/types/curriculum';
 import SelectableTreemap from './SelectableTreemap';
 import { getRandomThemes } from '@/lib/themes-expanded';
@@ -48,7 +48,8 @@ function generateCustomPrompt(
   objectives: ObjectiveData[],
   mode: PromptMode,
   theme: string | undefined,
-  gradeLevel: number
+  gradeLevel: number,
+  questionCount: number
 ): GeneratedPrompt {
   if (objectives.length === 0) {
     throw new Error('No objectives selected');
@@ -63,21 +64,12 @@ function generateCustomPrompt(
   const subject = objectives[0].subject;
   const codes = objectives.map(o => o.code);
 
-  // Calculate question count based on mode
-  let questionCount: number;
-  if (mode === 'deep') {
-    // Deep: fewer questions, more depth per objective
-    questionCount = Math.max(6, Math.min(10, objectives.length * 3));
-  } else {
-    // Broad: more questions spread across objectives
-    questionCount = Math.max(10, Math.min(20, objectives.length * 4));
-  }
-
   // Build skill command
   const skillName = subject === 'math' ? 'generate-math' : 'generate-reading';
   const codesStr = codes.join(', ');
 
-  let prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} ${mode === 'deep' ? 'deep-focus' : ''} problems covering: ${codesStr}`;
+  const modeStr = mode === 'deep' ? 'deep-focus ' : '';
+  let prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} ${modeStr}problems covering: ${codesStr}`;
 
   // Add theme if provided
   if (theme && theme.trim()) {
@@ -103,11 +95,13 @@ export default function CustomPromptBuilder({
 }: CustomPromptBuilderProps) {
   const [mode, setMode] = useState<PromptMode>('broad');
   const [theme, setTheme] = useState('');
+  const [questionCount, setQuestionCount] = useState<number>(10);
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [copiedFeedback, setCopiedFeedback] = useState(false);
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
   const [coverageData, setCoverageData] = useState<CoverageData | null>(null);
   const [loadingCoverage, setLoadingCoverage] = useState(true);
+  const hasAutoApplied = useRef(false);
 
   // Fetch coverage data
   const fetchCoverage = useCallback(async () => {
@@ -141,33 +135,76 @@ export default function CustomPromptBuilder({
     fetchCoverage();
   }, [fetchCoverage]);
 
-  // Generate random theme suggestions when component mounts or grade changes
+  // Generate random theme suggestions (show 8 options)
   useEffect(() => {
-    setSuggestedThemes(getRandomThemes(childGradeLevel, 12));
+    setSuggestedThemes(getRandomThemes(childGradeLevel, 8));
   }, [childGradeLevel]);
 
   // Calculate suggested objectives based on poor coverage
   const suggestedObjectives = useMemo(() => {
-    if (!coverageData) return { math: [], reading: [] };
+    if (!coverageData) {
+      console.log('[CustomPromptBuilder] No coverage data yet');
+      return { math: [], reading: [] };
+    }
+
+    console.log('[CustomPromptBuilder] Calculating suggestions. Categories:', coverageData.categories.length);
 
     interface ScoredObjective {
       objective: ObjectiveCoverage;
       category: CategoryCoverage;
-      score: number; // Lower is worse coverage
+      score: number; // Higher score = higher priority for practice
     }
 
     const mathObjectives: ScoredObjective[] = [];
     const readingObjectives: ScoredObjective[] = [];
 
     coverageData.categories.forEach(category => {
-      const isMath = category.categoryId.startsWith('MA-');
-      const isReading = category.categoryId.startsWith('SV-');
+      if (!category.objectives) {
+        console.warn('[CustomPromptBuilder] Category has no objectives array:', category.categoryId);
+        return;
+      }
 
       category.objectives.forEach(obj => {
-        // Calculate coverage score (0-100, where 0 is worst)
-        const score = obj.totalCount > 0
+        // Determine subject from objective code (MA-* = math, SV-* = reading)
+        const isMath = obj.code.startsWith('MA-');
+        const isReading = obj.code.startsWith('SV-');
+
+        if (!isMath && !isReading) {
+          console.warn('[CustomPromptBuilder] Unknown objective type:', obj.code);
+          return;
+        }
+
+        // Calculate priority score based on BOTH percentage and total count
+        // Higher score = more urgent to practice
+        let score = 0;
+
+        const percentage = obj.totalCount > 0
           ? (obj.correctCount / obj.totalCount) * 100
           : 0;
+        const totalCount = obj.totalCount;
+
+        // Priority 1: Never practiced (0 attempts) = highest urgency
+        if (totalCount === 0) {
+          score = 1000; // Highest priority
+        }
+        // Priority 2: Low practice count (< 15 attempts) = need more practice regardless of percentage
+        else if (totalCount < 15) {
+          // Score based on how few attempts (fewer = higher score)
+          score = 500 + (15 - totalCount) * 20;
+          // But reduce score if percentage is very high (> 90%)
+          if (percentage > 90) {
+            score -= 200;
+          }
+        }
+        // Priority 3: Many attempts but low percentage = poor mastery
+        else if (percentage < 70) {
+          // Score based on how low the percentage is
+          score = (70 - percentage) * 3;
+        }
+        // Priority 4: Many attempts AND good percentage = don't suggest
+        else {
+          score = 0; // Very low priority
+        }
 
         const scoredObj: ScoredObjective = {
           objective: obj,
@@ -183,29 +220,127 @@ export default function CustomPromptBuilder({
       });
     });
 
-    // Sort by score (lowest first = worst coverage)
-    // Prioritize: 0% coverage > low coverage > medium coverage
-    const sortByWorstCoverage = (a: ScoredObjective, b: ScoredObjective) => {
-      // If one has 0 attempts and the other doesn't, prioritize the one with 0 attempts
-      const aHasAttempts = a.objective.totalCount > 0;
-      const bHasAttempts = b.objective.totalCount > 0;
-
-      if (!aHasAttempts && bHasAttempts) return -1;
-      if (aHasAttempts && !bHasAttempts) return 1;
-
-      // Both have attempts or both have no attempts - sort by score
-      return a.score - b.score;
+    // Sort by score (highest first = highest priority)
+    const sortByPriority = (a: ScoredObjective, b: ScoredObjective) => {
+      return b.score - a.score; // Higher score first
     };
 
-    mathObjectives.sort(sortByWorstCoverage);
-    readingObjectives.sort(sortByWorstCoverage);
+    mathObjectives.sort(sortByPriority);
+    readingObjectives.sort(sortByPriority);
+
+    console.log('[CustomPromptBuilder] Total objectives found - Math:', mathObjectives.length, 'Reading:', readingObjectives.length);
 
     // Take top 4 of each subject
-    return {
+    const result = {
       math: mathObjectives.slice(0, 4),
       reading: readingObjectives.slice(0, 4),
     };
+
+    console.log('[CustomPromptBuilder] Suggestions - Math:', result.math.length, 'Reading:', result.reading.length);
+    if (result.math.length > 0) {
+      console.log('[CustomPromptBuilder] Top math suggestions:', result.math.map(s => `${s.objective.code} (score: ${s.score})`));
+    }
+
+    return result;
   }, [coverageData]);
+
+  // Auto-apply suggestions on initial load (prefer subject with worse overall coverage)
+  useEffect(() => {
+    // Only run once and only if we haven't auto-applied yet
+    if (hasAutoApplied.current) return;
+    if (!coverageData || loadingCoverage) return;
+    if (selectedObjectives.size > 0) return; // User already has selections
+
+    console.log('[CustomPromptBuilder] Auto-applying suggestions...');
+
+    // Calculate which subject has worse overall coverage
+    // Category IDs are lowercase Swedish names (algebra, geometri, lasforstaelse, etc.)
+    // Reading category is 'lasforstaelse', all others are math
+    const mathCategories = coverageData.categories.filter(c => c.categoryId !== 'lasforstaelse');
+    const readingCategories = coverageData.categories.filter(c => c.categoryId === 'lasforstaelse');
+
+    const mathCoverage = mathCategories.reduce((sum, c) => sum + c.coveragePercentage, 0) / Math.max(mathCategories.length, 1);
+    const readingCoverage = readingCategories.reduce((sum, c) => sum + c.coveragePercentage, 0) / Math.max(readingCategories.length, 1);
+
+    console.log('[CustomPromptBuilder] Math coverage:', mathCoverage, 'Reading coverage:', readingCoverage);
+
+    // Choose subject with worse coverage (or math if equal)
+    const subject = readingCoverage < mathCoverage ? 'reading' : 'math';
+    const allSuggestions = subject === 'math' ? suggestedObjectives.math : suggestedObjectives.reading;
+
+    // Smart suggestion: Analyze the top objectives to determine strategy
+    let objectiveCount = 3; // Default
+    let recommendedMode: PromptMode = 'broad';
+
+    if (allSuggestions.length > 0) {
+      // Check if top objectives need deep focus (many attempts but low percentage)
+      const needsDeepFocus = allSuggestions.slice(0, 2).every(s =>
+        s.objective.totalCount >= 10 &&
+        (s.objective.correctCount / s.objective.totalCount) < 0.7
+      );
+
+      // Check if top objectives are unpracticed (0 attempts)
+      const allUnpracticed = allSuggestions.slice(0, 4).every(s => s.objective.totalCount === 0);
+
+      if (needsDeepFocus) {
+        // Deep focus strategy: 1-2 objectives with many questions each
+        objectiveCount = 2;
+        recommendedMode = 'deep';
+        setQuestionCount(12); // More questions for deeper practice
+        console.log('[CustomPromptBuilder] Strategy: DEEP FOCUS on struggling objectives');
+      } else if (allUnpracticed) {
+        // Introduction strategy: 3-4 new objectives
+        objectiveCount = 4;
+        recommendedMode = 'broad';
+        setQuestionCount(16); // Spread questions across objectives
+        console.log('[CustomPromptBuilder] Strategy: BROAD INTRODUCTION to new objectives');
+      } else {
+        // Mixed strategy: 2-3 objectives
+        objectiveCount = 3;
+        recommendedMode = 'broad';
+        setQuestionCount(12);
+        console.log('[CustomPromptBuilder] Strategy: MIXED PRACTICE');
+      }
+
+      setMode(recommendedMode);
+    }
+
+    const suggestions = allSuggestions.slice(0, objectiveCount);
+
+    console.log('[CustomPromptBuilder] Applying', suggestions.length, subject, 'suggestions with', recommendedMode, 'mode');
+    suggestions.forEach(({ objective, score }) => {
+      console.log(`  - ${objective.code}: ${objective.correctCount}/${objective.totalCount} (score: ${score})`);
+    });
+
+    if (suggestions.length > 0) {
+      // Apply suggestions automatically
+      suggestions.forEach(({ objective, category }) => {
+        // Determine subject from objective code (SV-* = reading, MA-* = math)
+        const subjectType: 'math' | 'reading' = objective.code.startsWith('SV-') ? 'reading' : 'math';
+
+        const objectiveData: ObjectiveData = {
+          id: objective.id,
+          code: objective.code,
+          description: objective.description,
+          categoryId: category.categoryId,
+          categoryName: category.categoryName,
+          subject: subjectType,
+        };
+
+        onToggleObjective(objective.id, objectiveData);
+      });
+
+      // Auto-fill theme field with 1-4 random themes
+      const randomThemeCount = Math.floor(Math.random() * 4) + 1; // 1-4 themes
+      const randomThemes = getRandomThemes(childGradeLevel, randomThemeCount);
+      const themeString = randomThemes.join(', ');
+      setTheme(themeString);
+      console.log('[CustomPromptBuilder] Auto-filled theme:', themeString);
+
+      hasAutoApplied.current = true;
+      console.log('[CustomPromptBuilder] Auto-apply complete');
+    }
+  }, [coverageData, loadingCoverage, suggestedObjectives, selectedObjectives.size, onToggleObjective, childGradeLevel]);
 
   // Apply suggested objectives (choose subject with worst overall coverage)
   const applySuggestedObjectives = (subject: 'math' | 'reading') => {
@@ -257,7 +392,15 @@ export default function CustomPromptBuilder({
 
   // Validation
   const subjects = useMemo(() => {
-    return new Set(selectedObjectivesArray.map(o => o.subject));
+    const subjectsSet = new Set(selectedObjectivesArray.map(o => o.subject));
+    if (selectedObjectivesArray.length > 0) {
+      console.log('[CustomPromptBuilder] Selected objectives and subjects:');
+      selectedObjectivesArray.forEach(obj => {
+        console.log(`  - ${obj.code}: subject="${obj.subject}"`);
+      });
+      console.log('[CustomPromptBuilder] Unique subjects:', Array.from(subjectsSet));
+    }
+    return subjectsSet;
   }, [selectedObjectivesArray]);
 
   const hasMixedSubjects = subjects.size > 1;
@@ -265,8 +408,10 @@ export default function CustomPromptBuilder({
 
   // Auto-generate prompt whenever inputs change
   useEffect(() => {
+    console.log('[CustomPromptBuilder] Auto-generate effect triggered. canGenerate:', canGenerate, 'selectedCount:', selectedObjectives.size, 'theme:', theme?.substring(0, 30));
+
+    // Don't clear prompt if we can't generate - just keep the old one
     if (!canGenerate) {
-      setGeneratedPrompt(null);
       return;
     }
 
@@ -275,14 +420,16 @@ export default function CustomPromptBuilder({
         selectedObjectivesArray,
         mode,
         theme,
-        childGradeLevel
+        childGradeLevel,
+        questionCount
       );
+      console.log('[CustomPromptBuilder] Prompt generated successfully with theme:', theme?.substring(0, 30));
       setGeneratedPrompt(prompt);
     } catch (error) {
       console.error('Failed to generate prompt:', error);
-      setGeneratedPrompt(null);
+      // Keep old prompt on error
     }
-  }, [selectedObjectivesArray, mode, theme, childGradeLevel, canGenerate]);
+  }, [selectedObjectivesArray, mode, theme, childGradeLevel, questionCount, canGenerate, selectedObjectives.size]);
 
   // Handle copy to clipboard
   const handleCopy = async () => {
@@ -332,20 +479,34 @@ export default function CustomPromptBuilder({
                   </button>
                 </div>
                 <div className="space-y-1">
-                  {suggestedObjectives.math.map(({ objective, score }) => (
-                    <div key={objective.id} className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-gray-700">{objective.code}</span>
-                      <span className={`px-2 py-0.5 rounded ${
-                        score === 0 ? 'bg-red-100 text-red-800' :
-                        score < 30 ? 'bg-orange-100 text-orange-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {objective.totalCount > 0
-                          ? `${Math.round(score)}%`
-                          : 'Not attempted'}
-                      </span>
-                    </div>
-                  ))}
+                  {suggestedObjectives.math.map(({ objective, score }) => {
+                    const percentage = objective.totalCount > 0
+                      ? Math.round((objective.correctCount / objective.totalCount) * 100)
+                      : 0;
+                    const needsMorePractice = objective.totalCount > 0 && objective.totalCount < 15;
+                    return (
+                      <div key={objective.id} className="flex items-center justify-between text-xs gap-2">
+                        <span className="font-medium text-gray-700">{objective.code}</span>
+                        <div className="flex items-center gap-1">
+                          <span className={`px-2 py-0.5 rounded ${
+                            objective.totalCount === 0 ? 'bg-yellow-100 text-yellow-800' :
+                            percentage < 50 ? 'bg-red-100 text-red-800' :
+                            percentage < 70 ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {objective.totalCount > 0
+                              ? `${percentage}%`
+                              : 'Not attempted'}
+                          </span>
+                          {needsMorePractice && (
+                            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium">
+                              {objective.totalCount}×
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -363,20 +524,34 @@ export default function CustomPromptBuilder({
                   </button>
                 </div>
                 <div className="space-y-1">
-                  {suggestedObjectives.reading.map(({ objective, score }) => (
-                    <div key={objective.id} className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-gray-700">{objective.code}</span>
-                      <span className={`px-2 py-0.5 rounded ${
-                        score === 0 ? 'bg-red-100 text-red-800' :
-                        score < 30 ? 'bg-orange-100 text-orange-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {objective.totalCount > 0
-                          ? `${Math.round(score)}%`
-                          : 'Not attempted'}
-                      </span>
-                    </div>
-                  ))}
+                  {suggestedObjectives.reading.map(({ objective, score }) => {
+                    const percentage = objective.totalCount > 0
+                      ? Math.round((objective.correctCount / objective.totalCount) * 100)
+                      : 0;
+                    const needsMorePractice = objective.totalCount > 0 && objective.totalCount < 15;
+                    return (
+                      <div key={objective.id} className="flex items-center justify-between text-xs gap-2">
+                        <span className="font-medium text-gray-700">{objective.code}</span>
+                        <div className="flex items-center gap-1">
+                          <span className={`px-2 py-0.5 rounded ${
+                            objective.totalCount === 0 ? 'bg-yellow-100 text-yellow-800' :
+                            percentage < 50 ? 'bg-red-100 text-red-800' :
+                            percentage < 70 ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {objective.totalCount > 0
+                              ? `${percentage}%`
+                              : 'Not attempted'}
+                          </span>
+                          {needsMorePractice && (
+                            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium">
+                              {objective.totalCount}×
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -437,9 +612,26 @@ export default function CustomPromptBuilder({
         onToggleObjective={onToggleObjective}
       />
 
-      {/* Coverage Type Toggle */}
+      {/* Coverage Type Toggle + Question Count */}
       <div className="mt-6">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">Coverage Type</h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-semibold text-gray-700">Coverage Type</h4>
+          <div className="flex items-center gap-2">
+            <label htmlFor="questionCount" className="text-sm font-semibold text-gray-700">
+              Questions:
+            </label>
+            <input
+              id="questionCount"
+              type="number"
+              min="1"
+              max="50"
+              value={questionCount}
+              onChange={(e) => setQuestionCount(Math.max(1, Math.min(50, parseInt(e.target.value) || 10)))}
+              className="w-16 px-2 py-1 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-center text-sm"
+              placeholder="10"
+            />
+          </div>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setMode('broad')}
@@ -477,7 +669,7 @@ export default function CustomPromptBuilder({
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs text-gray-600">Quick select a theme:</p>
             <button
-              onClick={() => setSuggestedThemes(getRandomThemes(childGradeLevel, 12))}
+              onClick={() => setSuggestedThemes(getRandomThemes(childGradeLevel, 8))}
               className="text-xs text-blue-600 hover:text-blue-800 font-medium"
             >
               🔄 Shuffle themes
@@ -488,12 +680,12 @@ export default function CustomPromptBuilder({
               <button
                 key={index}
                 onClick={() => {
+                  console.log('[CustomPromptBuilder] Theme button clicked:', suggestedTheme);
                   // Append theme instead of replacing
                   setTheme(prev => {
-                    if (!prev.trim()) {
-                      return suggestedTheme;
-                    }
-                    return `${prev}, ${suggestedTheme}`;
+                    const newTheme = !prev.trim() ? suggestedTheme : `${prev}, ${suggestedTheme}`;
+                    console.log('[CustomPromptBuilder] Setting theme from', prev, 'to', newTheme);
+                    return newTheme;
                   });
                 }}
                 className="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-green-100 hover:text-green-800 transition-colors"
@@ -505,50 +697,79 @@ export default function CustomPromptBuilder({
           </div>
         </div>
 
-        <input
-          id="theme"
-          type="text"
-          value={theme}
-          onChange={(e) => setTheme(e.target.value)}
-          placeholder="e.g., marvel heroes and toilets, space exploration, soccer..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-        />
+        <div className="relative">
+          <input
+            id="theme"
+            type="text"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            placeholder="e.g., marvel heroes and toilets, space exploration, soccer..."
+            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+          />
+          {theme && (
+            <button
+              onClick={() => setTheme('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Clear theme"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
         <p className="text-xs text-gray-500 mt-1">
           Click a theme above or type your own custom theme
         </p>
       </div>
 
-      {/* Generated Prompt Display (auto-updates) */}
-      {generatedPrompt && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border-2 border-green-200">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-semibold text-gray-700">Generated Prompt</h4>
+      {/* Generated Prompt Display (always visible, auto-updates) */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg border-2 border-green-200">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-semibold text-gray-700">Generated Prompt</h4>
+          {generatedPrompt && (
             <button
               onClick={handleCopy}
               className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
             >
               {copiedFeedback ? '✓ Copied!' : 'Copy'}
             </button>
-          </div>
-          <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono bg-white p-3 rounded border border-gray-200">
-            {generatedPrompt.prompt}
-          </pre>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
-              {generatedPrompt.subject === 'math' ? '📐 Math' : '📖 Reading'}
-            </span>
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded">
-              {generatedPrompt.questionCount} questions
-            </span>
-            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
-              {generatedPrompt.mode === 'broad' ? '🌐 Broad' : '🎯 Deep'} focus
-            </span>
-            <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded">
-              {generatedPrompt.objectiveCodes.length} objective{generatedPrompt.objectiveCodes.length !== 1 ? 's' : ''}
-            </span>
-          </div>
+          )}
         </div>
-      )}
+        {generatedPrompt ? (
+          <>
+            <textarea
+              value={generatedPrompt.prompt}
+              onChange={(e) => {
+                setGeneratedPrompt({
+                  ...generatedPrompt,
+                  prompt: e.target.value,
+                });
+              }}
+              rows={4}
+              className="w-full text-sm text-gray-800 font-mono bg-white p-3 rounded border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y"
+            />
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                {generatedPrompt.subject === 'math' ? '📐 Math' : '📖 Reading'}
+              </span>
+              <span className="px-2 py-1 bg-green-100 text-green-800 rounded">
+                {generatedPrompt.questionCount} questions
+              </span>
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
+                {generatedPrompt.mode === 'broad' ? '🌐 Broad' : '🎯 Deep'} focus
+              </span>
+              <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded">
+                {generatedPrompt.objectiveCodes.length} objective{generatedPrompt.objectiveCodes.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="text-sm text-gray-500 bg-white p-3 rounded border border-gray-200 italic">
+            {loadingCoverage ? 'Loading suggestions...' : 'Select objectives above to generate a prompt'}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
