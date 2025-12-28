@@ -8,6 +8,8 @@ import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import FileDropZone from '@/components/ui/FileDropZone';
 import ProgressChart, { DailyStatsData } from '@/components/ui/ProgressChart';
+import { isDevelopment } from '@/lib/env';
+import DevAdminPanel from '@/components/admin/DevAdminPanel';
 import {
   DndContext,
   closestCenter,
@@ -1234,6 +1236,13 @@ export default function ParentDashboard() {
             </button>
           </div>
         </section>
+
+        {/* Developer Admin Panel (Development Only) */}
+        {isDevelopment() && (
+          <section className="mt-8">
+            <DevAdminPanel />
+          </section>
+        )}
       </div>
     </main>
   );

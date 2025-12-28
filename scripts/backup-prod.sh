@@ -60,6 +60,17 @@ if fly ssh sftp get /data/teacher.db "$TEMP_FILE" -a home-schooling; then
         echo "  - latest.db -> teacher-$TIMESTAMP.db"
         echo "  - latest-$DATE.db -> teacher-$TIMESTAMP.db"
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Backup completed: $BACKUP_FILE ($FILE_SIZE)" >> "$LOG_FILE"
+
+        # Clean up backups older than 2 weeks (14 days)
+        echo "Cleaning up old backups (older than 14 days)..."
+        OLD_BACKUP_COUNT=$(find "$BACKUP_DIR" -name "teacher-*.db" -type f -mtime +14 | wc -l | tr -d ' ')
+        if [ "$OLD_BACKUP_COUNT" -gt 0 ]; then
+            find "$BACKUP_DIR" -name "teacher-*.db" -type f -mtime +14 -delete
+            echo "Removed $OLD_BACKUP_COUNT old backup(s)"
+            echo "$(date '+%Y-%m-%d %H:%M:%S') - Cleaned up $OLD_BACKUP_COUNT backup(s) older than 14 days" >> "$LOG_FILE"
+        else
+            echo "No old backups to remove"
+        fi
     else
         echo "Error: Downloaded file is not a valid SQLite database" >&2
         echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: Invalid database file downloaded" >> "$LOG_FILE"

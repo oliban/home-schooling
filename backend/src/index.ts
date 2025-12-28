@@ -14,6 +14,8 @@ import assignmentsRoutes from './routes/assignments.js';
 import collectiblesRoutes from './routes/collectibles.js';
 import packagesRoutes from './routes/packages.js';
 import curriculumRoutes from './routes/curriculum.js';
+import adminRoutes from './routes/admin.js';
+import { isDevelopment } from './config/cors.js';
 
 // Re-export OCR queue types and functions for external use
 export { ocrQueue, ocrWorker, closeOcrQueue };
@@ -171,6 +173,12 @@ app.use('/api/assignments', assignmentsRoutes);
 app.use('/api/collectibles', collectiblesRoutes);
 app.use('/api/packages', packagesRoutes);
 app.use('/api/curriculum', curriculumRoutes);
+
+// Admin routes (development only)
+if (isDevelopment()) {
+  app.use('/api/admin', adminRoutes);
+  console.log('✓ Admin routes enabled (development mode)');
+}
 
 // Health check
 app.get('/api/health', (req, res) => {

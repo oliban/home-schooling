@@ -460,3 +460,38 @@ export const packages = {
   delete: (token: string, id: string) =>
     fetchApi<{ success: boolean }>(`/packages/${id}`, { method: 'DELETE', token }),
 };
+
+// Admin (development only)
+export const admin = {
+  getBackupStatus: (token: string) =>
+    fetchApi<{
+      lastBackup: number | null;
+      lastSync: number | null;
+      backupFiles: number;
+    }>('/admin/backup-status', { token }),
+
+  triggerBackup: (token: string) =>
+    fetchApi<{ jobId: string; status: string }>('/admin/backup', {
+      method: 'POST',
+      token,
+    }),
+
+  triggerSync: (token: string) =>
+    fetchApi<{ jobId: string; status: string }>('/admin/sync', {
+      method: 'POST',
+      token,
+    }),
+
+  getActiveJob: (token: string) =>
+    fetchApi<{
+      job: {
+        id: string;
+        type: 'backup' | 'sync';
+        status: 'running' | 'completed' | 'failed';
+        output: string;
+        error?: string;
+        startedAt: number;
+        completedAt?: number;
+      } | null;
+    }>('/admin/active-job', { token }),
+};

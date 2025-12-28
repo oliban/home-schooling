@@ -257,4 +257,16 @@ export function getDb(): HomeSchoolingDatabase {
   return dbInstance;
 }
 
+/**
+ * Closes the current database connection and resets the singleton.
+ * The next call to getDb() will create a new connection.
+ * Useful after restoring a database backup.
+ */
+export function resetDb(): void {
+  if (dbInstance) {
+    dbInstance.close();
+    dbInstance = null;
+  }
+}
+
 export type { HomeSchoolingDatabase };
