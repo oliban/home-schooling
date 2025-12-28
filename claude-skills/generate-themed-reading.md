@@ -125,10 +125,29 @@ Batch format with multiple packages (one per story/theme):
 - Long enough to support comprehension questions, short enough to keep attention
 
 ### Story Structure
-- **Beginning**: Introduce character(s) and setting
-- **Middle**: Present a problem, challenge, or interesting event
-- **End**: Resolution or meaningful conclusion
-- **Theme/Message**: Implicit lesson or insight (for SV-MAIN-IDEA questions)
+
+**IMPORTANT**: Vary narrative structure across stories to avoid repetitive patterns. Don't make every story a problem-solution moral lesson.
+
+**Structure Options** (rotate between these):
+
+1. **Problem-Solution**: Character faces challenge → tries different approaches → overcomes it (use sparingly)
+2. **Discovery/Wonder**: Character explores something new → makes observations → gains understanding or appreciation
+3. **Humorous Misunderstanding**: Character misinterprets something → funny situations ensue → confusion cleared up (or not!)
+4. **Unexpected Adventure**: Normal situation → surprising event → exciting developments → surprising conclusion
+5. **Slice-of-Life**: Everyday activity shown in interesting detail → small moments → gentle conclusion (no big lesson)
+6. **Mystery/Curiosity**: Something unusual → investigation → surprising explanation
+7. **Fantasy/Imagination**: Magical or impossible scenario → creative developments → open or whimsical ending
+
+**Ending Variety**:
+- Not every story needs a moral lesson or neat resolution
+- Some can end with wonder, laughter, surprise, or just a moment
+- Twist endings are engaging for comprehension questions
+- Open-ended conclusions work well
+
+**Theme/Message**:
+- Only include explicit moral lessons in ~30% of stories
+- Other stories can have implicit themes or just be entertaining/interesting
+- Humor, wonder, and fun are valuable without always teaching a lesson
 
 ### Content Guidelines
 - **Age-appropriate**: Match vocabulary and concepts to årskurs
@@ -139,6 +158,39 @@ Batch format with multiple packages (one per story/theme):
   - Character motivations/feelings (for SV-CHARACTER)
   - Situations requiring inference (for SV-INFERENCE)
   - Clear theme or message (for SV-MAIN-IDEA)
+
+### Maximizing Story Variety
+
+**Character Diversity** (rotate these across stories):
+- Human children (various ages, personalities, interests)
+- Animals as protagonists (realistic or talking)
+- Fantasy creatures (dragons, trolls, magical beings)
+- Anthropomorphized objects (talking toys, vehicles, household items)
+- Mix of character types in one story
+- Different personality types: curious, cautious, silly, clever, grumpy, enthusiastic
+
+**Tone/Genre Variety**:
+- **Funny/Silly**: Absurd situations, playful language, unexpected humor
+- **Exciting/Action**: Fast-paced events, adventures, narrow escapes
+- **Mysterious**: Puzzles to solve, secrets to uncover, clues to follow
+- **Magical/Fantastical**: Impossible things happen, imagination rules
+- **Realistic/Relatable**: Everyday moments made interesting
+- **Spooky-lite**: Mildly mysterious or eerie (age-appropriate, not scary)
+
+**Setting Variety**:
+- Nature: forest, beach, mountains, underwater, garden, park
+- Urban: city, school, store, library, museum
+- Home: different rooms, backyard, basement, attic
+- Fantastical: space, magical lands, inside toys/games, miniature worlds
+- Seasonal: emphasize different seasons and weather
+
+**Avoid Repetitive Patterns**:
+- Don't make every protagonist learn a lesson
+- Don't always use sibling dynamics
+- Don't always have an adult give wisdom at the end
+- Don't always make characters succeed through perseverance
+- Vary whether conflicts are internal (feelings) or external (events)
+- Mix solo protagonists with groups/pairs
 
 ### Grade-Level Story Complexity
 
@@ -313,6 +365,13 @@ Avoid:
    - Create a 150-250 word story appropriate for the grade level
    - Ensure the story supports the required question types
    - Include the theme creatively
+   - **CRITICAL**: When generating multiple stories in one batch, ensure MAXIMUM VARIETY:
+     - Use different narrative structures (problem-solution, discovery, humor, mystery, etc.)
+     - Use different character types (kids, animals, fantasy creatures, objects)
+     - Use different tones (funny, exciting, mysterious, realistic, magical)
+     - Mix up protagonist dynamics (solo, siblings, friends, groups, etc.)
+     - Vary endings (resolution, surprise, wonder, humor, open-ended)
+     - Only ~1 out of 3 stories should have an explicit moral lesson
 
 3. **Create questions** - For each story:
    - Generate the specified number of questions
@@ -337,10 +396,13 @@ See the Pokemon Äventyr example in the Output Format section above for a comple
 - **Hook the reader**: Start with action, dialogue, or intriguing situation
 - **Show, don't tell**: Use character actions and dialogue to reveal personality
 - **Sensory details**: Include sights, sounds, feelings to make it vivid
-- **Age-appropriate conflict**: Challenges kids can relate to
-- **Satisfying ending**: Resolution that ties to the theme
+- **Age-appropriate conflict**: Challenges kids can relate to (but not always a moral lesson!)
+- **Varied endings**: Sometimes neat resolution, sometimes surprise, sometimes wonder, sometimes just a moment
 - **Vocabulary balance**: Mostly familiar words + a few challenges
 - **Swedish language**: Natural Swedish phrasing, idioms when appropriate
+- **Embrace different tones**: Funny stories can be just funny, mysterious stories just mysterious - not everything needs to be wholesome
+- **Mix character types**: Rotate between human kids, animals, fantasy creatures, objects
+- **Vary narrative voice**: Some playful, some matter-of-fact, some mysterious, some excited
 
 ## Common Mistakes to Avoid
 
@@ -352,10 +414,16 @@ See the Pokemon Äventyr example in the Output Format section above for a comple
 6. ❌ Vocabulary question about a word that's too easy or not in story
 7. ❌ Multiple objectives could apply to same question (be specific)
 8. ❌ Forgetting to include story_text in the package object
+9. ❌ **ALL STORIES FOLLOW THE SAME PATTERN** - This is the biggest problem! Vary structure, characters, tone, and endings
+10. ❌ Every story has a moral lesson - Let stories be fun, mysterious, or silly without always teaching something
+11. ❌ All protagonists are children with siblings - Use animals, fantasy creatures, solo characters, groups, different dynamics
+12. ❌ Every story is wholesome - Kids enjoy humor, mystery, and adventure too
 
 ## Validation Checklist
 
 Before saving output, verify:
+
+**Technical Requirements:**
 - ✅ All stories are 150-250 words
 - ✅ story_text is in the package object (not just description)
 - ✅ Total questions = story_count × questions_per_story
@@ -366,3 +434,12 @@ Before saving output, verify:
 - ✅ LGR22 codes are valid (SV-LITERAL, SV-INFERENCE, SV-MAIN-IDEA, SV-CHARACTER, SV-VOCABULARY)
 - ✅ assignment_type is "reading" (NOT "math")
 - ✅ Saved to data/generated/ directory
+
+**Variety Requirements** (when generating multiple stories):
+- ✅ Stories use DIFFERENT narrative structures (not all problem-solution)
+- ✅ Stories have DIFFERENT character types (mix of kids, animals, fantasy, objects)
+- ✅ Stories have DIFFERENT tones (funny, mysterious, exciting, realistic, magical)
+- ✅ Stories have DIFFERENT endings (not all neat moral lessons)
+- ✅ Maximum 1 out of 3 stories has an explicit moral lesson
+- ✅ Not all protagonists are children with siblings
+- ✅ At least one story should be primarily fun/entertaining without a teaching moment

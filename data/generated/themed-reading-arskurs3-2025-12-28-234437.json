@@ -1,0 +1,200 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Katten och Ödlorna",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "En katt försöker förstå de mystiska små varelserna i trädgården",
+        "story_text": "Mjau satt på verandan och observerade trädgården med sina gröna ögon. Något rörde sig vid stenmuren. Något litet och snabbt.\n\n'Vad är det där?' tänkte Mjau nyfiket.\n\nDen lilla gröna varelsen hade fyra ben och en lång svans. Den låg helt stilla på den varma stenen och blinkade långsamt.\n\nMjau smög närmare. Varelsen rörde sig inte. 'Kanske är det en leksak?' tänkte Mjau. Men leksaker brukar inte blinka.\n\nPlötsligt öppnade varelsen munnen och fångade en fluga! Mjau hoppade till av förvåning.\n\n'Oj! Den äter ju flugor!' Mjau gillade inte flugor. De surrade och retade henne.\n\nNu kom fler av de gröna varelserna. En stor orange, en liten brun, och två till som var gröna. De solbadade alla på stenarna.\n\nMjau försökte räkna dem. 'En, två, tre... fem! Fem ödlor!'\n\nHela eftermiddagen satt Mjau där och tittade. Ödlorna klättrade på stenarna, jagade flugor, och vilade i solen. När kvällen kom försvann de in mellan stenarna.\n\n'Konstiga varelser,' tänkte Mjau och gäspade. 'Men ganska intressanta. Jag undrar om de kommer tillbaka imorgon?'",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder ordet 'observerade' när det beskriver hur Mjau tittade på trädgården?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att hon tittade snabbt och sen sprang iväg direkt",
+            "B: Att hon tittade noga och uppmärksamt på vad som hände",
+            "C: Att hon tittade med stängda ögon och drömde",
+            "D: Att hon tittade åt ett helt annat håll än trädgården"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Hur kände sig Mjau om ödlornas förmåga att fånga flugor?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon blev rädd och sprang och gömde sig direkt",
+            "B: Hon blev avundsjuk och ville själv kunna fånga flugor",
+            "C: Hon blev positivt överraskad eftersom hon inte gillade flugor",
+            "D: Hon blev ledsen för flugornas skull och tyckte synd om dem"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför trodde Mjau först att ödlan kunde vara en leksak?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att den låg så stilla och inte rörde sig",
+            "B: För att den var gjord av plast och hade hjul",
+            "C: För att den hade en nyckel i ryggen som man vred",
+            "D: För att den låg i leklådan tillsammans med hennes bollar"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad handlar berättelsen främst om?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hur man tränar katter att inte jaga andra djur",
+            "B: En katts nyfikna upptäckt av ödlor i trädgården",
+            "C: Varför det är viktigt att räkna alla djur man ser",
+            "D: Hur ödlor och katter kan bli bästa vänner"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Den Magiska Legovärlden",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "Viktor upptäcker att hans legobygge lever sitt eget liv på natten",
+        "story_text": "Viktor hade byggt ett legoslott med torn, portar och en hel legostaden runt omkring. 'Färdigt!' sa han nöjt innan han gick och lade sig.\n\nMitt i natten vaknade Viktor av ett konstigt ljud. Klick, klack, klick. Han tittade mot skrivbordet.\n\nI månskenet såg han något otroligt. Legofigurerna rörde på sig! Riddaren klättrade upp i tornet. Prinsen red på hästen. Draken flaxade med sina plastgade vingar.\n\nViktor gnuggade sig i ögonen. 'Drömmer jag?'\n\nNej, det var verkligt! De små legofigurerna levde! De pratade med små knastrande röster. 'Vakterna, till tornen!' ropade riddaren. 'Draken kommer!'\n\nMen lego-draken ville inte slåss. Den ville bara leka. Den flög runt slottet och gjorde loopings i luften.\n\n'Vänta!' ropade Viktor försiktigt. Alla legofigurerna stannade och tittade på honom.\n\n'Du kan se oss?' frågade prinsen förvånat.\n\n'Ja! Det här är ju mitt slott som jag byggde!' sa Viktor.\n\nRiddaren skrattade. 'Ditt slott på dagen, vårt äventyr på natten!'\n\nNär solen började lysa genom fönstret blev alla legofigurerna stilla igen. Viktor log. 'I kväll bygger jag en drake-grotta,' viskade han.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför gnuggade Viktor sig i ögonen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att han hade fått såpskum i ögonen när han tvättade sig",
+            "B: För att månskenet lyste för starkt genom fönstret och bländade",
+            "C: För att han var trött och ville somna om snabbt",
+            "D: För att han inte kunde tro att legofigurerna verkligen rörde sig"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'knastrande' när det beskriver legofigurernas röster?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att rösterna var höga och skrikiga som en siren",
+            "B: Att rösterna var mjuka och varma som en filt",
+            "C: Att rösterna var små och lite knirkiga som torr plast",
+            "D: Att rösterna var djupa och mörka som ett dån"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Hur var lego-draken annorlunda än vad riddaren verkade tro?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Draken ville leka istället för att slåss och vara farlig",
+            "B: Draken kunde inte flyga utan bara gå på marken",
+            "C: Draken var rädd för riddaren och gömde sig hela tiden",
+            "D: Draken var mycket större än alla trodde den skulle vara"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför ville Viktor bygga en drake-grotta nästa dag?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att han ville fånga draken och hålla den instängd",
+            "B: För att han ville göra legovärlden roligare för figurernas nattäventyr",
+            "C: För att riddaren hade bett honom att bygga det",
+            "D: För att han tyckte slottet var för stort och ville bygga något mindre"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Pratglada Porslinet",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "Badrummets toalett, handfat och dusch har åsikter om allt",
+        "story_text": "'Åh nej, inte igen!' klagade Toaletten. 'Varför lämnar de alltid locket uppe?'\n\n'Sluta gnälla,' sa Handfatet butter. 'Jag får tandkrämsfläckar hela tiden. ÖVERALLT!'\n\nDuschen fnissade upp i hörnet. 'Ni borde höra hur de sjunger när de duschar. Helt falskt!'\n\n'Det är inte vårt jobb att kritisera sången,' sa Toaletten förnämt. 'Vi är viktiga badrumsinredningar!'\n\n'Viktiga?' Tvåldispensern började skratta så att såpbubblor kom ut. 'Jag är den som gör folk rena!'\n\n'Utan mig hade det blivit översvämning!' morrade Golvbrunnen från sitt hörn.\n\n'TYST ALLIHOPA!' ropade Spegeln. 'Jag försöker reflektera här!'\n\nAlla blev tysta. Sedan började Toaletten skratta. Sen Handfatet. Sen alla andra.\n\n'Vi är ju ganska löjliga som bråkar,' sa Duschen. 'Vi jobbar ju i samma badrum!'\n\n'Det har du rätt i,' sa Toaletten. 'Men locket då? Kan de inte stänga det?'\n\n'Och tandkrämsfläckarna?' sa Handfatet.\n\n'Vi får väl bara acceptera hur människor är,' sa Spegeln visligt.\n\nDörren öppnades. En flicka kom in. Alla badrumsprylarna blev snabbt tysta och låtsades vara helt vanliga saker.\n\nMen när hon gick glömde hon locket uppe.\n\n'Typiskt!' viskrade Toaletten.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Varför blev alla badrumsprylar tysta när dörren öppnades?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att de blev rädda att flickan skulle bli arg på dem",
+            "B: För att de var trötta och behövde vila sina röster",
+            "C: För att de låtsades vara vanliga saker när människor var där",
+            "D: För att Spegeln hade sagt åt dem att vara tysta"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'förnämt' när Toaletten pratar?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: På ett fint och lite högfärdigt sätt som om man är viktigare",
+            "B: På ett tyst och försiktigt sätt så knappt någon hör",
+            "C: På ett snabbt och stressat sätt utan att tänka",
+            "D: På ett ledset och olyckligt sätt med gråtfärdig röst"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilken badrumspryl verkade vara mest irriterad över sitt jobb?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Duschen som tröttnade på falsk sång hela tiden",
+            "B: Handfatet som fick tandkrämsfläckar överallt",
+            "C: Golvbrunnen som var ensam nere i hörnet",
+            "D: Spegeln som inte fick koncentrera sig på att reflektera"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad handlar berättelsen egentligen om?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att man alltid ska städa badrummet varje dag annars blir prylarna arga",
+            "B: Att badrumsprylar verkligen kan prata om man lyssnar noga nog",
+            "C: Att det är viktigt att komma ihåg att stänga toalettlocket efter sig",
+            "D: En rolig historia om badrumsprylar som bråkar men som egentligen hör ihop"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    }
+  ]
+}
