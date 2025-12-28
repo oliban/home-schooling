@@ -4,6 +4,7 @@ import { getDb } from '../data/database.js';
 import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateParent } from '../middleware/auth.js';
 import { ocrQueue, type OcrJobData } from '../services/ocr-queue.js';
+import { invalidateAssignmentsCache } from './assignments.js';
 import type { MathPackage, PackageProblem, ImportPackageRequest, BatchImportRequest } from '../types/index.js';
 
 const router = Router();
@@ -485,6 +486,9 @@ router.post('/:id/assign', authenticateParent, async (req, res) => {
 
     // Invalidate packages cache (assignment status changed for this package)
     await invalidatePackagesCache(parentId);
+
+    // Invalidate assignments cache for both parent and child (new assignment affects both views)
+    await invalidateAssignmentsCache(parentId, childId);
 
     res.status(201).json({ id: assignmentId });
   } catch (error) {

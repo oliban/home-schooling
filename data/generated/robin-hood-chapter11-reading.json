@@ -1,0 +1,85 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Robin Hood - Kapitel 11: Låntagaren",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om hur Robin Hood hjälpte en riddare som hade skulder",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vilken årstid var det i början av berättelsen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Det var vinter och snön låg i drivor",
+            "B: Det var vår och blommorna hade börjat växa",
+            "C: Det var höst och löven hade börjat gulna",
+            "D: Det var sommar och solen sken varmt"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför red riddaren av Lea med huvudet nerböjt?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han var trött efter en lång resa",
+            "B: Han var ledsen för att han hade skulder",
+            "C: Han letade efter något han tappat",
+            "D: Han var skadad efter en strid"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför bestämde sig Robin Hood för att hjälpa riddaren istället för att råna honom?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Riddaren var fattig och behövde hjälp mot orättvisa",
+            "B: Riddaren lovade att ge Robin sitt slott senare",
+            "C: Riddaren var Robin Hoods hemliga kusin från förr",
+            "D: Riddaren hotade att kalla på kungens soldater annars"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Hur fick Robin Hood pengar att ge till riddaren?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han hittade en skatt gömd i skogen",
+            "B: Han sålde sina egna värdesaker och vapen",
+            "C: Han bad sina vänner att ge sina pengar",
+            "D: Han tog pengarna från en rik biskop"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad visar den här berättelsen om Robin Hoods sätt att vara rättvis?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han rånar alla rika människor utan undantag hela tiden",
+            "B: Han hjälper bara riddare och andra adelsmän i nöd",
+            "C: Han tar från elaka rika för att hjälpa dem som lider orättvist",
+            "D: Han lånar alltid ut pengar men kräver aldrig tillbaka dem"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-CHARACTER"]
+        }
+      ]
+    }
+  ]
+}

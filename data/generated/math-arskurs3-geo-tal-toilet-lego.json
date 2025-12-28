@@ -1,0 +1,149 @@
+{
+  "package": {
+    "name": "Geometri och Tal - Årskurs 3 (Kjell-Gunbritts Lego-Fängelse)",
+    "grade_level": 3,
+    "category_id": null,
+    "description": "Lägesord, symmetri och tal med tema Kjell-Gunbritt, Lego och fängelse",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "Kjell-Gunbritt bygger ett Lego-fängelse. Toaletten är till vänster om sängen och sängen är till vänster om dörren. Vad är längst till höger?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Dörren",
+        "B: Sängen",
+        "C: Toaletten",
+        "D: Inget av dem"
+      ],
+      "explanation": "Om toaletten är längst till vänster, sedan sängen, så är dörren längst till höger",
+      "difficulty": "easy",
+      "hint": "Rita en linje och placera ut sakerna från vänster till höger",
+      "lgr22_codes": ["MA-GEO-03"]
+    },
+    {
+      "question_text": "I fängelsets matsal står 3 toaletter bredvid varandra, 4 toaletter bakom dem och 2 toaletter framför dem. Hur många toaletter finns det totalt i matsalen?",
+      "correct_answer": "9",
+      "answer_type": "number",
+      "explanation": "3 + 4 + 2 = 9 toaletter",
+      "difficulty": "easy",
+      "hint": "Lägg ihop alla toaletter: bredvid + bakom + framför",
+      "lgr22_codes": ["MA-GEO-03", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Kjell-Gunbritt bygger en symmetrisk Lego-toalett. Hon har 6 gula Lego-klossar på vänster sida. Hur många gula klossar behöver hon på höger sida för att det ska bli symmetriskt?",
+      "correct_answer": "6",
+      "answer_type": "number",
+      "explanation": "Symmetri betyder att båda sidorna ser likadana ut, så hon behöver 6 klossar på höger sida också",
+      "difficulty": "easy",
+      "hint": "Symmetriskt betyder att det ser likadant ut på båda sidor",
+      "lgr22_codes": ["MA-GEO-04"]
+    },
+    {
+      "question_text": "Fängelsets toalettdörr har ett symmetriskt mönster. Överst finns 2 vita Lego-klossar, i mitten 4 röda och nederst 2 vita. Är mönstret symmetriskt uppifrån och ner?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Ja, det är symmetriskt",
+        "B: Nej, det är inte symmetriskt",
+        "C: Det går inte att säga",
+        "D: Bara om man vänder på dörren"
+      ],
+      "explanation": "2 vita överst, 4 röda i mitten, 2 vita nederst - det är symmetriskt uppifrån och ner",
+      "difficulty": "medium",
+      "hint": "Jämför översta raden med nedersta raden",
+      "lgr22_codes": ["MA-GEO-04"]
+    },
+    {
+      "question_text": "Kjell-Gunbritt räknar toaletter i fängelset. Hon räknar 234 toaletter. Vilket sifferord representerar tiotal?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: 2",
+        "B: 3",
+        "C: 4",
+        "D: 234"
+      ],
+      "explanation": "I talet 234 står 3 på tiotalsplatsen, vilket betyder 3 tiotal (30)",
+      "difficulty": "medium",
+      "hint": "I talet 234 är första siffran hundratal, andra siffran tiotal och tredje siffran ental",
+      "lgr22_codes": ["MA-TAL-02"]
+    },
+    {
+      "question_text": "Det finns 456 Lego-klossar i fängelsets byggrum. Hur många hundratal är det?",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "Siffran 4 står på hundratalsplatsen, vilket betyder 4 hundratal (400)",
+      "difficulty": "medium",
+      "hint": "Titta på den första siffran i talet 456",
+      "lgr22_codes": ["MA-TAL-02"]
+    },
+    {
+      "question_text": "Kjell-Gunbritt delar upp 8 Lego-toaletter i 4 lika stora grupper. Hur många toaletter blir det i varje grupp?",
+      "correct_answer": "2",
+      "answer_type": "number",
+      "explanation": "8 ÷ 4 = 2 toaletter i varje grupp",
+      "difficulty": "easy",
+      "hint": "Dela 8 på 4",
+      "lgr22_codes": ["MA-TAL-03"]
+    },
+    {
+      "question_text": "I fängelset finns 12 toaletter. Hälften av dem är vita Lego-toaletter. Hur många vita Lego-toaletter finns det?",
+      "correct_answer": "6",
+      "answer_type": "number",
+      "explanation": "Hälften av 12 är 12 ÷ 2 = 6 toaletter",
+      "difficulty": "easy",
+      "hint": "Hälften betyder delat på 2",
+      "lgr22_codes": ["MA-TAL-03", "MA-TAL-04"]
+    },
+    {
+      "question_text": "Kjell-Gunbritt har byggt 15 Lego-fängelseceller. En tredjedel av cellerna har toalett. Hur många celler har toalett?",
+      "correct_answer": "5",
+      "answer_type": "number",
+      "explanation": "En tredjedel av 15 är 15 ÷ 3 = 5 celler",
+      "difficulty": "medium",
+      "hint": "En tredjedel betyder delat på 3",
+      "lgr22_codes": ["MA-TAL-03", "MA-TAL-04"]
+    },
+    {
+      "question_text": "Det finns 20 fångar i Lego-fängelset. En fjärdedel av dem städar toaletterna. Hur många fångar städar toaletterna?",
+      "correct_answer": "5",
+      "answer_type": "number",
+      "explanation": "En fjärdedel av 20 är 20 ÷ 4 = 5 fångar",
+      "difficulty": "medium",
+      "hint": "En fjärdedel betyder delat på 4",
+      "lgr22_codes": ["MA-TAL-03", "MA-TAL-04"]
+    },
+    {
+      "question_text": "Kjell-Gunbritt har 10 Lego-toaletter. Hon ger bort hälften till sin kompis och sedan hälften av det som är kvar till sin bror. Hur många toaletter har hon kvar?",
+      "correct_answer": "C",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: 2 toaletter",
+        "B: 3 toaletter",
+        "C: 2,5 toaletter",
+        "D: 5 toaletter"
+      ],
+      "explanation": "Först ger hon bort hälften: 10 ÷ 2 = 5 kvar. Sedan ger hon bort hälften av 5: 5 ÷ 2 = 2,5 kvar",
+      "difficulty": "hard",
+      "hint": "Räkna steg för steg: först hälften av 10, sedan hälften av det som blev kvar",
+      "lgr22_codes": ["MA-TAL-03", "MA-TAL-04", "MA-PRO-03"]
+    },
+    {
+      "question_text": "I fängelsets toalettbyggnad finns toaletterna placerade i 3 rader. Översta raden har 102 toaletter, mellersta raden har 98 toaletter och nedersta raden har 203 toaletter. Vilken rad har flest toaletter?",
+      "correct_answer": "C",
+      "answer_type": "multiple_choice",
+      "options": [
+        "A: Översta raden",
+        "B: Mellersta raden",
+        "C: Nedersta raden",
+        "D: Alla har lika många"
+      ],
+      "explanation": "203 är störst av talen 102, 98 och 203, så nedersta raden har flest",
+      "difficulty": "medium",
+      "hint": "Jämför hundratalen först: 1, 0 och 2. Vilket är störst?",
+      "lgr22_codes": ["MA-TAL-02", "MA-TAL-01"]
+    }
+  ]
+}

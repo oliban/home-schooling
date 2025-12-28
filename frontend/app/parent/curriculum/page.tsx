@@ -7,9 +7,11 @@ import { children } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import CoverageChart from '@/components/curriculum/CoverageChart';
+import CustomPromptBuilder from '@/components/curriculum/CustomPromptBuilder';
 import GapAnalysis from '@/components/curriculum/GapAnalysis';
 import GenerationSuggestions from '@/components/curriculum/GenerationSuggestions';
 import ExportButton from '@/components/curriculum/ExportButton';
+import { ObjectiveData } from '@/types/curriculum';
 
 interface ChildData {
   id: string;
@@ -35,6 +37,10 @@ export default function CurriculumDashboard() {
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+
+  // State for custom prompt builder
+  const [selectedObjectives, setSelectedObjectives] = useState<Set<number>>(new Set());
+  const [objectiveDetails, setObjectiveDetails] = useState<Map<number, ObjectiveData>>(new Map());
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -69,6 +75,29 @@ export default function CurriculumDashboard() {
     localStorage.removeItem('parentToken');
     localStorage.removeItem('parentData');
     router.push('/parent/login');
+  };
+
+  // Handle objective selection for custom prompt builder
+  const handleToggleObjective = (objectiveId: number, objective: ObjectiveData) => {
+    setSelectedObjectives(prev => {
+      const next = new Set(prev);
+      if (next.has(objectiveId)) {
+        next.delete(objectiveId);
+      } else {
+        next.add(objectiveId);
+      }
+      return next;
+    });
+
+    setObjectiveDetails(prev => {
+      const next = new Map(prev);
+      if (!next.has(objectiveId)) {
+        next.set(objectiveId, objective);
+      } else {
+        next.delete(objectiveId);
+      }
+      return next;
+    });
   };
 
   const selectedChild = childrenList.find(c => c.id === selectedChildId);
@@ -163,6 +192,20 @@ export default function CurriculumDashboard() {
             <CoverageChart
               childId={selectedChildId}
               childName={selectedChild?.name}
+            />
+          </section>
+        )}
+
+        {/* Custom Prompt Builder Section */}
+        {selectedChildId && selectedChild && (
+          <section className="mb-8">
+            <CustomPromptBuilder
+              childId={selectedChildId}
+              childName={selectedChild.name}
+              childGradeLevel={selectedChild.grade_level}
+              selectedObjectives={selectedObjectives}
+              objectiveDetails={objectiveDetails}
+              onToggleObjective={handleToggleObjective}
             />
           </section>
         )}

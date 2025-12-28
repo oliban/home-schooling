@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter - Kapitel 8: Trolldrycksläraren",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om Harrys första vecka på Hogwarts och mötet med professor Snape",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad gjorde folk när de såg Harry i korridorerna?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De hälsade artigt och gick vidare utan att stirra",
+            "B: De ställde sig på tå för att titta eller vände om för att se honom igen",
+            "C: De sprang iväg för att de var rädda för honom",
+            "D: De ignorerade honom helt och hållet"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vilket problem hade eleverna med att hitta i Hogwarts slott?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Det var för mörkt att se vart man gick i korridorerna",
+            "B: Alla korridorer såg likadana ut och hade samma utseende",
+            "C: Allting flyttade runt mycket, inklusive trappor, porträtt och rustningar",
+            "D: Slottet var för stort och de hade inte fått någon karta"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför var lektionerna i historia så tråkiga?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Läraren var ett spöke som surrade på monotont om namn och årtal",
+            "B: Eleverna fick bara läsa i böcker utan att prata med varandra",
+            "C: Ämnet handlade bara om mugglares historia som ingen var intresserad av",
+            "D: Klassrummet var för varmt vilket gjorde att alla blev sömniga"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför trodde Weasleytvillingarna att Quirrells turban var full av vitlök?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De hade sett honom stoppa vitlök i turbanen en dag",
+            "B: Quirrell hade berättat för dem att han var rädd för vampyrer",
+            "C: Vitlök var ett vanligt skydd mot mörka varelser i allmänhet",
+            "D: Klassrummet luktade vitlök och de trodde det var för att skydda honom överallt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför ställde Snape svåra frågor till Harry i början av lektionen?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han ville testa om Harry verkligen var så begåvad som alla sa",
+            "B: Han ville visa att berömmelse inte är allt och ödmjuka Harry inför klassen",
+            "C: Han trodde att Harry hade läst böckerna och skulle kunna svara rätt",
+            "D: Han ville ge Hermione chansen att visa sina kunskaper genom att svara istället"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför blev Harry bestraffad när Nevilles kittel exploderade?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Harry hade blandat ihop ingredienserna i sin egen kittel också",
+            "B: Harry hade skrattat åt Neville när olyckan hände",
+            "C: Snape anklagade Harry för att medvetet inte varna Neville om felet",
+            "D: Harry och Ron arbetade för nära Neville vilket orsakade olyckan"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad kan man förstå om Hagrids reaktion när Harry berättar om Snape?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hagrid vet något om Snape som han inte vill berätta för Harry",
+            "B: Hagrid tycker att Harry överdriver och borde sluta klaga på lärare",
+            "C: Hagrid är rädd för Snape och vågar inte kritisera honom",
+            "D: Hagrid förstår inte Harrys problem eftersom han aldrig gick på Hogwarts"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vilket tema utforskas i kapitlet genom Harrys upplevelser?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att vänskap är viktigare än berömmelse och framgång i skolan",
+            "B: Att berömmelse och rykte inte alltid leder till rättvisa eller fördelar",
+            "C: Att lärare alltid har rätt även när deras metoder känns orättvisa",
+            "D: Att magiska skolor är farliga platser där man måste vara försiktig"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "package": {
+    "name": "Samband och Förändring - Årskurs 6 (Demon Slayer)",
+    "grade_level": 6,
+    "category_id": null,
+    "description": "Proportionalitet, grafer och koordinatsystem med Demon Slayer-tema",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "Tanjiro har tränat andningstekniker i 3 timmar och lärt sig 12 nya tekniker. Om han tränar i samma takt, hur många tekniker lär han sig på 5 timmar?",
+      "correct_answer": "20",
+      "answer_type": "number",
+      "explanation": "12 tekniker ÷ 3 timmar = 4 tekniker per timme. 4 × 5 = 20 tekniker",
+      "difficulty": "easy",
+      "hint": "Räkna först ut hur många tekniker han lär sig per timme",
+      "lgr22_codes": ["MA-SAM-01", "MA-PRO-04"]
+    },
+    {
+      "question_text": "Nezuko har besegrat 75% av demonerna i en by. Om det fanns 40 demoner från början, hur många har hon besegrat?",
+      "correct_answer": "30",
+      "answer_type": "number",
+      "explanation": "75% av 40 = 0,75 × 40 = 30 demoner",
+      "difficulty": "medium",
+      "hint": "75% är samma sak som 3/4 eller 0,75",
+      "lgr22_codes": ["MA-SAM-01", "MA-TAL-07"]
+    },
+    {
+      "question_text": "Zenitsu springer 150 meter på 30 sekunder. Hur långt springer han på 2 minuter om han håller samma hastighet?",
+      "correct_answer": "600",
+      "answer_type": "number",
+      "explanation": "2 minuter = 120 sekunder. 150 m på 30 s betyder 5 m/s. 5 × 120 = 600 meter",
+      "difficulty": "medium",
+      "hint": "Tänk på att 2 minuter = 120 sekunder",
+      "lgr22_codes": ["MA-SAM-01", "MA-PRO-04"]
+    },
+    {
+      "question_text": "En Hashira kan besegra demoner 4 gånger snabbare än en vanlig demon slayer. Om en vanlig slayer behöver 20 minuter för att besegra en demon, hur lång tid tar det för en Hashira?",
+      "correct_answer": "5",
+      "answer_type": "number",
+      "explanation": "20 minuter ÷ 4 = 5 minuter",
+      "difficulty": "easy",
+      "hint": "4 gånger snabbare betyder att dela tiden med 4",
+      "lgr22_codes": ["MA-SAM-01", "MA-PRO-04"]
+    },
+    {
+      "question_text": "Inosuke samlar poäng genom att besegra demoner. En graf visar att han får 5 poäng per demon. Om grafen visar en rät linje från (0,0) till (8,y), vad är värdet på y?",
+      "correct_answer": "40",
+      "answer_type": "number",
+      "explanation": "5 poäng per demon betyder y = 5 × 8 = 40 poäng",
+      "difficulty": "medium",
+      "hint": "Multiplicera antalet demoner (8) med poängen per demon (5)",
+      "lgr22_codes": ["MA-SAM-02", "MA-SAM-03"]
+    },
+    {
+      "question_text": "En graf visar Tanjiros träningsframsteg. X-axeln visar dagar (0-10) och y-axeln visar antal tränade timmar. Om punkterna ligger på en rät linje genom (0,0) och (5,15), hur många timmar har han tränat dag 10?",
+      "correct_answer": "30",
+      "answer_type": "number",
+      "explanation": "15 timmar på 5 dagar = 3 timmar per dag. På dag 10: 3 × 10 = 30 timmar",
+      "difficulty": "medium",
+      "hint": "Räkna först ut hur många timmar per dag han tränar",
+      "lgr22_codes": ["MA-SAM-02", "MA-SAM-01"]
+    },
+    {
+      "question_text": "Giyu placerar fällor för demoner i ett koordinatsystem. En fälla är på punkt (3,7). Om han flyttar fällan 4 steg åt höger och 2 steg ner, vilken punkt är fällan på nu? Skriv svaret som x,y (t.ex. 5,3)",
+      "correct_answer": "7,5",
+      "answer_type": "text",
+      "explanation": "Från (3,7): 4 steg höger betyder x+4 = 7, 2 steg ner betyder y-2 = 5. Svar: (7,5)",
+      "difficulty": "medium",
+      "hint": "Höger betyder lägg till på x, ner betyder dra ifrån på y",
+      "lgr22_codes": ["MA-SAM-03"]
+    },
+    {
+      "question_text": "I ett koordinatsystem markeras demonernas position. Om en demon är på punkt (6,8) och en annan på punkt (6,2), hur många enheter är det mellan dem?",
+      "correct_answer": "6",
+      "answer_type": "number",
+      "explanation": "Eftersom x är samma (6) räknar vi bara skillnaden i y: 8 - 2 = 6 enheter",
+      "difficulty": "easy",
+      "hint": "De har samma x-koordinat, så räkna bara skillnaden i y",
+      "lgr22_codes": ["MA-SAM-03"]
+    },
+    {
+      "question_text": "Shinobu blandar gift med proportionen 3 delar gift till 7 delar vatten. Om hon vill ha totalt 200 ml blandning, hur många ml gift behöver hon?",
+      "correct_answer": "60",
+      "answer_type": "number",
+      "explanation": "3+7 = 10 delar totalt. 3/10 av 200 = 0,3 × 200 = 60 ml gift",
+      "difficulty": "hard",
+      "hint": "Räkna först ut hur många delar det är totalt (3+7)",
+      "lgr22_codes": ["MA-SAM-01", "MA-PRO-04"]
+    },
+    {
+      "question_text": "En graf visar antalet besegrade demoner över tid. Om grafen är en rät linje och visar punkterna (2,6) och (5,15), hur många demoner besegras per dag?",
+      "correct_answer": "3",
+      "answer_type": "number",
+      "explanation": "Från dag 2 till dag 5 är 3 dagar. Från 6 till 15 demoner är 9 demoner. 9 ÷ 3 = 3 demoner per dag",
+      "difficulty": "hard",
+      "hint": "Räkna skillnaden i demoner delat med skillnaden i dagar",
+      "lgr22_codes": ["MA-SAM-02", "MA-SAM-01"]
+    },
+    {
+      "question_text": "Rengoku kan springa med hastigheten 8 m/s. Om han ökar hastigheten med 25%, hur snabbt springer han då?",
+      "correct_answer": "10",
+      "answer_type": "number",
+      "explanation": "25% av 8 = 2. 8 + 2 = 10 m/s",
+      "difficulty": "medium",
+      "hint": "Räkna först ut vad 25% av 8 är, lägg sedan till detta på 8",
+      "lgr22_codes": ["MA-SAM-01", "MA-TAL-07"]
+    },
+    {
+      "question_text": "I ett koordinatsystem ska fyra vaktposter placeras i hörnen av en rektangel. Tre vaktposter är på (2,3), (2,8) och (7,3). Vad är koordinaterna för den fjärde vaktposten?",
+      "correct_answer": "7,8",
+      "answer_type": "text",
+      "explanation": "För en rektangel måste den fjärde punkten ha x=7 (som (7,3)) och y=8 (som (2,8)). Svar: (7,8)",
+      "difficulty": "hard",
+      "hint": "I en rektangel har motstående sidor samma längd och är parallella",
+      "lgr22_codes": ["MA-SAM-03", "MA-GEO-05"]
+    }
+  ]
+}

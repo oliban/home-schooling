@@ -1,0 +1,119 @@
+{
+  "package": {
+    "name": "Algebra och Problemlösning - Årskurs 6, Gaming Edition",
+    "grade_level": 6,
+    "category_id": "algebra",
+    "description": "Ekvationer, mönster och problemlösning med tema: Geometry Dash, datorer och Fortnite",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "I Geometry Dash samlar du mynt. Du har x mynt och samlar 47 mynt till. Nu har du totalt 125 mynt. Hur många mynt hade du från början? (Lös ekvationen: x + 47 = 125)",
+      "correct_answer": "78",
+      "answer_type": "number",
+      "explanation": "x + 47 = 125. Subtrahera 47 från båda sidor: x = 125 - 47 = 78 mynt",
+      "difficulty": "medium",
+      "hint": "Vad måste du göra med 47 på båda sidor för att få x ensamt?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04", "MA-PRO-05"]
+    },
+    {
+      "question_text": "Din dator har en processor som kör på en viss hastighet. Om du ökar hastigheten med 3 GHz blir den 12 GHz. Vilken hastighet hade processorn från början? (3 + x = 12)",
+      "correct_answer": "9",
+      "answer_type": "number",
+      "explanation": "3 + x = 12. Subtrahera 3 från båda sidor: x = 12 - 3 = 9 GHz",
+      "difficulty": "easy",
+      "hint": "Vad blir 12 minus 3?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04"]
+    },
+    {
+      "question_text": "I Fortnite köper du V-Bucks. Ett skin kostar 3 gånger så många V-Bucks som en emote. Om emoten kostar y V-Bucks och skinet kostar 1200 V-Bucks, hur mycket kostar emoten? (3y = 1200)",
+      "correct_answer": "400",
+      "answer_type": "number",
+      "explanation": "3y = 1200. Dela båda sidor med 3: y = 1200 ÷ 3 = 400 V-Bucks",
+      "difficulty": "medium",
+      "hint": "Hur får du y ensamt om det står 3y?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04", "MA-PRO-06"]
+    },
+    {
+      "question_text": "Du spelar Geometry Dash och din poäng följer ett mönster: 5, 10, 15, 20, ... Vilken blir din poäng vid det 8:e försöket?",
+      "correct_answer": "40",
+      "answer_type": "number",
+      "explanation": "Mönstret ökar med 5 varje gång. Position 8: 5 × 8 = 40 poäng",
+      "difficulty": "medium",
+      "hint": "Hur mycket ökar poängen varje gång? Multiplicera det med positionen.",
+      "lgr22_codes": ["MA-ALG-05", "MA-PRO-06"]
+    },
+    {
+      "question_text": "Din dators RAM-minne fylls enligt mönstret: 2 GB, 4 GB, 8 GB, 16 GB, ... Hur mycket RAM används vid nästa steg i mönstret?",
+      "correct_answer": "32",
+      "answer_type": "number",
+      "explanation": "Varje tal är dubbelt så stort som föregående (multipliceras med 2). 16 × 2 = 32 GB",
+      "difficulty": "medium",
+      "hint": "Vad händer mellan varje tal? Försök hitta regeln!",
+      "lgr22_codes": ["MA-ALG-05", "MA-PRO-05"]
+    },
+    {
+      "question_text": "I Fortnite spelar du 5 matcher per dag. Efter n dagar har du spelat 35 matcher. Hur många dagar har du spelat? (5n = 35)",
+      "correct_answer": "7",
+      "answer_type": "number",
+      "explanation": "5n = 35. Dela båda sidor med 5: n = 35 ÷ 5 = 7 dagar",
+      "difficulty": "easy",
+      "hint": "Hur många gånger får 5 plats i 35?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04", "MA-PRO-06"]
+    },
+    {
+      "question_text": "En ny dator kostar k kronor. Med en rabatt på 800 kr kostar den 6200 kr. Vad var det ursprungliga priset? (k - 800 = 6200)",
+      "correct_answer": "7000",
+      "answer_type": "number",
+      "explanation": "k - 800 = 6200. Addera 800 till båda sidor: k = 6200 + 800 = 7000 kr",
+      "difficulty": "medium",
+      "hint": "Om du tar bort 800 kr och får 6200 kr, vad var summan innan?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04", "MA-PRO-05"]
+    },
+    {
+      "question_text": "I Geometry Dash klarar du banorna enligt mönstret: Nivå 1 tar 3 minuter, nivå 2 tar 5 minuter, nivå 3 tar 7 minuter, nivå 4 tar 9 minuter. Hur lång tid tar nivå 6?",
+      "correct_answer": "13",
+      "answer_type": "number",
+      "explanation": "Mönstret ökar med 2 minuter varje gång. Nivå 5: 11 min, Nivå 6: 13 min",
+      "difficulty": "medium",
+      "hint": "Hur mycket ökar tiden mellan varje nivå? Fortsätt mönstret!",
+      "lgr22_codes": ["MA-ALG-05", "MA-PRO-06"]
+    },
+    {
+      "question_text": "Du köper ett gaming-headset för 450 kr och en mus. Totalt betalar du 850 kr. Hur mycket kostade musen? Skriv upp en ekvation och lös den.",
+      "correct_answer": "400",
+      "answer_type": "number",
+      "explanation": "450 + x = 850, där x är musens pris. x = 850 - 450 = 400 kr",
+      "difficulty": "medium",
+      "hint": "Om headsetet + musen = 850 kr, vad blir musen om du tar bort headsetets pris?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04", "MA-PRO-05"]
+    },
+    {
+      "question_text": "I Fortnite tjänar du XP enligt följande: 100, 200, 300, 400, ... XP per match. Du behöver 1500 XP totalt. Efter hur många matcher har du tillräckligt med XP?",
+      "correct_answer": "5",
+      "answer_type": "number",
+      "explanation": "Match 1: 100, Match 2: 200 (totalt 300), Match 3: 300 (totalt 600), Match 4: 400 (totalt 1000), Match 5: 500 (totalt 1500). Svar: 5 matcher",
+      "difficulty": "hard",
+      "hint": "Räkna upp mönstret och addera XP tills du når 1500.",
+      "lgr22_codes": ["MA-ALG-05", "MA-PRO-05", "MA-PRO-06"]
+    },
+    {
+      "question_text": "Din dator har x GB lagringsutrymme. Du använder 256 GB för spel och har 128 GB kvar. Hur mycket lagring har datorn totalt? (x - 256 = 128)",
+      "correct_answer": "384",
+      "answer_type": "number",
+      "explanation": "x - 256 = 128. Addera 256 till båda sidor: x = 128 + 256 = 384 GB",
+      "difficulty": "medium",
+      "hint": "Vad var totalen innan du använde 256 GB?",
+      "lgr22_codes": ["MA-ALG-03", "MA-ALG-04", "MA-PRO-06"]
+    },
+    {
+      "question_text": "Ett Fortnite Battle Pass kostar 4 gånger så mycket som en emote. Om Battle Pass kostar m V-Bucks och emoten kostar 200 V-Bucks, hur mycket kostar Battle Pass? (m = 4 × 200)",
+      "correct_answer": "800",
+      "answer_type": "number",
+      "explanation": "m = 4 × 200 = 800 V-Bucks",
+      "difficulty": "easy",
+      "hint": "Vad blir 4 gånger 200?",
+      "lgr22_codes": ["MA-ALG-03", "MA-PRO-06"]
+    }
+  ]
+}

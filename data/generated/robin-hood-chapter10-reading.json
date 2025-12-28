@@ -1,0 +1,85 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Robin Hood - Kapitel 10: Ellens Bröllop",
+        "grade_level": 3,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om hur Robin Hood hjälpte Allan och Ellen att gifta sig",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vem skulle Ellen gifta sig med i början av berättelsen?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Allan från Dalen",
+            "B: En rik adelsman som hennes pappa hade valt",
+            "C: Robin Hood",
+            "D: Biskopen"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad klädde Robin ut sig till när han gick till bröllopet?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: En präst i svarta kläder",
+            "B: En riddare med rustning",
+            "C: En spelman med en harpa",
+            "D: En bonde med enkla kläder"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför blåste Robin i hornet inne i kyrkan?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att kalla på sina vänner som väntade utanför",
+            "B: För att varna Allan att inte komma till kyrkan",
+            "C: För att skrämma biskopen att fly från platsen",
+            "D: För att visa att han var en bra musiker"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Hur fick Robin Ellens pappa att godkänna bröllopet med Allan?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han hotade att berätta Ellens hemligheter för alla",
+            "B: Han lovade att bjuda pappan på en stor fest",
+            "C: Han sa att Allan var en hemlig prins",
+            "D: Han visade påsar med guldmynt som Allan kunde ge"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vad lär oss den här berättelsen om Robin Hoods karaktär?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att han alltid följer kyrkans regler och lagar",
+            "B: Att han hjälper vanliga människor mot orättvisa",
+            "C: Att han bara bryr sig om sina egna vänner",
+            "D: Att han vill bli rik genom att stjäla guld"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-CHARACTER"]
+        }
+      ]
+    }
+  ]
+}

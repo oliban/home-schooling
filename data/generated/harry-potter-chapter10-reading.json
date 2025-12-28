@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter - Kapitel 10: Allhelgonaaftonen",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om allhelgonaaftonen när ett troll tar sig in på Hogwarts och Harry och Ron räddar Hermione",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad fick Harry skickat med ugglepost?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Ett brev från sin moster Petunia med order att komma hem",
+            "B: En inbjudan från Dumbledore till ett särskilt möte på kvällen",
+            "C: En Nimbus Tvåtusen kvastkäpp från professor McGonagall",
+            "D: En present från Hagrid med sötsaker från Honungsvägen"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vilka är de tre typerna av bollar som används i quidditch?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Målbollen, hinderbollen och guldkulan som ger extra poäng",
+            "B: Klonken som jagarna kastar, dunkarna som slår och kvicken som ger poäng",
+            "C: Den röda bollen, den svarta bollen och den gyllene bollen",
+            "D: Anfallsbollen, försvarsbollen och den magiska bollen som avgör matchen"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför blev Ron arg på Hermione under lektion med professor Flitwick?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon vägrade att hjälpa honom när han bad om hjälp med svåra ord",
+            "B: Hon skrattade åt honom när han inte kunde få fjädern att flyga",
+            "C: Hon rapporterade honom till professorn för att han inte följde instruktioner",
+            "D: Hon rättade honom på ett nedlåtande sätt inför alla och verkade besserwisseraktig"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad betyder det att kvicken är 'snabb och svår att se' i quidditchspelet?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att sökarens uppgift kräver både uppmärksamhet och snabba reflexer under hela matchen",
+            "B: Att bollen är helt osynlig och bara kan fångas med magi och tur",
+            "C: Att den bara dyker upp i slutet av matchen när alla är trötta",
+            "D: Att den är så liten att den är omöjlig att fånga utan specialutrustning"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför valde Harry och Ron att gå tillbaka och rädda Hermione från trollet?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De ville imponera på professor McGonagall genom att visa sitt mod",
+            "B: De hoppades vinna många poäng för Gryffindor genom en hjälteinsats",
+            "C: De insåg att Hermione var i fara eftersom hon inte visste om trollet",
+            "D: Percy beordrade dem att kontrollera att alla elever var i säkerhet"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Hur förändrades relationen mellan Harry, Ron och Hermione efter trollincidenten?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hermione blev arg på dem för att de hade riskerat sina liv onödigt",
+            "B: De blev vänner eftersom Hermione skyddade dem genom att ljuga för läraren",
+            "C: Ingenting förändrades eftersom de fortfarande tyckte hon var irriterande",
+            "D: Professor McGonagall förbjöd dem att umgås efter den farliga incidenten"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE", "SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vilken trollformel använde Ron för att besegra trollet?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Wingardium Leviosa för att få klubban att sväva och falla på trollet",
+            "B: Expelliarmus för att få trollets vapen att flyga ur dess händer",
+            "C: Stupefy för att bedöva trollet så det föll medvetslöst till golvet",
+            "D: Incendio för att sätta eld på trollet och skrämma bort det"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vilket tema utforskar kapitlet genom scenen där Hermione ljuger för att skydda Harry och Ron?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att lögner alltid är acceptabla om de hjälper ens vänner att undvika straff",
+            "B: Att lärare aldrig bör ifrågasättas även när de har fel om vad som hänt",
+            "C: Att individuella prestationer är viktigare än lagarbete och samarbete",
+            "D: Att verklig vänskap ibland kräver personliga uppoffringar och lojalitet"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-INFERENCE", "SV-CHARACTER"]
+        }
+      ]
+    }
+  ]
+}

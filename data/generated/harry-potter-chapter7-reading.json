@@ -1,0 +1,124 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Harry Potter - Kapitel 7: Sorteringshatten",
+        "grade_level": 6,
+        "category_id": null,
+        "assignment_type": "reading",
+        "description": "Läsförståelse om när Harry och de andra förstaårseleverna sorteras in i sina elevhem",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vem mötte förstaårseleverna vid porten till Hogwarts?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Albus Dumbledore höll ett tal för att välkomna dem",
+            "B: Professor McGonagall tog emot dem och ledde dem vidare",
+            "C: Hagrid följde med dem hela vägen in till Stora salen",
+            "D: Spöken välkomnade dem inne i ett litet vänterum"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vilka är de fyra elevhemmen som eleverna kan sorteras in i?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Morgana, Merlin, Dumbledore och McGonagall",
+            "B: Norr, Söder, Öst och Väst för olika delar av slottet",
+            "C: Gryffindor, Hufflepuff, Ravenclaw och Slytherin",
+            "D: Trollkarlar, Häxor, Spöken och Alver för olika magiska varelser"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Varför kände sig Harry nervös och illamående innan sorteringen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han var rädd för att möta Draco Malfoy igen efter tågresan",
+            "B: Han ville inte äta den stora festmåltiden som väntade",
+            "C: Han oroade sig för att träffa Dumbledore för första gången",
+            "D: Han visste inte vad provet innebar och skulle utföras inför hela skolan"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE", "SV-CHARACTER"]
+        },
+        {
+          "question_text": "Hur fungerade sorteringsprocessen i verkligheten?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: De fick sätta på sig en gammal, magisk hatt som kunde läsa tankar",
+            "B: De tvingades slåss mot ett troll för att visa sitt mod",
+            "C: Professor McGonagall frågade dem vilket hem de ville tillhöra",
+            "D: De fick genomgå ett skriftligt prov i trollformler och besvärjelser"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Varför beskrev Sorteringshatten Slytherin som ett hem där 'sluga rävar nyttjar alla knep att sina mål och syften vinna'?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att varna eleverna att Slytherin är farligt och bör undvikas",
+            "B: För att beskriva att Slytherin värdesätter slug intelligens och målmedvetenhet",
+            "C: För att skämta om att alla i Slytherin är opålitliga och ohederliga",
+            "D: För att förklara att bara elever som fuskar kommer hamna där"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE", "SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vad avslöjar Harrys tanke 'Inte Slytherin, inte Slytherin' om hans karaktär?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han är feg och rädd för att misslyckas med sina studier",
+            "B: Han vill imponera på Ron genom att hamna i samma elevhem",
+            "C: Han har egna värderingar och vill själv påverka sin framtid trots osäkerhet",
+            "D: Han litar inte på Sorteringshatten och tycker processen är orättvis"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-CHARACTER", "SV-INFERENCE", "SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Hur reagerade hatten på Harrys önskan att inte hamna i Slytherin?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Den lyssnade på honom och placerade honom i Gryffindor istället",
+            "B: Den ignorerade hans önskan helt och sorterade efter sina egna regler",
+            "C: Den blev arg och hotade att inte sortera honom överhuvudtaget",
+            "D: Den tvingade honom att motivera varför han ville undvika Slytherin"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-LITERAL", "SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vilket tema utforskar kapitlet genom sorteringsscenen och Harrys inre monolog?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Vikten av att alltid lyda auktoritetsfigurer utan att ifrågasätta dem",
+            "B: Hur talang och medfödd begåvning alltid är viktigare än ansträngning",
+            "C: Att vänskap bara kan uppstå mellan personer som är exakt likadana",
+            "D: Spänningen mellan ödet och den egna viljans betydelse för vem vi blir"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA", "SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

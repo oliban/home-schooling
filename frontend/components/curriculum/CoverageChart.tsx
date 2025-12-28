@@ -320,6 +320,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   const [viewMode, setViewMode] = useState<'categories' | 'objectives'>('categories');
   const [selectedCategories, setSelectedCategories] = useState<Map<string, {x: number, y: number, width: number, height: number}>>(new Map());
   const [flippingCategories, setFlippingCategories] = useState<Set<string>>(new Set());
+  const [isMounted, setIsMounted] = useState(false);
 
   const fetchCoverage = useCallback(async () => {
     if (!childId) return;
@@ -358,6 +359,10 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   useEffect(() => {
     fetchCoverage();
   }, [fetchCoverage]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Handle category click - toggle overlay for that category
   const handleCategoryClick = (categoryName: string, position: {x: number, y: number, width: number, height: number}) => {
@@ -592,9 +597,9 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       {/* Treemap with objectives overlay */}
       <div className="relative h-80">
         {/* Categories grid - ALWAYS rendered, never changes */}
-        {showCategoriesBase && (
+        {showCategoriesBase && isMounted && (
           <div className="absolute inset-0">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
               <Treemap
                 data={categoryData}
                 dataKey="size"
@@ -612,9 +617,9 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         )}
 
         {/* All objectives grid - shown when "All Objectives" clicked */}
-        {!showCategoriesBase && (
+        {!showCategoriesBase && isMounted && (
           <div className="absolute inset-0">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
               <Treemap
                 data={treemapData.flatMap(category => category.children)}
                 dataKey="size"
@@ -649,23 +654,25 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
                 transition: 'transform 0.6s ease-in-out',
               }}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <Treemap
-                  data={objectives}
-                  dataKey="size"
-                  aspectRatio={position.width / position.height}
-                  stroke="#fff"
-                  fill="#8884d8"
-                  content={(props: any) => (
-                    <CustomContent
-                      {...props}
-                      onClick={() => handleObjectiveClick(categoryName)}
-                    />
-                  )}
-                >
-                  <Tooltip content={<CustomTooltip />} />
-                </Treemap>
-              </ResponsiveContainer>
+              {isMounted && (
+                <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+                  <Treemap
+                    data={objectives}
+                    dataKey="size"
+                    aspectRatio={position.width / position.height}
+                    stroke="#fff"
+                    fill="#8884d8"
+                    content={(props: any) => (
+                      <CustomContent
+                        {...props}
+                        onClick={() => handleObjectiveClick(categoryName)}
+                      />
+                    )}
+                  >
+                    <Tooltip content={<CustomTooltip />} />
+                  </Treemap>
+                </ResponsiveContainer>
+              )}
             </div>
           );
         })}

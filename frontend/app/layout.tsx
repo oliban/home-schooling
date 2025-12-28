@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { LanguageProvider } from '@/lib/LanguageContext';
+import { RechartsWarningFilter } from '@/lib/RechartsWarningFilter';
 
 export const metadata: Metadata = {
   title: 'Brainrot-skolan - Läxor för barn',
@@ -13,8 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="sv">
+    <html lang="sv" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50">
+        <RechartsWarningFilter />
         <LanguageProvider>
           {children}
         </LanguageProvider>
