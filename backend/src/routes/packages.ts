@@ -196,8 +196,8 @@ router.post('/import', authenticateParent, async (req, res) => {
         const assignmentType = pkg.assignment_type || (pkg.category_id === null && problems.every(p => p.answer_type === 'multiple_choice') ? 'reading' : 'math');
 
         db.run(
-          `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, difficulty_summary, description, is_global)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, difficulty_summary, description, story_text, is_global)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             packageId,
             req.user!.id,
@@ -208,6 +208,7 @@ router.post('/import', authenticateParent, async (req, res) => {
             problems.length,
             JSON.stringify(difficultySummary),
             pkg.description || null,
+            pkg.story_text || null,
             globalFlag ? 1 : 0
           ]
         );

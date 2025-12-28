@@ -1,0 +1,124 @@
+{
+  "package": {
+    "name": "Matematik Årskurs 6 - Pokemon, Zebror & Katter",
+    "grade_level": 6,
+    "category_id": null,
+    "description": "Blandade uppgifter med magiska äventyr",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "Ash har 247 Pokémon och uppskattar att han behöver fånga ungefär 250 för att fylla sin Pokédex. Är hans uppskattning rimlig?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "247 är mycket nära 250, så uppskattningen är rimlig. Skillnaden är bara 3 Pokémon.",
+      "difficulty": "easy",
+      "hint": "Jämför hur nära 247 är till 250",
+      "lgr22_codes": ["MA-TAL-12"]
+    },
+    {
+      "question_text": "En magisk zebra springer 3 789 meter på en dag. Trollkarlen uppskattar att zebran springer ungefär 4 000 meter. Hur många meter skiljer det mellan verkligheten och uppskattningen?",
+      "correct_answer": "211",
+      "answer_type": "number",
+      "explanation": "4 000 - 3 789 = 211 meter. Uppskattningen är 211 meter för hög.",
+      "difficulty": "medium",
+      "hint": "Räkna skillnaden mellan den uppskattade sträckan och den verkliga sträckan",
+      "lgr22_codes": ["MA-TAL-12", "MA-PRO-04"]
+    },
+    {
+      "question_text": "En trollkatt kan teleportera 48 gånger per dag. Om katten säger att den kan teleportera ungefär 50 gånger, hur många procent skiljer det från verkligheten? (Avrunda till närmaste heltal)",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "Skillnad: 50 - 48 = 2. Procent: (2 ÷ 48) × 100 ≈ 4,17% ≈ 4%",
+      "difficulty": "hard",
+      "hint": "Räkna först skillnaden, sedan räkna ut hur många procent det är av det verkliga värdet",
+      "lgr22_codes": ["MA-TAL-12", "MA-TAL-07"]
+    },
+    {
+      "question_text": "Pikachu samlar bär. Han uppskattar att han har plockat 1 500 bär. I verkligheten har han 1 473 bär. Är uppskattningen inom 50 bär från verkligheten?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "Skillnad: 1 500 - 1 473 = 27 bär. Eftersom 27 < 50 är uppskattningen inom 50 bär.",
+      "difficulty": "medium",
+      "hint": "Räkna ut skillnaden och jämför med 50",
+      "lgr22_codes": ["MA-TAL-12"]
+    },
+    {
+      "question_text": "En magisk zebra delar ut 15 magiska stenar lika mellan 3 kompisar. Om vi skriver detta som 15 = 3 × __, vilket tal ska stå på den tomma platsen?",
+      "correct_answer": "5",
+      "answer_type": "number",
+      "explanation": "15 ÷ 3 = 5, så 15 = 3 × 5. Varje kompis får 5 stenar.",
+      "difficulty": "easy",
+      "hint": "Dela 15 med 3 för att få svaret",
+      "lgr22_codes": ["MA-ALG-01", "MA-PRO-04"]
+    },
+    {
+      "question_text": "Mew använder telekinesi och flyttar lådor. Om 7 + 8 = 15, vilket uttryck är också sant?",
+      "correct_answer": "C",
+      "answer_type": "multiple_choice",
+      "options": ["A: 15 - 7 = 9", "B: 8 + 8 = 15", "C: 15 - 8 = 7", "D: 7 + 7 = 15"],
+      "explanation": "Om 7 + 8 = 15, då är 15 - 8 = 7 också sant. Det är samma likhet, bara omvänd.",
+      "difficulty": "medium",
+      "hint": "Tänk på hur addition och subtraktion hänger ihop",
+      "lgr22_codes": ["MA-ALG-01"]
+    },
+    {
+      "question_text": "En trollkatt blandar trolldrycker. Hon vet att 12 + 18 = 30. Om hon tar bort 12 droppar från 30, hur många droppar har hon kvar?",
+      "correct_answer": "18",
+      "answer_type": "number",
+      "explanation": "Eftersom 12 + 18 = 30, så är 30 - 12 = 18. Likhetstecknet fungerar åt båda hållen.",
+      "difficulty": "easy",
+      "hint": "Använd att 12 + 18 = 30 för att lösa uppgiften",
+      "lgr22_codes": ["MA-ALG-01"]
+    },
+    {
+      "question_text": "Charizard flyger en sträcka på __ kilometer på morgonen och 25 kilometer på kvällen, totalt 60 kilometer. Vilket uttryck beskriver detta? (__står för det obekanta talet)",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": ["A: __ - 25 = 60", "B: __ + 25 = 60", "C: __ × 25 = 60", "D: 25 - __ = 60"],
+      "explanation": "Morgon + kväll = totalt, alltså __ + 25 = 60. Det obekanta talet är 35 km.",
+      "difficulty": "medium",
+      "hint": "Tänk på att totala sträckan är summan av morgon och kväll",
+      "lgr22_codes": ["MA-ALG-01", "MA-ALG-03"]
+    },
+    {
+      "question_text": "En zebra ritar en magisk cirkel med en diameter på 8 cm. Hur lång måste radiestrecket vara som zebran ritar från mitten till kanten?",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "Radien är hälften av diametern. 8 ÷ 2 = 4 cm.",
+      "difficulty": "easy",
+      "hint": "Radien är hälften av diametern",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-05"]
+    },
+    {
+      "question_text": "En trollkatt ritar en triangel där två sidor är 5 cm och en sida är 8 cm. Vilken typ av triangel är detta?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": ["A: Liksidig triangel", "B: Likbent triangel", "C: Rätvinklig triangel", "D: Trubbvinklig triangel"],
+      "explanation": "En likbent triangel har två sidor som är lika långa. Här är två sidor 5 cm.",
+      "difficulty": "medium",
+      "hint": "En likbent triangel har två sidor som är lika långa",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-05"]
+    },
+    {
+      "question_text": "Pikachu konstruerar en rektangel med längden 12 cm och bredden 5 cm. Hur lång blir omkretsen?",
+      "correct_answer": "34",
+      "answer_type": "number",
+      "explanation": "Omkrets = 2 × längd + 2 × bredd = 2 × 12 + 2 × 5 = 24 + 10 = 34 cm",
+      "difficulty": "medium",
+      "hint": "Omkretsen är summan av alla sidor: längd + bredd + längd + bredd",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-07"]
+    },
+    {
+      "question_text": "En magisk zebra ritar en kvadrat där varje sida är 9 cm. Om zebran sedan ritar diagonalerna i kvadraten, hur många trianglar bildas inuti kvadraten?",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "När man ritar båda diagonalerna i en kvadrat delar de upp den i 4 lika stora trianglar.",
+      "difficulty": "medium",
+      "hint": "Rita en kvadrat och teckna båda diagonalerna från hörn till hörn",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-05"]
+    }
+  ]
+}

@@ -262,9 +262,17 @@ router.get('/:id', authenticateAny, (req, res) => {
     }
 
     let questions: (MathProblem | ReadingQuestion | (PackageProblem & Partial<AssignmentAnswer>))[] = [];
+    let storyText: string | null = null;
 
     // Package-based assignments (both math and reading) load from package_problems
     if (assignment.package_id) {
+      // Get package details (including story_text for reading assignments)
+      const pkg = db.get<{ story_text: string | null }>(
+        'SELECT story_text FROM math_packages WHERE id = ?',
+        [assignment.package_id]
+      );
+      storyText = pkg?.story_text || null;
+
       const rawQuestions = db.all<PackageProblem & Partial<AssignmentAnswer>>(
         `SELECT pp.*, aa.child_answer, aa.is_correct, aa.answered_at, aa.attempts_count, aa.hint_purchased, aa.scratch_pad_image
          FROM package_problems pp
@@ -332,7 +340,8 @@ router.get('/:id', authenticateAny, (req, res) => {
 
     res.json({
       ...assignment,
-      questions
+      questions,
+      story_text: storyText
     });
   } catch (error) {
     console.error('Get assignment error:', error);

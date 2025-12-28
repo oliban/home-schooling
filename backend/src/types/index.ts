@@ -110,6 +110,7 @@ export interface MathPackage {
   problem_count: number;
   difficulty_summary: string | null;
   description: string | null;
+  story_text: string | null;
   is_global: number;
   created_at: string;
   is_active: number;
@@ -149,6 +150,7 @@ export interface ImportPackageRequest {
     category_id?: string;
     assignment_type?: 'math' | 'reading';
     description?: string;
+    story_text?: string;
     global?: boolean;
   };
   problems: Array<{

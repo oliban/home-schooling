@@ -343,7 +343,7 @@ For `answer_type: "multiple_choice"`:
 4. Use Swedish number format (comma for decimals: 3,5 not 3.5)
 5. Currency is always "kr" (kronor)
 6. **Always include `lgr22_codes`** - an array of objective codes for curriculum tracking
-7. **Always save generated files to `/data/generated/` directory** - use descriptive filenames like `math-arskurs3-geometri-YYYY-MM-DD.json`
+7. **Always save generated files to `/data/generated/` directory** - use descriptive filenames like `math-arskurs3-geometri-YYYY-MM-DD-HHMMSS.json` (timestamp prevents overwriting if multiple runs happen on the same day)
 8. **Text-to-Speech Pronunciation**: When using the multiplication symbol, write "×" (multiplication sign) or spell out "gånger" instead of using "x" (lowercase letter x), as text-to-speech will pronounce "x" as the letter "X" rather than "times/gånger". Example: Write "3 × 4" or "3 gånger 4", NOT "3 x 4".
 
 ## LGR 22 Objective Codes Reference

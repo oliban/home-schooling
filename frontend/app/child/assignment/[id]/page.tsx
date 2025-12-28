@@ -42,6 +42,7 @@ interface AssignmentData {
   created_at: string;
   completed_at: string | null;
   questions: Question[];
+  story_text?: string | null;
 }
 
 export default function AssignmentPage() {
@@ -75,6 +76,7 @@ export default function AssignmentPage() {
   const [completed, setCompleted] = useState(false);
   const [purchasedHint, setPurchasedHint] = useState<string | null>(null);
   const [buyingHint, setBuyingHint] = useState(false);
+  const [storyCollapsed, setStoryCollapsed] = useState(false);
   const sketchPadRef = useRef<SketchPadHandle>(null);
 
   useEffect(() => {
@@ -345,6 +347,48 @@ export default function AssignmentPage() {
           />
         </div>
       </div>
+
+      {/* Story Text (for themed reading assignments) - Always visible, collapsible */}
+      {assignment.assignment_type === 'reading' && assignment.story_text && (
+        <div className="max-w-5xl mx-auto px-8 pt-6">
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl shadow-sm overflow-hidden">
+            {/* Header with toggle button */}
+            <button
+              onClick={() => setStoryCollapsed(!storyCollapsed)}
+              className="w-full flex items-center justify-between p-6 hover:bg-amber-100 transition-colors"
+              aria-expanded={!storyCollapsed}
+              aria-label={storyCollapsed ? 'Visa berättelsen' : 'Dölj berättelsen'}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">📖</span>
+                <h2 className="text-xl font-bold text-amber-900">Läs berättelsen</h2>
+              </div>
+              <div className="flex items-center gap-2 text-amber-700">
+                <span className="text-sm font-medium">
+                  {storyCollapsed ? 'Visa' : 'Dölj'}
+                </span>
+                <svg
+                  className={`w-5 h-5 transition-transform ${storyCollapsed ? '' : 'rotate-180'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+
+            {/* Story content - collapsible */}
+            {!storyCollapsed && (
+              <div className="px-6 pb-6 prose max-w-none text-gray-800 leading-relaxed border-t border-amber-200 pt-4">
+                {assignment.story_text.split('\n\n').map((paragraph, i) => (
+                  <p key={i} className="mb-4">{paragraph}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Question */}
       <div className="max-w-5xl mx-auto p-8">

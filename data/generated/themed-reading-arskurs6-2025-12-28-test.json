@@ -1,0 +1,200 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Pokemon Äventyr - Pikachus Mod",
+        "grade_level": 6,
+        "assignment_type": "reading",
+        "description": "En berättelse om Pikachu som hjälper en rädd Eevee",
+        "story_text": "Det var en kylig höstmorgon när Pikachu och Ash vandrade genom Viridian-skogen. Pikachu hoppade glatt mellan löven och samlade bär till deras frukost. Plötsligt hörde de ett förtvivlat tjut.\n\n\"Pika pika!\" utbrast Pikachu och rusade mot ljudet. Bakom en stor ek fann de en liten Eevee som satt fast i ett gammalt nät. Eevees päls var tovrig och den skakade av rädsla.\n\n\"Lugn, vi hjälper dig,\" sa Ash försiktigt. Men när han närmade sig spände Eevee alla muskler och knorrade varningen.\n\nPikachu förstod att Eevee var livrädd. Istället för att använda sin elektriska kraft, började Pikachu humma en lugn melodi. Sakta men säkert slappnade Eevee av. Pikachu fortsatte sjunga medan Ash försiktigt klippte bort nätet.\n\nNär Eevee äntligen var fri, tittade den upp på Pikachu med tacksamhet i blicken. Istället för att fly stannade Eevee kvar. Det visade sig att den var vilse och ensam.\n\n\"Vill du följa med oss?\" frågade Ash vänligt. Eevee nickade ivrigt.\n\nPå vägen tillbaka till lägret insåg Ash något viktigt: ibland är medkänsla och tålamod starkare vapen än någon attack.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Var hittade Pikachu och Ash den lilla Eevee?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: I en grotta djupt inne i skogen",
+            "B: Bakom en stor ek, fastnade i ett gammalt nät",
+            "C: Uppe i ett träd där den hade klättrat upp",
+            "D: Vid en å där den försökte dricka vatten"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'förtvivlat' när texten beskriver Eevees tjut?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Ett glatt och upprött läte som visar glädje",
+            "B: Ett tyst och knappt hörbart läte",
+            "C: Ett hopplöst och desperat läte som visar nöd",
+            "D: Ett argt och hotfullt läte som varnar fiender"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vad visar Pikachus sätt att hjälpa Eevee om dess karaktär?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Pikachu föredrar att alltid använda sin starkaste attack först",
+            "B: Pikachu är rädd för att närma sig andra Pokemon",
+            "C: Pikachu är empatisk och kan anpassa sitt sätt att hjälpa efter situationen",
+            "D: Pikachu bryr sig bara om Pokemon som redan är dess vänner"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vilket huvudbudskap förmedlar berättelsen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Elektriska attacker är alltid det bästa sättet att lösa problem",
+            "B: Man ska undvika rädda djur eftersom de kan vara farliga",
+            "C: Medkänsla och tålamod kan vara kraftfullare än fysisk styrka",
+            "D: Det är viktigt att samla bär för att ha tillräckligt med mat"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Zebror och Magi - Den Gyllene Strimmans Hemlighet",
+        "grade_level": 6,
+        "assignment_type": "reading",
+        "description": "En zebra upptäcker sina magiska krafter",
+        "story_text": "Zara var inte som andra zebror i savannens hjord. Medan de andra hade vanliga svart-vitaränder, lyste en av Zaras ränder svagt med en gyllene glöd när månen var full.\n\n\"Det är konstigt,\" brukade de äldre zebrorna viska. \"Det har aldrig hänt förut.\"\n\nEn kväll när Zara drack vid vattenhålet, såg hon sin reflektion dansa i vattnet. Den gyllene randen pulserade starkare än någonsin. Plötsligt hörde hon en röst i vinden: \"Den som bär guldets tecken kan tala med växternas själar.\"\n\nZara trodde knappt sina öron. Hon vände sig mot ett torrt akaciaträd och viskade försiktigt: \"Kan du höra mig?\"\n\nTrädet svarade med ett mjukt prassel. \"Vi har väntat på dig, gyllene. Savannens växter behöver någon som kan förmedla vårt budskap till djuren.\"\n\nUnder de följande veckorna lärde sig Zara att lyssna på gräset, träden och blommorna. Hon upptäckte att växterna kunde varna för torka, visa var vatten fanns och berätta vilka vägar som var säkra att vandra.\n\nNär den stora torkan kom och hjorden blev desperat, ledde Zara dem till en dold källa som ingen annan visste om. Från den dagen såg de inte längre hennes gyllene rand som konstig, utan som en gåva som räddade dem alla.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad var speciellt med Zaras utseende?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon var helt gyllene utan några svarta ränder alls",
+            "B: Hon hade fler ränder än de andra zebrorna",
+            "C: Hon var större och starkare än andra zebror",
+            "D: En av hennes ränder lyste med en gyllene glöd"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad betyder 'förmedla' i meningen 'förmedla vårt budskap till djuren'?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att gömma eller dölja information från andra",
+            "B: Att överföra eller kommunicera information mellan parter",
+            "C: Att skriva ner och bevara information för framtiden",
+            "D: Att förändra eller översätta information till nytt språk"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Hur förändrades hjordens inställning till Zara under berättelsen?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Från att se hennes gyllene rand som konstig till att se den som en värdefull gåva",
+            "B: De var alltid positiva till henne och hennes speciella förmågor",
+            "C: De blev mer och mer misstänksamma och rädda för hennes krafter",
+            "D: Deras åsikt förändrades inte alls under historiens gång"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vilket budskap förmedlar berättelsen om att vara annorlunda?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Det är bäst att dölja det som gör dig annorlunda",
+            "B: Det som gör dig annorlunda kan vara din största styrka",
+            "C: Alla måste acceptera dig exakt som du är från början",
+            "D: Magiska krafter är viktigare än vänskap och gemenskap"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Katter och Magi - Lunas Drömbokhandel",
+        "grade_level": 6,
+        "assignment_type": "reading",
+        "description": "En katt driver en magisk bokhandel där drömmar blir verklighet",
+        "story_text": "På Drömmargatan nummer 13 låg en liten bokhandel som få människor lade märke till. Men varje natt, när klockan slog midnatt, tändes lamporna och Luna, en elegant svart katt med silvergrå ögon, öppnade dörren för sina särskilda kunder.\n\nLunas bokhandel var inte som andra. Böckerna på hyllorna innehöll inga vanliga berättelser utan riktiga drömmar, samlade från människor över hela världen. En bok kunde innehålla en barndomsdröm om att flyga, en annan en tonårsdröm om att bli musiker.\n\nEn novemberkväll kom en liten flicka vid namn Elsa in i butiken. Hon hade följt en gyllene fjäril som fladdrat in genom hennes fönster.\n\n\"Välkommen,\" muttrade Luna och hoppade upp på disken. \"Du letar efter något, eller hur?\"\n\nElsa nickade försiktigt. \"Jag har tappat något... min dröm om att måla. Jag har glömt hur det känns att vilja skapa.\"\n\nLuna förde Elsa till en speciell hylla längst bak. Där stod en liten bok med pärlemorvit pärm.\n\n\"Detta är din egen dröm,\" förklarade Luna. \"Du lämnade den här för länge sedan när du blev rädd för att misslyckas.\"\n\nNär Elsa öppnade boken fylldes rummet av färger och minnen. Hon såg sig själv som sjuåring, hur hon målat sin första solnedgång och känt den där magiska känslan av att skapa.\n\n\"Får jag ta med den hem?\" frågade Elsa.\n\nLuna log sitt kattleende. \"Den har alltid varit din. Jag har bara bevarat den åt dig.\"",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "När öppnade Lunas bokhandel för kunder?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Varje morgon när solen gick upp",
+            "B: På eftermiddagarna efter skolan",
+            "C: Varje natt när klockan slog midnatt",
+            "D: Bara på helgerna när folk hade tid"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad betyder 'bevara' i meningen 'Jag har bara bevarat den åt dig'?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att hålla något säkert och skyddat för framtiden",
+            "B: Att sälja något till högsta budgivare",
+            "C: Att förstöra eller göra sig av med något",
+            "D: Att förändra något till något helt annorlunda"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Varför hade Elsa lämnat sin dröm i bokhandeln?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon tyckte inte längre om att måla och ville prova något nytt",
+            "B: Hon hade blivit rädd för att misslyckas med sin konst",
+            "C: Hennes föräldrar hade förbjudit henne att måla",
+            "D: Hon hade glömt bort var hon lagt sina målarfärger"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad symboliserar Lunas bokhandel i berättelsen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att böcker alltid är bättre än verkliga upplevelser",
+            "B: Att katter är klokare än människor i alla situationer",
+            "C: Att det är farligt att ha stora drömmar och ambitioner",
+            "D: Att våra drömmar och passioner finns kvar inom oss även när vi tror vi förlorat dem"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    }
+  ]
+}

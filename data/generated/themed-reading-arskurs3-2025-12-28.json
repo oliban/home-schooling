@@ -1,0 +1,200 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Ödlejakt i Trädgården",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "En berättelse om Felix som jagar ödlor i sin trädgård",
+        "story_text": "Det var en solig sommardag och Felix smög försiktigt genom trädgården. Han hade sett en grön ödla mellan stenarna vid muren och ville titta på den lite närmare. Med sin glasburk i handen gick han fram steg för steg. Ödlan vilade på en varm sten och solade sig i värmen.\n\nPlötsligt rusade Felix fram, men ödlan var snabbare. Den försvann blixtrsnabbt mellan buskarna! Felix kände sig lite besviken men gav inte upp. Han vattnade trädgården med sin syster Emma och väntade tålmodigt.\n\nEfter en stund kom ödlan tillbaka. Den älskade att ligga i solen. Den här gången var Felix försiktigare. Han satte sig helt stilla på gräset och bara tittade. Ödlan kom närmare och närmare. Till slut var den bara en halv meter från honom!\n\n'Titta Emma!' viskade Felix glatt. 'Nu fick jag se den alldeles nära!'\n\nEmma log. 'Du var ju klokare den här gången,' sa hon. 'Ibland är det bättre att vänta än att jaga.'",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Var såg Felix den gröna ödlan första gången?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Under en buske vid staketet",
+            "B: Mellan stenarna vid muren",
+            "C: På gräsmattan vid trädet",
+            "D: Vid blommorna nära verandan"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'blixtrsnabbt' när texten beskriver hur ödlan försvann?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: På ett försiktigt och tyst sätt",
+            "B: På ett långsamt och försiktigt sätt",
+            "C: På ett otroligt snabbt och hastigt sätt",
+            "D: På ett klumpigt och knöligt sätt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Varför kom ödlan tillbaka efter att Felix hade vattnat trädgården?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Den ville dricka ur vattenkranen",
+            "B: Den älskade att sola sig på stenarna",
+            "C: Den blev nyfiken på glasburken",
+            "D: Den ville leka med Felix och Emma"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        },
+        {
+          "question_text": "Vilket huvudbudskap förmedlar berättelsen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Ödlor är farliga djur som man ska hålla sig borta från",
+            "B: Det är roligt att samla djur i glasburkar",
+            "C: Syster och bror ska alltid hjälpa varandra",
+            "D: Ibland får man bättre resultat genom tålamod än genom att stressa"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Legoslottet",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "En berättelse om Maja och Noah som bygger tillsammans",
+        "story_text": "Maja och Noah hade tömt hela legoasken på golvet i vardagsrummet. Det låg legobitar överallt! De skulle bygga det största slottet någonsin.\n\n'Jag vill bygga tornen!' sa Maja entusiastiskt och började stapla röda och blåa bitar. Noah tyckte det lät bra. Han började istället bygga murarna runt slottet. Han valde grå och bruna bitar för att det skulle se äkta ut.\n\nEfter en stund började det bli svårt. Majas torn blev alldeles för höga och vingliga. De ramlade hela tiden! Noah såg hur besviken hon blev.\n\n'Vänta,' sa Noah och tänkte efter. 'Om vi gör tornen bredare nere vid basen så blir de stabilare.' Han visade henne hur.\n\nMaja försökte igen med Noahs tips. Nu höll tornen! De byggde vidare tillsammans och hjälptes åt med de svåra delarna. Till slut stod där ett fantastiskt legoslott med fyra höga torn, tjocka murar och till och med en liten port.\n\n'Vi är ett bra team!' sa Maja stolt och klappade Noah på axeln. 'Ditt slott blev snyggt,' svarade Noah med ett leende. 'Nej, VÅRT slott!' rättade Maja.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vilka färger valde Noah för murarna runt slottet?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Röda och blåa legobitar",
+            "B: Gröna och gula legobitar",
+            "C: Grå och bruna legobitar",
+            "D: Vita och svarta legobitar"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Vad visar Noahs sätt att hjälpa Maja om hans karaktär?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han är omtänksam och tycker om att hjälpa andra att lyckas",
+            "B: Han vill alltid bestämma hur andra ska bygga sina saker",
+            "C: Han tycker att hans egna idéer är bättre än andras",
+            "D: Han blir lätt irriterad när någon gör fel"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'entusiastiskt' när det beskriver hur Maja pratade?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: På ett tyst och försiktigt sätt med oro",
+            "B: På ett ivrigt och glatt sätt med energi",
+            "C: På ett argt och irriterat sätt med besvikelse",
+            "D: På ett trött och ointresserat sätt med leda"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Varför rättade Maja Noah när han sa 'ditt slott'?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon ville inte att Noah skulle få äran för bygget",
+            "B: Hon tyckte att Noah hade gjort fel under bygget",
+            "C: Hon ville visa att de hade byggt slottet tillsammans som ett lag",
+            "D: Hon var fortfarande besviken över sina fallna torn"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Badrumsmysteriet",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "En berättelse om Linus som löser ett mysterium i badrummet",
+        "story_text": "Linus stod i badrummet och stirrade på golvet. Det var alldeles vått! Små vattenpölar låg här och där, och handduken som hade hängt på kroken låg i en blöt hög på golvet.\n\n'Vem har stänkt vatten överallt?' frågade mamma när hon kom in. Linus skakade på huvudet. Det hade inte varit han. Hans lillasyster Stella hade ju duschat före honom, men hon sa att hon hade varit försiktig.\n\nLinus tittade runt i badrummet som en detektiv. Han undersökte toaletten, handfatet och duschen. Plötsligt såg han något konstigt. Duschslangen hade ett litet hål! När han öppnade kranen sprutade vatten åt sidan genom hålet istället för att bara gå ner i duschen.\n\n'Titta mamma!' ropade Linus. 'Jag vet varför det är vått!' Han visade henne hålet i slangen. Mamma blev förvånad.\n\n'Vilket skarpt öga du har!' sa mamma. 'Då måste vi köpa en ny slang. Tack vare dig vet vi nu att det inte var någons fel.'\n\nStella kom in och såg lättad ut. 'Jag visste att jag hade varit försiktig!' sa hon. Linus log. Det kändes bra att ha löst mysteriet.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad låg i en blöt hög på badrumsgolvet?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: En handduk som hade hängt på kroken",
+            "B: En badmatta som hade legat framför duschen",
+            "C: En tvål som hade fallit ur tvålkoppen",
+            "D: En pyjamasdress som någon hade glömt"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-LITERAL"]
+        },
+        {
+          "question_text": "Hur kände sig Stella när Linus hade löst mysteriet?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon blev arg för att Linus hade blandat sig i",
+            "B: Hon kände sig lättad eftersom det inte var hennes fel",
+            "C: Hon blev ledsen för att hon inte löst mysteriet själv",
+            "D: Hon blev förvånad över att slangen var trasig"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad betyder ordet 'skarpt' när mamma säger att Linus har ett skarpt öga?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att ögat ser ut som något vasst och spetsigt",
+            "B: Att ögat gör ont och behöver undersökas",
+            "C: Att ögat kan se saker som är långt borta",
+            "D: Att han är uppmärksam och märker små viktiga detaljer"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilket budskap förmedlar berättelsen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Det är viktigt att alltid städa badrummet efter sig",
+            "B: Duschslangar måste bytas ut varje år för säkerheten",
+            "C: Genom att undersöka noggrant kan man hitta lösningar istället för att skylla på andra",
+            "D: Stora syskon ska alltid hjälpa små syskon med problem"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        }
+      ]
+    }
+  ]
+}

@@ -670,4 +670,86 @@ describe('Math Package System', () => {
       });
     });
   });
+
+  describe('Story Text for Themed Reading', () => {
+    it('should store story_text in reading packages', () => {
+      const db = getDb();
+      const storyPackageId = uuidv4();
+      const testStory = 'Det var en gång en liten pokemon som hette Pikachu. Han bodde i en skog full av äventyr...';
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, assignment_type, problem_count, story_text, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [storyPackageId, parent1Id, 'Pokemon Äventyr', 6, 'reading', 4, testStory, 1]
+      );
+
+      const pkg = db.get<{ story_text: string | null; assignment_type: string }>(
+        'SELECT story_text, assignment_type FROM math_packages WHERE id = ?',
+        [storyPackageId]
+      );
+
+      expect(pkg).toBeDefined();
+      expect(pkg?.assignment_type).toBe('reading');
+      expect(pkg?.story_text).toBe(testStory);
+
+      // Cleanup
+      db.run('DELETE FROM math_packages WHERE id = ?', [storyPackageId]);
+    });
+
+    it('should allow null story_text for backward compatibility', () => {
+      const db = getDb();
+      const regularPackageId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, assignment_type, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [regularPackageId, parent1Id, 'Regular Math Package', 5, 'math', 10, 0]
+      );
+
+      const pkg = db.get<{ story_text: string | null }>(
+        'SELECT story_text FROM math_packages WHERE id = ?',
+        [regularPackageId]
+      );
+
+      expect(pkg).toBeDefined();
+      expect(pkg?.story_text).toBeNull();
+
+      // Cleanup
+      db.run('DELETE FROM math_packages WHERE id = ?', [regularPackageId]);
+    });
+
+    it('should include story_text when retrieving reading assignment', () => {
+      const db = getDb();
+      const storyPackageId = uuidv4();
+      const assignmentId = uuidv4();
+      const testStory = 'En spännande berättelse om zebror som kan göra magi...';
+
+      // Create reading package with story
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, assignment_type, problem_count, story_text, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [storyPackageId, parent1Id, 'Zebror och Magi', 6, 'reading', 4, testStory, 1]
+      );
+
+      // Create assignment from package
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+        [assignmentId, parent1Id, child1Id, 'reading', 'Läs om zebror', 6, storyPackageId]
+      );
+
+      // Retrieve story_text like the assignment endpoint does
+      const pkg = db.get<{ story_text: string | null }>(
+        'SELECT story_text FROM math_packages WHERE id = ?',
+        [storyPackageId]
+      );
+
+      expect(pkg).toBeDefined();
+      expect(pkg?.story_text).toBe(testStory);
+
+      // Cleanup
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [storyPackageId]);
+    });
+  });
 });

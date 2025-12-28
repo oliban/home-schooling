@@ -65,15 +65,35 @@ function generateCustomPrompt(
   const codes = objectives.map(o => o.code);
 
   // Build skill command
-  const skillName = subject === 'math' ? 'generate-math' : 'generate-reading';
+  const skillName = subject === 'math' ? 'generate-math' : 'generate-themed-reading';
   const codesStr = codes.join(', ');
 
   const modeStr = mode === 'deep' ? 'deep-focus ' : '';
-  let prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} ${modeStr}problems covering: ${codesStr}`;
+  let prompt: string;
 
-  // Add theme if provided
-  if (theme && theme.trim()) {
-    prompt += `\n\nTheme: ${theme.trim()}`;
+  // Format prompt differently for reading (themed stories) vs math
+  if (subject === 'reading') {
+    // Calculate story count and questions per story for themed reading
+    // Aim for 3-5 stories with 3-5 questions each
+    let storyCount = 3;
+    let questionsPerStory = Math.ceil(questionCount / storyCount);
+
+    // Adjust if questions per story is too high
+    if (questionsPerStory > 5) {
+      storyCount = Math.ceil(questionCount / 5);
+      questionsPerStory = Math.ceil(questionCount / storyCount);
+    }
+
+    const themesText = theme && theme.trim() ? `, themes: ${theme.trim()}` : '';
+    prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} problems covering: ${codesStr}${themesText}, ${storyCount} ${storyCount === 1 ? 'story' : 'stories'}, ${questionsPerStory} questions per story`;
+  } else {
+    // Math prompt (unchanged)
+    prompt = `Use ${skillName} skill for årskurs ${gradeLevel}, ${questionCount} ${modeStr}problems covering: ${codesStr}`;
+
+    // Add theme if provided
+    if (theme && theme.trim()) {
+      prompt += `\n\nTheme: ${theme.trim()}`;
+    }
   }
 
   return {
@@ -143,11 +163,9 @@ export default function CustomPromptBuilder({
   // Calculate suggested objectives based on poor coverage
   const suggestedObjectives = useMemo(() => {
     if (!coverageData) {
-      console.log('[CustomPromptBuilder] No coverage data yet');
       return { math: [], reading: [] };
     }
 
-    console.log('[CustomPromptBuilder] Calculating suggestions. Categories:', coverageData.categories.length);
 
     interface ScoredObjective {
       objective: ObjectiveCoverage;
@@ -228,7 +246,6 @@ export default function CustomPromptBuilder({
     mathObjectives.sort(sortByPriority);
     readingObjectives.sort(sortByPriority);
 
-    console.log('[CustomPromptBuilder] Total objectives found - Math:', mathObjectives.length, 'Reading:', readingObjectives.length);
 
     // Take top 4 of each subject
     const result = {
@@ -236,9 +253,7 @@ export default function CustomPromptBuilder({
       reading: readingObjectives.slice(0, 4),
     };
 
-    console.log('[CustomPromptBuilder] Suggestions - Math:', result.math.length, 'Reading:', result.reading.length);
     if (result.math.length > 0) {
-      console.log('[CustomPromptBuilder] Top math suggestions:', result.math.map(s => `${s.objective.code} (score: ${s.score})`));
     }
 
     return result;
@@ -251,7 +266,6 @@ export default function CustomPromptBuilder({
     if (!coverageData || loadingCoverage) return;
     if (selectedObjectives.size > 0) return; // User already has selections
 
-    console.log('[CustomPromptBuilder] Auto-applying suggestions...');
 
     // Calculate which subject has worse overall coverage
     // Category IDs are lowercase Swedish names (algebra, geometri, lasforstaelse, etc.)
@@ -262,7 +276,6 @@ export default function CustomPromptBuilder({
     const mathCoverage = mathCategories.reduce((sum, c) => sum + c.coveragePercentage, 0) / Math.max(mathCategories.length, 1);
     const readingCoverage = readingCategories.reduce((sum, c) => sum + c.coveragePercentage, 0) / Math.max(readingCategories.length, 1);
 
-    console.log('[CustomPromptBuilder] Math coverage:', mathCoverage, 'Reading coverage:', readingCoverage);
 
     // Choose subject with worse coverage (or math if equal)
     const subject = readingCoverage < mathCoverage ? 'reading' : 'math';
@@ -287,30 +300,22 @@ export default function CustomPromptBuilder({
         objectiveCount = 2;
         recommendedMode = 'deep';
         setQuestionCount(12); // More questions for deeper practice
-        console.log('[CustomPromptBuilder] Strategy: DEEP FOCUS on struggling objectives');
       } else if (allUnpracticed) {
         // Introduction strategy: 3-4 new objectives
         objectiveCount = 4;
         recommendedMode = 'broad';
         setQuestionCount(16); // Spread questions across objectives
-        console.log('[CustomPromptBuilder] Strategy: BROAD INTRODUCTION to new objectives');
       } else {
         // Mixed strategy: 2-3 objectives
         objectiveCount = 3;
         recommendedMode = 'broad';
         setQuestionCount(12);
-        console.log('[CustomPromptBuilder] Strategy: MIXED PRACTICE');
       }
 
       setMode(recommendedMode);
     }
 
     const suggestions = allSuggestions.slice(0, objectiveCount);
-
-    console.log('[CustomPromptBuilder] Applying', suggestions.length, subject, 'suggestions with', recommendedMode, 'mode');
-    suggestions.forEach(({ objective, score }) => {
-      console.log(`  - ${objective.code}: ${objective.correctCount}/${objective.totalCount} (score: ${score})`);
-    });
 
     if (suggestions.length > 0) {
       // Apply suggestions automatically
@@ -335,10 +340,8 @@ export default function CustomPromptBuilder({
       const randomThemes = getRandomThemes(childGradeLevel, randomThemeCount);
       const themeString = randomThemes.join(', ');
       setTheme(themeString);
-      console.log('[CustomPromptBuilder] Auto-filled theme:', themeString);
 
       hasAutoApplied.current = true;
-      console.log('[CustomPromptBuilder] Auto-apply complete');
     }
   }, [coverageData, loadingCoverage, suggestedObjectives, selectedObjectives.size, onToggleObjective, childGradeLevel]);
 
@@ -348,29 +351,52 @@ export default function CustomPromptBuilder({
 
     const suggestions = subject === 'math' ? suggestedObjectives.math : suggestedObjectives.reading;
 
-    // Clear current selection
+    // Build list of all operations to perform
+    const toRemove: number[] = [];
+    const toAdd: Array<{ objective: ObjectiveCoverage; category: CategoryCoverage }> = [];
+
+    // Figure out what needs to change
+    const suggestedIds = new Set(suggestions.map(s => s.objective.id));
+
+    // Items to remove: currently selected but not in suggestions
     selectedObjectives.forEach(id => {
+      if (!suggestedIds.has(id)) {
+        toRemove.push(id);
+      }
+    });
+
+    // Items to add: in suggestions but not currently selected
+    suggestions.forEach(item => {
+      if (!selectedObjectives.has(item.objective.id)) {
+        toAdd.push(item);
+      }
+    });
+
+    // Execute all removals
+    toRemove.forEach(id => {
       const obj = objectiveDetails.get(id);
       if (obj) {
         onToggleObjective(id, obj);
       }
     });
 
-    // Apply suggestions
-    suggestions.forEach(({ objective, category }) => {
-      const subjectType: 'math' | 'reading' = category.categoryId.startsWith('MA-') ? 'math' : 'reading';
+    // Wait for parent state to update before adding (parent has subject-mixing check)
+    setTimeout(() => {
+      toAdd.forEach(({ objective, category }) => {
+        const subjectType: 'math' | 'reading' = objective.code.startsWith('SV-') ? 'reading' : 'math';
 
-      const objectiveData: ObjectiveData = {
-        id: objective.id,
-        code: objective.code,
-        description: objective.description,
-        categoryId: category.categoryId,
-        categoryName: category.categoryName,
-        subject: subjectType,
-      };
+        const objectiveData: ObjectiveData = {
+          id: objective.id,
+          code: objective.code,
+          description: objective.description,
+          categoryId: category.categoryId,
+          categoryName: category.categoryName,
+          subject: subjectType,
+        };
 
-      onToggleObjective(objective.id, objectiveData);
-    });
+        onToggleObjective(objective.id, objectiveData);
+      });
+    }, 50);
   };
 
   // Convert selected objectives to array
@@ -393,13 +419,6 @@ export default function CustomPromptBuilder({
   // Validation
   const subjects = useMemo(() => {
     const subjectsSet = new Set(selectedObjectivesArray.map(o => o.subject));
-    if (selectedObjectivesArray.length > 0) {
-      console.log('[CustomPromptBuilder] Selected objectives and subjects:');
-      selectedObjectivesArray.forEach(obj => {
-        console.log(`  - ${obj.code}: subject="${obj.subject}"`);
-      });
-      console.log('[CustomPromptBuilder] Unique subjects:', Array.from(subjectsSet));
-    }
     return subjectsSet;
   }, [selectedObjectivesArray]);
 
@@ -408,7 +427,6 @@ export default function CustomPromptBuilder({
 
   // Auto-generate prompt whenever inputs change
   useEffect(() => {
-    console.log('[CustomPromptBuilder] Auto-generate effect triggered. canGenerate:', canGenerate, 'selectedCount:', selectedObjectives.size, 'theme:', theme?.substring(0, 30));
 
     // Don't clear prompt if we can't generate - just keep the old one
     if (!canGenerate) {
@@ -423,7 +441,6 @@ export default function CustomPromptBuilder({
         childGradeLevel,
         questionCount
       );
-      console.log('[CustomPromptBuilder] Prompt generated successfully with theme:', theme?.substring(0, 30));
       setGeneratedPrompt(prompt);
     } catch (error) {
       console.error('Failed to generate prompt:', error);
@@ -680,11 +697,9 @@ export default function CustomPromptBuilder({
               <button
                 key={index}
                 onClick={() => {
-                  console.log('[CustomPromptBuilder] Theme button clicked:', suggestedTheme);
                   // Append theme instead of replacing
                   setTheme(prev => {
                     const newTheme = !prev.trim() ? suggestedTheme : `${prev}, ${suggestedTheme}`;
-                    console.log('[CustomPromptBuilder] Setting theme from', prev, 'to', newTheme);
                     return newTheme;
                   });
                 }}

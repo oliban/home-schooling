@@ -94,29 +94,40 @@ export default function CurriculumDashboard() {
     }
 
     // Adding a new objective - check if it would mix subjects
-    const currentSubjects = Array.from(selectedObjectives)
-      .map(id => objectiveDetails.get(id))
-      .filter((obj): obj is ObjectiveData => obj !== undefined)
-      .map(obj => obj.subject);
+    // Use updater functions that coordinate via shared closure state
+    let shouldAdd = false;
 
-    const uniqueCurrentSubjects = new Set(currentSubjects);
-
-    if (uniqueCurrentSubjects.size > 0 && !uniqueCurrentSubjects.has(objective.subject)) {
-      // Would cause mixing - prevent addition
-      console.warn('[handleToggleObjective] Cannot mix subjects. Ignoring click.');
-      return;
-    }
-
-    // OK to add
+    // First, check if we can add (using updater to see current state)
     setSelectedObjectives(prev => {
+      setObjectiveDetails(prevDetails => {
+        // Check subjects based on CURRENT state, not stale closures
+        const currentSubjects = Array.from(prev)
+          .map(id => prevDetails.get(id))
+          .filter((obj): obj is ObjectiveData => obj !== undefined)
+          .map(obj => obj.subject);
+
+        const uniqueCurrentSubjects = new Set(currentSubjects);
+
+        if (uniqueCurrentSubjects.size > 0 && !uniqueCurrentSubjects.has(objective.subject)) {
+          // Would cause mixing - prevent addition
+          console.warn('[handleToggleObjective] Cannot mix subjects. Ignoring click.');
+          shouldAdd = false;
+          return prevDetails; // No change
+        }
+
+        // OK to add
+        shouldAdd = true;
+        const next = new Map(prevDetails);
+        next.set(objectiveId, objective);
+        return next;
+      });
+
+      if (!shouldAdd) {
+        return prev; // No change
+      }
+
       const next = new Set(prev);
       next.add(objectiveId);
-      return next;
-    });
-
-    setObjectiveDetails(prev => {
-      const next = new Map(prev);
-      next.set(objectiveId, objective);
       return next;
     });
   };
