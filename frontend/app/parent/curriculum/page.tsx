@@ -8,8 +8,6 @@ import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import CoverageChart from '@/components/curriculum/CoverageChart';
 import CustomPromptBuilder from '@/components/curriculum/CustomPromptBuilder';
-import GapAnalysis from '@/components/curriculum/GapAnalysis';
-import GenerationSuggestions from '@/components/curriculum/GenerationSuggestions';
 import ExportButton from '@/components/curriculum/ExportButton';
 import { ObjectiveData } from '@/types/curriculum';
 
@@ -229,26 +227,6 @@ export default function CurriculumDashboard() {
               selectedObjectives={selectedObjectives}
               objectiveDetails={objectiveDetails}
               onToggleObjective={handleToggleObjective}
-            />
-          </section>
-        )}
-
-        {/* Gap Analysis Section */}
-        {selectedChildId && (
-          <section className="mb-8">
-            <GapAnalysis
-              childId={selectedChildId}
-              childName={selectedChild?.name}
-            />
-          </section>
-        )}
-
-        {/* Generation Suggestions Section */}
-        {selectedChildId && (
-          <section className="mb-8">
-            <GenerationSuggestions
-              childId={selectedChildId}
-              childName={selectedChild?.name}
             />
           </section>
         )}
