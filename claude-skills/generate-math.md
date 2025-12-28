@@ -118,8 +118,21 @@ For backward compatibility with direct assignment creation:
 
 ## Answer Types
 - `number`: Child types a number (most common)
-- `multiple_choice`: Child picks from options array
-- `text`: Child types text answer
+- `multiple_choice`: Child picks from options array (REQUIRED for yes/no questions and specific choice questions)
+- `text`: Child types text answer (only for short text responses, NOT for yes/no)
+
+### Important: Yes/No Questions MUST Use Multiple Choice
+**CRITICAL:** If a question expects a yes/no answer, you MUST use `answer_type: "multiple_choice"` with options `["A: Ja", "B: Nej"]`, NOT `answer_type: "text"`. This provides a better user experience by allowing children to click/tap buttons instead of typing.
+
+Example:
+```json
+{
+  "question_text": "Är 47 ungefär 50?",
+  "answer_type": "multiple_choice",
+  "options": ["A: Ja", "B: Nej"],
+  "correct_answer": "A"
+}
+```
 
 ## Answer Format Guidelines (For Number Answers)
 
@@ -331,6 +344,7 @@ For `answer_type: "multiple_choice"`:
 5. Currency is always "kr" (kronor)
 6. **Always include `lgr22_codes`** - an array of objective codes for curriculum tracking
 7. **Always save generated files to `/data/generated/` directory** - use descriptive filenames like `math-arskurs3-geometri-YYYY-MM-DD.json`
+8. **Text-to-Speech Pronunciation**: When using the multiplication symbol, write "×" (multiplication sign) or spell out "gånger" instead of using "x" (lowercase letter x), as text-to-speech will pronounce "x" as the letter "X" rather than "times/gånger". Example: Write "3 × 4" or "3 gånger 4", NOT "3 x 4".
 
 ## LGR 22 Objective Codes Reference
 

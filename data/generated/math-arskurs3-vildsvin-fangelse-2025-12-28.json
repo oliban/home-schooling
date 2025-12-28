@@ -1,0 +1,127 @@
+{
+  "package": {
+    "name": "Vildsvin och Magiska Fängelser - Årskurs 3",
+    "grade_level": 3,
+    "category_id": null,
+    "description": "Blandade uppgifter om vildsvin, magi, teleportering och fängelser",
+    "global": true
+  },
+  "problems": [
+    {
+      "question_text": "I det magiska fängelset finns 47 vildsvin-fångar. Vakten säger att det finns ungefär 50 vildsvin. Är vaktens uppskattning rimlig?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "47 är mycket nära 50, så uppskattningen är rimlig. Skillnaden är bara 3 vildsvin.",
+      "difficulty": "easy",
+      "hint": "Hur nära ligger 47 till 50?",
+      "lgr22_codes": ["MA-TAL-12", "MA-PRO-01"]
+    },
+    {
+      "question_text": "Den äckliga fängelsematen serveras i portioner om 8 soppor till 73 fångar. Kocken påstår att 10 soppor räcker. Stämmer det?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "73 är mycket större än 10 (8 gånger), så 10 portioner räcker inte alls. Kocken har fel.",
+      "difficulty": "medium",
+      "hint": "Är 73 ungefär lika mycket som 10?",
+      "lgr22_codes": ["MA-TAL-12", "MA-PRO-01"]
+    },
+    {
+      "question_text": "En teleportering flyttar ett vildsvin 125 meter. Om vildsvinet säger att det flyttades ungefär 100 meter, är det en bra uppskattning?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "125 är ganska nära 100. Skillnaden är 25 meter, vilket är rimligt när man uppskattar.",
+      "difficulty": "medium",
+      "hint": "Hur långt är det mellan 100 och 125?",
+      "lgr22_codes": ["MA-TAL-12", "MA-PRO-01"]
+    },
+    {
+      "question_text": "I fängelsekafeterian kastades 398 ruttna grönsaker bort igår. Kocken säger att det var ungefär 500 grönsaker. Är uppskattningen rimlig?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "398 är närmre 400 än 500. Skillnaden mellan 398 och 500 är 102, vilket är ganska mycket. En bättre uppskattning är 400.",
+      "difficulty": "hard",
+      "hint": "Är 398 närmare 400 eller 500?",
+      "lgr22_codes": ["MA-TAL-12", "MA-PRO-01"]
+    },
+    {
+      "question_text": "På den magiska fängelseborgen finns 5 vildsvin på vänstra sidan. På högra sidan finns 3 vildsvin. Hur många vildsvin måste teleporteras från vänster till höger så det blir lika många? Skriv som: 5 - ? = 3 + ?",
+      "correct_answer": "1",
+      "answer_type": "number",
+      "explanation": "Om vi flyttar 1 vildsvin blir det 4 på varje sida. 5 - 1 = 3 + 1, alltså 4 = 4.",
+      "difficulty": "medium",
+      "hint": "Prova att flytta 1 vildsvin och räkna hur många det blir på varje sida.",
+      "lgr22_codes": ["MA-ALG-01", "MA-TAL-01"]
+    },
+    {
+      "question_text": "I den äckliga matkön står 7 fångar. Lika många fångar är på toaletten. Om det är 14 fångar totalt, skriv ekvationen: 7 + ? = 14",
+      "correct_answer": "7",
+      "answer_type": "number",
+      "explanation": "7 + 7 = 14, så det står 7 fångar på toaletten också.",
+      "difficulty": "easy",
+      "hint": "Vad ska du lägga till 7 för att få 14?",
+      "lgr22_codes": ["MA-ALG-01", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Efter en magisk teleportering finns det 12 vildsvin i fängelsecell A och 12 vildsvin i cell B. Betyder det att 12 = 12?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "Ja! Likhetstecknet betyder att båda sidorna har samma värde. 12 vildsvin är lika många som 12 vildsvin.",
+      "difficulty": "easy",
+      "hint": "Vad betyder likhetstecknet (=)?",
+      "lgr22_codes": ["MA-ALG-01"]
+    },
+    {
+      "question_text": "Om 3 + 5 = 8, är det samma sak som 5 + 3 = 8? Tänk på fångar som byter plats i kön till den äckliga maten.",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "Ja! Addition fungerar åt båda håll. 3 + 5 och 5 + 3 ger båda 8. Det spelar ingen roll i vilken ordning vi lägger ihop.",
+      "difficulty": "medium",
+      "hint": "Prova att räkna båda sätten. Får du samma svar?",
+      "lgr22_codes": ["MA-ALG-01", "MA-TAL-01"]
+    },
+    {
+      "question_text": "Rita en fyrkantig fängelsecell som är 4 rutor bred och 3 rutor hög. Hur många hörn har cellen?",
+      "correct_answer": "4",
+      "answer_type": "number",
+      "explanation": "En fyrkant (rektangel) har alltid 4 hörn, oavsett storlek.",
+      "difficulty": "easy",
+      "hint": "Alla fyrkanter har lika många hörn. Hur många?",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-01"]
+    },
+    {
+      "question_text": "Trollkarlen ritar en magisk teleporteringscirkel på marken. Vad ska du använda för att rita en riktigt rund cirkel?",
+      "correct_answer": "B",
+      "answer_type": "multiple_choice",
+      "options": ["A: Linjal", "B: Sträng med penna"],
+      "explanation": "En sträng med penna (eller passare) hjälper dig rita en perfekt cirkel. Håll sträng-änden i mitten och rita runt. Linjal används för räta linjer.",
+      "difficulty": "medium",
+      "hint": "Vilket verktyg gör det lätt att hålla samma avstånd från mitten hela vägen runt?",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-01"]
+    },
+    {
+      "question_text": "Fångarna ska bygga ett triangelformat tak över den äckliga matkön. De har 3 brädor. Kan de göra en triangel?",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: Ja", "B: Nej"],
+      "explanation": "Ja! En triangel har exakt 3 sidor, så 3 brädor räcker perfekt för att göra en triangel.",
+      "difficulty": "easy",
+      "hint": "Hur många sidor har en triangel?",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-01"]
+    },
+    {
+      "question_text": "Fängelsevakten vill göra en kvadrat för vildsvinens hage. Alla sidor måste vara lika långa. Om ena sidan är 5 meter, hur långa är de andra tre sidorna tillsammans?",
+      "correct_answer": "15",
+      "answer_type": "number",
+      "explanation": "I en kvadrat är alla 4 sidor lika långa. Om en sida är 5 meter, så är de andra tre också 5 meter vardera. 5 + 5 + 5 = 15 meter.",
+      "difficulty": "hard",
+      "hint": "I en kvadrat är alla sidor lika. Om en är 5 meter, hur många meter är tre sidor?",
+      "lgr22_codes": ["MA-GEO-02", "MA-GEO-01", "MA-TAL-01"]
+    }
+  ]
+}
