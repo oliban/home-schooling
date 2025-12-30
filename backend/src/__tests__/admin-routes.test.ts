@@ -10,6 +10,7 @@ import request from 'supertest';
 // Mock dependencies
 vi.mock('../middleware/admin.js', () => ({
   requireDevelopment: (req: any, res: any, next: any) => next(),
+  requireAdmin: (req: any, res: any, next: any) => next(),
 }));
 
 vi.mock('../middleware/auth.js', () => ({

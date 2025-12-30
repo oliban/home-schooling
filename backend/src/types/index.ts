@@ -4,6 +4,7 @@ export interface Parent {
   password_hash: string;
   name: string;
   created_at: string;
+  is_admin: number;
 }
 
 export interface Child {
@@ -52,6 +53,7 @@ export interface Assignment {
   created_at: string;
   completed_at: string | null;
   package_id: string | null;
+  assigned_by_id: string | null;
 }
 
 export interface MathProblem {
@@ -206,6 +208,7 @@ export interface AuthPayload {
   id: string;
   email: string;
   type: 'parent';
+  isAdmin: boolean;
 }
 
 export interface ChildAuthPayload {

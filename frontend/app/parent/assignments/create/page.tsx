@@ -3,16 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { children, assignments } from '@/lib/api';
+import { children, assignments, admin } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 interface ChildOption {
   id: string;
   name: string;
   grade_level: number;
+  parent_name?: string;
+  parent_id?: string;
 }
 
 export default function CreateAssignmentPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [childrenList, setChildrenList] = useState<ChildOption[]>([]);
   const [selectedChild, setSelectedChild] = useState('');
   const [type, setType] = useState<'math' | 'reading'>('math');
@@ -33,8 +37,22 @@ export default function CreateAssignmentPage() {
 
   const loadChildren = async (token: string) => {
     try {
-      const list = await children.list(token);
-      setChildrenList(list.map(c => ({ id: c.id, name: c.name, grade_level: c.grade_level })));
+      // Check if user is admin
+      const parentData = localStorage.getItem('parentData');
+      const isAdmin = parentData ? JSON.parse(parentData).isAdmin : false;
+
+      // Admin users see all children, regular users see only their own
+      const list = isAdmin
+        ? await admin.listChildren(token)
+        : await children.list(token);
+
+      setChildrenList(list.map(c => ({
+        id: c.id,
+        name: c.name,
+        grade_level: c.grade_level,
+        parent_name: (c as any).parent_name,
+        parent_id: (c as any).parent_id
+      })));
       if (list.length > 0) {
         setSelectedChild(list[0].id);
       }
@@ -50,17 +68,17 @@ export default function CreateAssignmentPage() {
     setError('');
 
     if (!selectedChild) {
-      setError('Please select a child');
+      setError(t('parent.assignment.errors.selectChild'));
       return;
     }
 
     if (!title.trim()) {
-      setError('Please enter a title');
+      setError(t('parent.assignment.errors.enterTitle'));
       return;
     }
 
     if (!jsonContent.trim()) {
-      setError('Please paste the JSON content');
+      setError(t('parent.assignment.errors.pasteJson'));
       return;
     }
 
@@ -68,7 +86,7 @@ export default function CreateAssignmentPage() {
     try {
       parsed = JSON.parse(jsonContent);
     } catch {
-      setError('Invalid JSON format');
+      setError(t('parent.assignment.errors.invalidJson'));
       return;
     }
 
@@ -99,7 +117,7 @@ export default function CreateAssignmentPage() {
 
       router.push('/parent');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create assignment');
+      setError(err instanceof Error ? err.message : t('parent.assignment.errors.failed'));
     } finally {
       setSubmitting(false);
     }
@@ -134,7 +152,7 @@ export default function CreateAssignmentPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-xl">{t('common.loading')}</div>
       </div>
     );
   }
@@ -147,17 +165,17 @@ export default function CreateAssignmentPage() {
             <Link href="/parent" className="text-2xl hover:scale-110 transition-transform">
               ←
             </Link>
-            <h1 className="text-2xl font-bold">Create Assignment</h1>
+            <h1 className="text-2xl font-bold">{t('parent.assignment.createTitle')}</h1>
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
             <div className="text-4xl mb-4">👶</div>
-            <p className="text-gray-600 mb-4">Add a child first before creating assignments</p>
+            <p className="text-gray-600 mb-4">{t('parent.assignment.addChildFirst')}</p>
             <Link
               href="/parent/children/add"
               className="inline-block px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700"
             >
-              Add Child
+              {t('parent.assignment.buttons.addChild')}
             </Link>
           </div>
         </div>
@@ -172,7 +190,7 @@ export default function CreateAssignmentPage() {
           <Link href="/parent" className="text-2xl hover:scale-110 transition-transform">
             ←
           </Link>
-          <h1 className="text-2xl font-bold">Create Assignment</h1>
+          <h1 className="text-2xl font-bold">{t('parent.assignment.createTitle')}</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm">
@@ -185,7 +203,7 @@ export default function CreateAssignmentPage() {
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Child
+                {t('parent.assignment.child')}
               </label>
               <select
                 value={selectedChild}
@@ -194,7 +212,8 @@ export default function CreateAssignmentPage() {
               >
                 {childrenList.map((child) => (
                   <option key={child.id} value={child.id}>
-                    {child.name} (Grade {child.grade_level})
+                    {child.name} ({t('parent.child.gradeLevelLabel', { grade: child.grade_level })})
+                    {child.parent_name && ` - Parent: ${child.parent_name}`}
                   </option>
                 ))}
               </select>
@@ -202,7 +221,7 @@ export default function CreateAssignmentPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type
+                {t('parent.assignment.type')}
               </label>
               <div className="flex gap-2">
                 <button
@@ -214,7 +233,7 @@ export default function CreateAssignmentPage() {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  📐 Math
+                  📐 {t('parent.assignment.types.math')}
                 </button>
                 <button
                   type="button"
@@ -225,7 +244,7 @@ export default function CreateAssignmentPage() {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  📖 Reading
+                  📖 {t('parent.assignment.types.reading')}
                 </button>
               </div>
             </div>
@@ -233,7 +252,7 @@ export default function CreateAssignmentPage() {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title
+              {t('parent.assignment.title')}
             </label>
             <input
               type="text"
@@ -241,16 +260,16 @@ export default function CreateAssignmentPage() {
               onChange={(e) => setTitle(e.target.value)}
               required
               className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-              placeholder={type === 'math' ? 'Matte: Addition' : 'Lasforstaelse: Pippi kapitel 1'}
+              placeholder={type === 'math' ? t('parent.assignment.titlePlaceholderMath') : t('parent.assignment.titlePlaceholderReading')}
             />
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Content (JSON)
+              {t('parent.assignment.contentLabel')}
             </label>
             <p className="text-xs text-gray-500 mb-2">
-              Paste the JSON generated by Claude Code skills
+              {t('parent.assignment.contentHelp')}
             </p>
             <textarea
               value={jsonContent}
@@ -264,7 +283,7 @@ export default function CreateAssignmentPage() {
           {/* Example */}
           <details className="mb-6">
             <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700">
-              Show example format
+              {t('parent.assignment.showExample')}
             </summary>
             <pre className="mt-2 p-3 bg-gray-50 rounded-xl text-xs overflow-auto">
               {type === 'math' ? exampleMath : exampleReading}
@@ -276,14 +295,14 @@ export default function CreateAssignmentPage() {
               href="/parent"
               className="flex-1 py-3 text-center border border-gray-300 rounded-xl font-medium hover:bg-gray-50"
             >
-              Cancel
+              {t('parent.assignment.buttons.cancel')}
             </Link>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300 transition-colors"
             >
-              {submitting ? 'Creating...' : 'Create Assignment'}
+              {submitting ? t('parent.assignment.buttons.creating') : t('parent.assignment.buttons.create')}
             </button>
           </div>
         </form>

@@ -1,9 +1,9 @@
 import express from 'express';
-import { requireDevelopment } from '../middleware/admin.js';
+import { requireDevelopment, requireAdmin } from '../middleware/admin.js';
 import { authenticateParent } from '../middleware/auth.js';
 import { adminJobManager } from '../services/admin-job-manager.js';
 import { runScript } from '../services/script-runner.js';
-import { resetDb } from '../data/database.js';
+import { resetDb, getDb } from '../data/database.js';
 import {
   getLastBackupTimestamp,
   getLastSyncTimestamp,
@@ -77,6 +77,53 @@ router.post('/sync', requireDevelopment, authenticateParent, async (req, res) =>
 router.get('/active-job', requireDevelopment, authenticateParent, (req, res) => {
   const job = adminJobManager.getActiveJob();
   res.json({ job });
+});
+
+/**
+ * GET /api/admin/parents
+ * Returns list of all parents in the system (admin only)
+ */
+router.get('/parents', authenticateParent, requireAdmin, (req, res) => {
+  try {
+    const db = getDb();
+    const parents = db.all(
+      'SELECT id, email, name, family_code, is_admin, created_at FROM parents ORDER BY name'
+    );
+    res.json(parents);
+  } catch (error) {
+    console.error('Error fetching parents:', error);
+    res.status(500).json({ error: 'Failed to fetch parents' });
+  }
+});
+
+/**
+ * GET /api/admin/children
+ * Returns list of all children with parent info and assignment counts (admin only)
+ */
+router.get('/children', authenticateParent, requireAdmin, (req, res) => {
+  try {
+    const db = getDb();
+    const children = db.all(`
+      SELECT
+        c.id,
+        c.parent_id,
+        c.name,
+        c.grade_level,
+        c.birthdate,
+        c.created_at,
+        p.name as parent_name,
+        p.email as parent_email,
+        (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status IN ('pending', 'in_progress')) as active_assignments,
+        (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status = 'completed') as completed_assignments
+      FROM children c
+      JOIN parents p ON c.parent_id = p.id
+      ORDER BY c.name
+    `);
+    res.json(children);
+  } catch (error) {
+    console.error('Error fetching children:', error);
+    res.status(500).json({ error: 'Failed to fetch children' });
+  }
 });
 
 export default router;

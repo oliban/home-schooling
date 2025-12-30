@@ -1,0 +1,200 @@
+{
+  "batch": {
+    "grade_level": 3,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Fenrisulvens Vän",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "En berättelse om en flicka som träffar den mytologiska ulven Fenris",
+        "story_text": "Elsa vandrade genom den täta skogen när hon hörde ett ljud. Bakom en stor sten låg en enorm varg med silverfärgad päls. Vargen var så stor som en häst! \"Var inte rädd,\" viskade vargen med en djup röst. \"Jag är Fenris.\" Elsa hade läst om Fenris i sagoböcker. Han var en magisk ulv från nordisk mytologi. \"Är du verklig?\" frågade Elsa förvånat. Fenris nickade. \"Jag har sovit här i tusen år. Men nu har jag vaknat för att leka.\" De lekte kurragömma mellan träden. Fenris var stor, men han var snabb som vinden. När det började mörkna fick Elsa åka hem på Fenris rygg. Han sprang så fort att träden bara blev gröna streck. Vid hennes hus stannade han. \"Kan vi leka igen?\" frågade Elsa hoppfullt. Fenris blinkade med sina gyllene ögon. \"Kanske. Om du hittar den rätta stenen.\" Sedan försvann han som rök in i kvällen. Elsa stod kvar med ett stort leende. Hon skulle leta efter stenen varje dag.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder ordet 'förvånat' när texten beskriver Elsas reaktion?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att vara rädd och vilja springa iväg",
+            "B: Att vara arg och irriterad på någon",
+            "C: Att vara överraskad och inte förväntat sig det",
+            "D: Att vara glad och hoppa upp och ner"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vad handlar berättelsen egentligen om?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hur farligt det är att gå ensam i skogen",
+            "B: En magisk vänskap mellan en flicka och ett mytologiskt väsen",
+            "C: Vikten av att alltid komma hem innan det mörknar",
+            "D: Hur man spelar kurragömma på rätt sätt"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vad visar det om Elsas karaktär att hon inte sprang iväg när hon såg den enorma vargen?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon är modig och nyfiken på nya saker",
+            "B: Hon är försiktig och litar aldrig på främlingar",
+            "C: Hon är rädd men försöker dölja det väl",
+            "D: Hon är alltid tyst och säger aldrig emot"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Vad tror du händer om Elsa hittar den rätta stenen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Stenen kommer att förvandla henne till en varg",
+            "B: Fenris kommer att bli arg och jaga bort henne",
+            "C: Stenen kommer att ge henne magiska krafter",
+            "D: Fenris kommer att komma tillbaka och leka med henne igen"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Spider-Mans Missade Dag",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "En humoristisk berättelse om Spider-Man som försöker gå på bio",
+        "story_text": "Peter Parker hade väntat hela veckan. Idag skulle han äntligen få se den nya filmen på bio med sin bästa vän Ned. Men just när han köpte popcorn började hans spindel-sinne kittla. \"Åh nej, inte nu,\" muttrade Peter. Genom fönstret såg han en rånare springa med en väska. Peter suckade, bytte till Spider-Man-kostymen och svingade iväg. Men rånaren var snabbare än han trott. Jakten tog honom till andra sidan stan. När han äntligen fångade tjuven och lämnat honom vid polisen, tittade han på klockan. Filmen hade börjat för trettio minuter sedan! Spider-Man svingade tillbaka, bytte om och rusade in i biosalongen. Det var helt mörkt. Han snubblade över någons fötter, råkade spilla sitt läskglas och trillade ner i fel stol. \"Ursäkta!\" viskade han och klättrade över tre personer. När han äntligen hittade Ned var filmen nästan slut. \"Vad hände?\" viskade Ned. Peter bara skakade på huvudet och skrattade tyst. Att vara superhjälte var inte alltid så superbt.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder ordet 'muttrade' när texten beskriver hur Peter sa 'Åh nej, inte nu'?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att säga något mycket högt och tydligt",
+            "B: Att sjunga en glad melodi för sig själv",
+            "C: Att säga något lågt och lite missnöjt",
+            "D: Att skrika rakt ut med all sin kraft"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilket är berättelsens huvudbudskap?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Man ska alltid komma i tid till bioföreställningar",
+            "B: Även superhjältar har vardagsproblem och saker går inte alltid som planerat",
+            "C: Det är viktigt att fånga tjuvar snabbt och effektivt",
+            "D: Man ska aldrig gå på bio när man har viktiga saker att göra"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Hur kände sig Peter troligtvis när han satt bredvid Ned och filmen nästan var slut?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Jättearg på Ned för att han inte väntat",
+            "B: Frustrerad men också road över situationen",
+            "C: Stolt över att ha fångat rånaren så snabbt",
+            "D: Rädd för att Ned skulle vara sur på honom"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför skrattade Peter tyst när Ned frågade vad som hänt?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han insåg hur komiskt hela situationen var trots att den var frustrerande",
+            "B: Han tyckte Neds fråga var löjlig och dum",
+            "C: Han ville inte att andra skulle höra honom",
+            "D: Han var glad att tjuven hade fångats så snabbt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Den Mystiska Trollstaven",
+        "grade_level": 3,
+        "assignment_type": "reading",
+        "description": "Ett mystiskt äventyr på Hogwarts med en försvunnen trollstav",
+        "story_text": "Luna Lovegood gick ensam genom Hogwarts korridorer efter middag. Plötsligt såg hon något glimma i ett hörn. Det var en trollstav, men ingen vanlig sådan. Den var gjord av silvervitt trä och hade märkliga runor inristade. Luna plockade upp den försiktigt. Staven kändes iskall i hennes hand. När hon svepte med den i luften hände något konstigt. Alla färger omkring henne blev starkare. Väggarna lyste i purpur, hennes eget hår blev guldgult, och hennes skor blev knallröda. \"Fascinerande,\" viskade Luna. Hon svepte igen. Nu blev allt blått - väggar, tavlor, till och med hennes händer! Ett tredje svep och färgerna kom tillbaka till det normala. Nästan. Hennes näsa var fortfarande blå. Luna kikade på staven. Vems var den? Och varför låg den övergivit på golvet? Hon bestämde sig för att ta med den till professor Flitwick i morgon. Kanske kunde han lösa mysteriet. Luna stoppade ner staven i fickan och gick vidare, visslade glatt trots sin blåa näsa.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder ordet 'övergiven' när texten beskriver var staven låg?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att något är väldigt värdefullt och omtyckt",
+            "B: Att något har lämnats kvar och glömts bort",
+            "C: Att något är gömt på en hemlig plats",
+            "D: Att något har tvättats och blivit rent"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vad handlar berättelsen främst om?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hur man använder trollstavar på rätt sätt",
+            "B: Vikten av att vara försiktig med magiska föremål",
+            "C: Ett mystiskt upptäckt som väcker nyfikenhet och frågor",
+            "D: Varför man ska ta med konstiga saker till lärare"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vad visar Lunas reaktion när märkliga saker händer om hennes karaktär?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon är nyfiken och tycker om saker som är annorlunda",
+            "B: Hon blir lätt rädd när något oväntat sker",
+            "C: Hon blir arg när saker inte går som planerat",
+            "D: Hon bryr sig mest om vad andra tycker om henne"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför tar Luna med staven till professor Flitwick?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hon vill berätta för honom att hennes näsa blivit blå",
+            "B: Professor Flitwick hade tappat sin egen trollstav",
+            "C: Hon vill visa att hon hittat en vacker trollstav",
+            "D: Hon hoppas att professorn kan hjälpa henne förstå vad staven är"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

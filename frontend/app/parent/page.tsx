@@ -10,6 +10,7 @@ import FileDropZone from '@/components/ui/FileDropZone';
 import ProgressChart, { DailyStatsData } from '@/components/ui/ProgressChart';
 import { isDevelopment } from '@/lib/env';
 import DevAdminPanel from '@/components/admin/DevAdminPanel';
+import AdminPanel from '@/components/admin/AdminPanel';
 import {
   DndContext,
   closestCenter,
@@ -52,12 +53,15 @@ interface AssignmentData {
   completed_at: string | null;
   correct_count: number;
   total_count: number;
+  assigned_by_name?: string;
+  assigned_by_email?: string;
 }
 
 interface ParentData {
   id: string;
   email: string;
   name: string;
+  isAdmin?: boolean;
 }
 
 interface ImportedPackage {
@@ -136,7 +140,7 @@ function SortableAssignmentCard({
         {...attributes}
         {...listeners}
         className="p-2 mr-2 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
-        title="Drag to reorder"
+        title={t('parent.dashboard.dragToReorder')}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <circle cx="4" cy="3" r="1.5" />
@@ -161,6 +165,11 @@ function SortableAssignmentCard({
             <p className="text-sm text-gray-600">
               {t('parent.dashboard.created')} {new Date(assignment.created_at).toLocaleDateString()}
             </p>
+            {assignment.assigned_by_name && (
+              <p className="text-xs text-purple-600">
+                {t('parent.dashboard.assignedBy', { name: assignment.assigned_by_name })}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -296,12 +305,12 @@ export default function ParentDashboard() {
 
       // Validate batch structure
       if (!batch.batch.grade_level) {
-        setImportError('Batch must have "grade_level" field.');
+        setImportError(t('parent.dashboard.errors.batchGradeRequired'));
         return;
       }
 
       if (batch.packages.length === 0) {
-        setImportError('Batch must contain at least one package.');
+        setImportError(t('parent.dashboard.errors.batchEmptyPackages'));
         return;
       }
 
@@ -309,15 +318,15 @@ export default function ParentDashboard() {
       for (let i = 0; i < batch.packages.length; i++) {
         const pkg = batch.packages[i];
         if (!pkg.package || !pkg.problems || !Array.isArray(pkg.problems)) {
-          setImportError(`Package ${i + 1} is invalid. Must have "package" and "problems" fields.`);
+          setImportError(t('parent.dashboard.errors.packageInvalid', { index: i + 1 }));
           return;
         }
         if (!pkg.package.name || !pkg.package.grade_level) {
-          setImportError(`Package ${i + 1} must have "name" and "grade_level" fields.`);
+          setImportError(t('parent.dashboard.errors.packageMissingFields', { index: i + 1 }));
           return;
         }
         if (pkg.problems.length === 0) {
-          setImportError(`Package ${i + 1} must contain at least one problem.`);
+          setImportError(t('parent.dashboard.errors.packageEmptyProblems', { index: i + 1 }));
           return;
         }
       }
@@ -331,17 +340,17 @@ export default function ParentDashboard() {
     // Single package format
     const singlePkg = parsed as unknown as ImportedPackage;
     if (!singlePkg.package || !singlePkg.problems || !Array.isArray(singlePkg.problems)) {
-      setImportError('Invalid format. Must be single package (with "package" and "problems") or batch (with "batch" and "packages").');
+      setImportError(t('parent.dashboard.errors.invalidFormat'));
       return;
     }
 
     if (!singlePkg.package.name || !singlePkg.package.grade_level) {
-      setImportError('Package must have "name" and "grade_level" fields.');
+      setImportError(t('parent.dashboard.errors.packageMustHaveFields'));
       return;
     }
 
     if (singlePkg.problems.length === 0) {
-      setImportError('Package must contain at least one problem.');
+      setImportError(t('parent.dashboard.errors.packageMustHaveProblems'));
       return;
     }
 
@@ -356,7 +365,7 @@ export default function ParentDashboard() {
 
     // Validate auto-assign has a child selected
     if (autoAssign && !selectedChildId) {
-      setImportError('Please select a child for auto-assignment.');
+      setImportError(t('parent.dashboard.errors.selectChildForAutoAssign'));
       return;
     }
 
@@ -394,8 +403,17 @@ export default function ParentDashboard() {
           setImportProgress(Math.round(((i + 1) / totalPackages) * 100));
         }
 
-        const assignMsg = autoAssign ? ` and assigned ${assignmentsCreated} to ${childrenList.find(c => c.id === selectedChildId)?.name}` : '';
-        setImportSuccess(`Imported ${totalPackages} packages with ${totalProblems} total problems${assignMsg}!`);
+        const childName = childrenList.find(c => c.id === selectedChildId)?.name || '';
+        if (autoAssign && assignmentsCreated > 0) {
+          setImportSuccess(t('parent.dashboard.import.successBatchAssigned', {
+            packages: totalPackages,
+            problems: totalProblems,
+            assignments: assignmentsCreated,
+            childName
+          }));
+        } else {
+          setImportSuccess(t('parent.dashboard.import.successBatch', { packages: totalPackages, problems: totalProblems }));
+        }
         setImportedBatch(null);
 
         // Reload assignments if we created any
@@ -428,12 +446,16 @@ export default function ParentDashboard() {
           setAssignmentsList(updatedAssignments);
         }
 
-        const assignMsg = autoAssign ? ` and assigned to ${childrenList.find(c => c.id === selectedChildId)?.name}` : '';
-        setImportSuccess(`Package imported successfully with ${result.problemCount} problems${assignMsg}!`);
+        const childName = childrenList.find(c => c.id === selectedChildId)?.name || '';
+        if (autoAssign) {
+          setImportSuccess(t('parent.dashboard.import.successAssigned', { problems: result.problemCount, childName }));
+        } else {
+          setImportSuccess(t('parent.dashboard.import.success', { problems: result.problemCount }));
+        }
         setImportedData(null);
       }
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Failed to import package');
+      setImportError(err instanceof Error ? err.message : t('parent.dashboard.errors.importFailed'));
     } finally {
       setImporting(false);
       setImportProgress(0);
@@ -614,7 +636,7 @@ export default function ParentDashboard() {
               href="/parent/curriculum"
               className="px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors font-medium"
             >
-              📊 LGR 22
+              {t('parent.dashboard.lgr22Link')}
             </Link>
             <LanguageSwitcher showLabel={true} />
             <button
@@ -702,10 +724,10 @@ export default function ParentDashboard() {
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100">
                     <div className="flex items-center gap-1 text-purple-600">
                       <span>🧠</span>
-                      <span>{child.brainrotCount} brainrots</span>
+                      <span>{t('parent.dashboard.brainrotCount', { count: child.brainrotCount })}</span>
                     </div>
                     <div className="text-gray-600">
-                      {child.brainrotValue} coins
+                      {t('parent.dashboard.brainrotValue', { value: child.brainrotValue })}
                     </div>
                   </div>
                 </Link>
@@ -872,6 +894,11 @@ export default function ParentDashboard() {
                                           {t('parent.dashboard.completedAt')} {new Date(assignment.completed_at).toLocaleString()}
                                         </p>
                                       )}
+                                      {assignment.assigned_by_name && (
+                                        <p className="text-xs text-purple-600">
+                                          {t('parent.dashboard.assignedBy', { name: assignment.assigned_by_name })}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3">
@@ -899,7 +926,7 @@ export default function ParentDashboard() {
         {/* Import Package Section */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Import Problem Package</h2>
+            <h2 className="text-xl font-bold">{t('parent.dashboard.importTitle')}</h2>
             <Link
               href="/parent/packages"
               className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
@@ -917,26 +944,26 @@ export default function ParentDashboard() {
                   onClick={clearImport}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                 >
-                  Import Another
+                  {t('parent.dashboard.importAnother')}
                 </button>
               </div>
             ) : importedBatch ? (
               <div>
                 <div className="mb-4 p-4 bg-purple-50 rounded-lg">
-                  <h3 className="font-bold text-lg mb-2">Batch Import</h3>
+                  <h3 className="font-bold text-lg mb-2">{t('parent.dashboard.batchImport')}</h3>
                   <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                    <div>Grade: {importedBatch.batch.grade_level}</div>
-                    <div>Packages: {importedBatch.packages.length}</div>
-                    <div>Total Problems: {importedBatch.packages.reduce((sum, pkg) => sum + pkg.problems.length, 0)}</div>
+                    <div>{t('parent.dashboard.grade', { level: importedBatch.batch.grade_level })}</div>
+                    <div>{t('parent.dashboard.packagesCount', { count: importedBatch.packages.length })}</div>
+                    <div>{t('parent.dashboard.totalProblems', { count: importedBatch.packages.reduce((sum, pkg) => sum + pkg.problems.length, 0) })}</div>
                     {importedBatch.batch.category_id && (
-                      <div>Category: {importedBatch.batch.category_id}</div>
+                      <div>{t('parent.dashboard.category', { name: importedBatch.batch.category_id })}</div>
                     )}
                   </div>
                   <div className="mt-3 text-sm text-gray-500">
-                    <strong>Packages:</strong>
+                    <strong>{t('parent.dashboard.packagesLabel')}:</strong>
                     <ul className="mt-1 pl-4 list-disc max-h-32 overflow-y-auto">
                       {importedBatch.packages.map((pkg, i) => (
-                        <li key={i}>{pkg.package.name} ({pkg.problems.length} problems)</li>
+                        <li key={i}>{pkg.package.name} ({t('parent.dashboard.problemsCount', { count: pkg.problems.length })})</li>
                       ))}
                     </ul>
                   </div>
@@ -950,9 +977,9 @@ export default function ParentDashboard() {
                     className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
                   <div>
-                    <span className="font-medium">Share globally</span>
+                    <span className="font-medium">{t('parent.dashboard.shareGlobally')}</span>
                     <p className="text-sm text-gray-500">
-                      Visible to all parents with children in grade {importedBatch.batch.grade_level}
+                      {t('parent.dashboard.shareGloballyDescription', { grade: importedBatch.batch.grade_level })}
                     </p>
                   </div>
                 </label>
@@ -967,9 +994,9 @@ export default function ParentDashboard() {
                         className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <div>
-                        <span className="font-medium">Auto-assign after import</span>
+                        <span className="font-medium">{t('parent.dashboard.autoAssign')}</span>
                         <p className="text-sm text-gray-500">
-                          Immediately assign all packages to selected child
+                          {t('parent.dashboard.autoAssignDescription')}
                         </p>
                       </div>
                     </label>
@@ -981,10 +1008,10 @@ export default function ParentDashboard() {
                           onChange={(e) => setSelectedChildId(e.target.value)}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="">Select child...</option>
+                          <option value="">{t('parent.dashboard.selectChild')}</option>
                           {childrenList.map((child) => (
                             <option key={child.id} value={child.id}>
-                              {child.name} (Grade {child.grade_level})
+                              {child.name} ({t('parent.dashboard.grade', { level: child.grade_level })})
                               {child.grade_level === importedBatch.batch.grade_level ? ' ✓' : ''}
                             </option>
                           ))}
@@ -993,8 +1020,8 @@ export default function ParentDashboard() {
                         {/* Allow Hints Toggle */}
                         <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                           <div>
-                            <span className="font-medium text-sm">Allow Hints</span>
-                            <p className="text-xs text-gray-500">Child can buy hints after wrong answers</p>
+                            <span className="font-medium text-sm">{t('parent.dashboard.allowHints')}</span>
+                            <p className="text-xs text-gray-500">{t('parent.dashboard.allowHintsDescription')}</p>
                           </div>
                           <button
                             type="button"
@@ -1024,7 +1051,7 @@ export default function ParentDashboard() {
                 {importing && importProgress > 0 && (
                   <div className="mb-4">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Importing packages...</span>
+                      <span>{t('parent.dashboard.importingPackages')}</span>
                       <span>{importProgress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -1042,14 +1069,18 @@ export default function ParentDashboard() {
                     disabled={importing || (autoAssign && !selectedChildId)}
                     className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50"
                   >
-                    {importing ? `Importing... ${importProgress}%` : `Import ${importedBatch.packages.length} Packages${autoAssign ? ' & Assign' : ''}`}
+                    {importing
+                      ? t('parent.dashboard.importingProgress', { progress: importProgress })
+                      : autoAssign
+                        ? t('parent.dashboard.importAndAssign', { count: importedBatch.packages.length })
+                        : t('parent.dashboard.importPackages', { count: importedBatch.packages.length })}
                   </button>
                   <button
                     onClick={clearImport}
                     disabled={importing}
                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -1058,13 +1089,13 @@ export default function ParentDashboard() {
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-bold text-lg mb-2">{importedData.package.name}</h3>
                   <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                    <div>Grade: {importedData.package.grade_level}</div>
-                    <div>Problems: {importedData.problems.length}</div>
+                    <div>{t('parent.dashboard.grade', { level: importedData.package.grade_level })}</div>
+                    <div>{t('parent.dashboard.problemsCount', { count: importedData.problems.length })}</div>
                     {importedData.package.category_id && (
-                      <div>Category: {importedData.package.category_id}</div>
+                      <div>{t('parent.dashboard.category', { name: importedData.package.category_id })}</div>
                     )}
                     {importedData.package.description && (
-                      <div className="col-span-2">Description: {importedData.package.description}</div>
+                      <div className="col-span-2">{t('parent.dashboard.description', { text: importedData.package.description })}</div>
                     )}
                   </div>
                 </div>
@@ -1077,9 +1108,9 @@ export default function ParentDashboard() {
                     className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
                   <div>
-                    <span className="font-medium">Share globally</span>
+                    <span className="font-medium">{t('parent.dashboard.shareGlobally')}</span>
                     <p className="text-sm text-gray-500">
-                      Visible to all parents with children in grade {importedData.package.grade_level}
+                      {t('parent.dashboard.shareGloballyDescription', { grade: importedData.package.grade_level })}
                     </p>
                   </div>
                 </label>
@@ -1094,9 +1125,9 @@ export default function ParentDashboard() {
                         className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <div>
-                        <span className="font-medium">Auto-assign after import</span>
+                        <span className="font-medium">{t('parent.dashboard.autoAssign')}</span>
                         <p className="text-sm text-gray-500">
-                          Immediately assign to selected child
+                          {t('parent.dashboard.autoAssignSingleDescription')}
                         </p>
                       </div>
                     </label>
@@ -1108,10 +1139,10 @@ export default function ParentDashboard() {
                           onChange={(e) => setSelectedChildId(e.target.value)}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="">Select child...</option>
+                          <option value="">{t('parent.dashboard.selectChild')}</option>
                           {childrenList.map((child) => (
                             <option key={child.id} value={child.id}>
-                              {child.name} (Grade {child.grade_level})
+                              {child.name} ({t('parent.dashboard.grade', { level: child.grade_level })})
                               {child.grade_level === importedData.package.grade_level ? ' ✓' : ''}
                             </option>
                           ))}
@@ -1120,8 +1151,8 @@ export default function ParentDashboard() {
                         {/* Allow Hints Toggle */}
                         <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                           <div>
-                            <span className="font-medium text-sm">Allow Hints</span>
-                            <p className="text-xs text-gray-500">Child can buy hints after wrong answers</p>
+                            <span className="font-medium text-sm">{t('parent.dashboard.allowHints')}</span>
+                            <p className="text-xs text-gray-500">{t('parent.dashboard.allowHintsDescription')}</p>
                           </div>
                           <button
                             type="button"
@@ -1154,13 +1185,17 @@ export default function ParentDashboard() {
                     disabled={importing || (autoAssign && !selectedChildId)}
                     className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50"
                   >
-                    {importing ? 'Importing...' : `Import Package${autoAssign ? ' & Assign' : ''}`}
+                    {importing
+                      ? t('parent.dashboard.importing')
+                      : autoAssign
+                        ? t('parent.dashboard.importPackageAndAssign')
+                        : t('parent.dashboard.importPackage')}
                   </button>
                   <button
                     onClick={clearImport}
                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -1211,7 +1246,7 @@ export default function ParentDashboard() {
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">📊</div>
-              <p className="font-medium">LGR 22 Coverage</p>
+              <p className="font-medium">{t('parent.dashboard.lgr22Coverage')}</p>
             </Link>
             <Link
               href="/login"
@@ -1236,6 +1271,11 @@ export default function ParentDashboard() {
             </button>
           </div>
         </section>
+
+        {/* Admin Panel (for admin parents only) */}
+        {parent?.isAdmin && (
+          <AdminPanel token={localStorage.getItem('parentToken') || ''} />
+        )}
 
         {/* Developer Admin Panel (Development Only) */}
         {isDevelopment() && (

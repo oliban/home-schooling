@@ -72,11 +72,11 @@ router.post('/register', async (req, res) => {
       [id, email.toLowerCase(), passwordHash, name, familyCode]
     );
 
-    const token = generateParentToken({ id, email: email.toLowerCase() });
+    const token = generateParentToken({ id, email: email.toLowerCase(), is_admin: 0 });
 
     res.status(201).json({
       token,
-      user: { id, email: email.toLowerCase(), name, familyCode }
+      user: { id, email: email.toLowerCase(), name, familyCode, isAdmin: false }
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -108,11 +108,21 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = generateParentToken({ id: parent.id, email: parent.email });
+    const token = generateParentToken({ id: parent.id, email: parent.email, is_admin: parent.is_admin });
+
+    const userResponse = {
+      id: parent.id,
+      email: parent.email,
+      name: parent.name,
+      familyCode: (parent as Parent & { family_code: string }).family_code,
+      isAdmin: parent.is_admin === 1
+    };
+
+    console.log('[AUTH] Login response for', parent.email, ':', JSON.stringify(userResponse));
 
     res.json({
       token,
-      user: { id: parent.id, email: parent.email, name: parent.name, familyCode: (parent as Parent & { family_code: string }).family_code }
+      user: userResponse
     });
   } catch (error) {
     console.error('Login error:', error);

@@ -83,11 +83,12 @@ export function authenticateAny(req: Request, res: Response, next: NextFunction)
   }
 }
 
-export function generateParentToken(parent: { id: string; email: string }): string {
+export function generateParentToken(parent: { id: string; email: string; is_admin?: number }): string {
   const payload: AuthPayload = {
     id: parent.id,
     email: parent.email,
-    type: 'parent'
+    type: 'parent',
+    isAdmin: parent.is_admin === 1
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }

@@ -1,0 +1,200 @@
+{
+  "batch": {
+    "grade_level": 6,
+    "global": true
+  },
+  "packages": [
+    {
+      "package": {
+        "name": "Fenrisulvens Kedjor",
+        "grade_level": 6,
+        "assignment_type": "reading",
+        "description": "En berättelse om en pojke som upptäcker den mytologiska vargen Fenris i en underjordisk grotta",
+        "story_text": "Viktor hade utforskat grottan i flera timmar när han hörde en konstant skrapande ljud från djupet. Med pannlampan som enda ljuskälla klättrade han djupare ner genom den smala passagen. Plötsligt vidgades grottan till en enorm sal. I mitten låg en varg större än någon han någonsin sett, bunden av silverglänsande kedjor som tycktes vävas av månljus. Vargens päls skimrade som nordanljuset. \"Fenris,\" viskade Viktor, igenkännande den mytologiska ulven från berättelserna mormor brukade berätta. Vargögonen mötte hans blick. \"Du känner mitt namn, människobarn. Men kännerna du också till orättvisan?\" rösten mullrade som åska. \"Gudarna fängslade mig här för brott jag ännu inte begått, för en framtid de fruktade.\" Viktor kände hur sympatin växte. Att bli dömd för något man inte gjort kändes fel. Men han mindes också sagornas varning - Fenris skulle orsaka ragnarök, gudarnas undergång. Hans hand rörde sig mot kedjorna, sedan tvekade han. \"Jag... jag förstår inte vad som är rätt,\" erkände Viktor. Fenris milda blick blev nästan beundrande. \"Visdom börjar med erkännandet av osäkerhet, unge vän. Kanske behöver världen fler som tvekar innan de agerar.\"",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder ordet 'orättvisan' när Fenris talar om varför han fängslades?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Det handlar om att bryta mot lagar och regler",
+            "B: Det handlar om att bli behandlad på ett sätt som inte är rättvist",
+            "C: Det handlar om att vara arg på andra människor",
+            "D: Det handlar om att göra saker som är farliga"
+          ],
+          "difficulty": "easy",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilket huvudtema utforskar berättelsen?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Vikten av att utforska grottor säkert och metodiskt",
+            "B: Att nordisk mytologi är spännande och lärorik att studia",
+            "C: Den moraliska komplexiteten i att döma någon för framtida handlingar",
+            "D: Att man alltid ska lyssna på sina morföräldrars visdom"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vad visar Viktors tvekan om hans karaktärsutveckling i berättelsen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han är feg och rädd för konsekvenserna av sina val",
+            "B: Han litar inte på sina egna instinkter och är osäker",
+            "C: Han är alltför påverkad av gamla berättelser och sagor",
+            "D: Han mognar genom att inse att moraliska val kan vara komplexa"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför blir Fenris 'beundrande' när Viktor erkänner sin osäkerhet?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han respekterar förmågan att se komplexitet istället för att handla impulsivt",
+            "B: Han inser att Viktor är för svag för att befria honom ändå",
+            "C: Han tycker det är roligt när människor är förvirrade och osäkra",
+            "D: Han hoppas kunna manipulera Viktor genom att berömma honom"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Thors Glömda Hammare",
+        "grade_level": 6,
+        "assignment_type": "reading",
+        "description": "En humoristisk berättelse om Thor som tappar Mjölner på Midgård",
+        "story_text": "Thor gäspade och sträckte på sig när han vaknade på Avengers-tornet. I sitt halvvakna tillstånd ställde han Mjölner mot väggen och gick för att hämta frukost. Två timmar senare, mitt i ett viktigt möte om en potentiell invasion, sträckte han ut handen för att kalla på hammaren. Ingenting hände. Han försökte igen. Fortfarande ingenting. \"Ehhh, jag kommer strax tillbaka,\" mumlade han och rusade iväg. Var hade han lagt den? Inte i sovrummet. Inte i köket. Inte på träningsrummet. Panik började sprida sig. Han kunde inte erkänna för de andra Avengers att han tappat bort sin hammare! Tony Stark skulle aldrig sluta reta honom. I desperation ringde han sin bror Loki. \"Du har väl inte... lånat den?\" frågade han försiktigt. Lokis skratt ekade genom luren. \"Storebror, även jag har högre standard än att stjäla din hammare medan du sover. Har du kollat badrummet?\" Tjugo pinsamma minuter senare hittade Thor slutligen Mjölner - balanserad på toalettstolen där han lämnat den när han vaknade och behövde gå på toaletten. \"Detta förblir mellan oss,\" sa han strängt till hammaren. Mjölner teg klokt.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder 'mumlade' när texten beskriver hur Thor pratade när han lämnade mötet?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Att tala mycket högt och aggressivt till andra",
+            "B: Att viska så tyst att ingen kan höra vad man säger",
+            "C: Att tala otydligt och lågt, ofta av osäkerhet eller stress",
+            "D: Att sjunga en melodi istället för att prata normalt"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vilket är berättelsens främsta budskap?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Man ska alltid ha koll på sina magiska vapen och verktyg",
+            "B: Även mäktiga hjältar har vardagliga pinsamma ögonblick som alla andra",
+            "C: Det är viktigt att be om hjälp när man har förlorat något",
+            "D: Syskon bör alltid hjälpa varandra oavsett vad som hänt"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Vad avslöjar Thors beteende om hans personlighet?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han är arrogant och vägrar erkänna sina misstag för någon",
+            "B: Han är dum och glömmer ofta bort viktiga saker",
+            "C: Han är mänsklig och bryr sig om sitt rykte trots sin styrka",
+            "D: Han litar mer på sin bror än på sina Avengers-kollegor"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför nämner Thor specifikt att Tony Stark 'aldrig skulle sluta reta honom'?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: För att Tony Stark är känd för att stjäla andras vapen",
+            "B: För att Tony brukar tappa bort sina egna saker ofta",
+            "C: För att Thor tidigare har retat Tony för liknande misstag",
+            "D: För att det antyder en dynamik där Tony älskar att påpeka andras felbedömningar"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    },
+    {
+      "package": {
+        "name": "Patronus-Problemet",
+        "grade_level": 6,
+        "assignment_type": "reading",
+        "description": "En mystisk berättelse om en elev vars Patronus förändras oväntat",
+        "story_text": "Neville Longbottom hade tränat i månavis på sin Patronus-besvärjelse. Äntligen, efter otaliga försök, hade han lyckats framkalla en fullständig Patronus - en silver lejonhona som speglade hans nyfunna mod. Men idag, när professor Lupin bad honom demonstrera för klassen, hände något märkligt. Det silvervita ljuset formade sig inte till ett lejon. Istället materialiserades en helt annan varelse - en drake med fjädrar istället för fjäll, som simmade genom luften med eleganta rörelser. Klassen flämtade. Detta var ingen känd magisk varelse. \"Extraordinärt,\" mumlade Lupin fascinerat. \"En Patronus kan förändras när häxor eller trollkarlar genomgår djupgående personlig transformation. Men detta... detta har jag aldrig sett.\" Neville stirrade på den drömlika skapelsen. Under det senaste halvåret hade mycket förändrats. Han hade börjat ifrågasätta gamla sanningar om vad mod egentligen betydde. Kanske var verkligt mod inte bara att stå upp mot fiender, utan också att omfamna vem han verkligen var - någon som inte perfekt passade i de förväntade kategorierna. Draken-som-inte-var-en-drake svävade runt honom, och för första gången på länge kände Neville sig helt bekväm med osäkerheten.",
+        "global": true
+      },
+      "problems": [
+        {
+          "question_text": "Vad betyder 'extraordinärt' när professor Lupin beskriver Nevilles Patronus?",
+          "correct_answer": "A",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Något exceptionellt ovanligt och anmärkningsvärt utöver det vanliga",
+            "B: Något farligt och hotfullt som borde undvikas",
+            "C: Något vackert och estetiskt tilltalande att se på",
+            "D: Något gammalt och traditionellt från forntida tider"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-VOCABULARY"]
+        },
+        {
+          "question_text": "Vad handlar berättelsen i grunden om?",
+          "correct_answer": "C",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Hur viktigt det är att träna hårt på svår magi",
+            "B: Att lärare som professor Lupin kan hjälpa elever utvecklas",
+            "C: Att acceptera och omfamna sin sanna identitet även när den inte passar förväntningar",
+            "D: Att magiska varelser kan förändras på oväntade sätt"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-MAIN-IDEA"]
+        },
+        {
+          "question_text": "Hur har Nevilles karaktär utvecklats under det senaste halvåret?",
+          "correct_answer": "B",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han har blivit modigare och vågar nu bekämpa sina fiender",
+            "B: Han har utvecklat en djupare förståelse för sin identitet och komplexitet",
+            "C: Han har blivit bättre på att utföra svåra magiska besvärjelser",
+            "D: Han har lärt sig att dölja sina verkliga känslor för andra"
+          ],
+          "difficulty": "medium",
+          "lgr22_codes": ["SV-CHARACTER"]
+        },
+        {
+          "question_text": "Varför känner sig Neville 'bekväm med osäkerheten' i slutet av berättelsen?",
+          "correct_answer": "D",
+          "answer_type": "multiple_choice",
+          "options": [
+            "A: Han har gett upp försöket att kontrollera sin Patronus form",
+            "B: Professor Lupin har försäkrat honom att allt kommer bli bra",
+            "C: Han vet nu att hans Patronus är starkare än alla andras",
+            "D: Han har insett att det är okej att inte passa in i tydliga kategorier"
+          ],
+          "difficulty": "hard",
+          "lgr22_codes": ["SV-INFERENCE"]
+        }
+      ]
+    }
+  ]
+}

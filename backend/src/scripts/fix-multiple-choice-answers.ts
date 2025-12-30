@@ -15,7 +15,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../../data/homeschooling.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../../data/teacher.db');
 
 interface Problem {
   id: string;

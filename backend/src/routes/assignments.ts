@@ -171,6 +171,8 @@ router.get('/', authenticateAny, async (req, res) => {
     const db = getDb();
     let query = `
       SELECT a.*, c.name as child_name,
+        p_assigned.name as assigned_by_name,
+        p_assigned.email as assigned_by_email,
         -- Score calculation: correct answers
         CASE
           WHEN a.package_id IS NOT NULL THEN
@@ -191,6 +193,7 @@ router.get('/', authenticateAny, async (req, res) => {
         END as total_count
       FROM assignments a
       JOIN children c ON a.child_id = c.id
+      LEFT JOIN parents p_assigned ON a.assigned_by_id = p_assigned.id
     `;
     const params: string[] = [];
 
@@ -244,8 +247,11 @@ router.get('/:id', authenticateAny, (req, res) => {
   try {
     const db = getDb();
 
-    const assignment = db.get<Assignment>(
-      'SELECT * FROM assignments WHERE id = ?',
+    const assignment = db.get<Assignment & { assigned_by_name?: string; assigned_by_email?: string }>(
+      `SELECT a.*, p.name as assigned_by_name, p.email as assigned_by_email
+       FROM assignments a
+       LEFT JOIN parents p ON a.assigned_by_id = p.id
+       WHERE a.id = ?`,
       [req.params.id]
     );
 
@@ -364,11 +370,24 @@ router.post('/', authenticateParent, async (req, res) => {
 
     const db = getDb();
 
-    // Verify child belongs to parent
-    const child = db.get<{ id: string; grade_level: number }>(
-      'SELECT id, grade_level FROM children WHERE id = ? AND parent_id = ?',
-      [childId, req.user!.id]
+    console.log('[ASSIGNMENT] Create request - User:', req.user!.email, 'isAdmin:', req.user!.isAdmin, 'childId:', childId);
+
+    // Verify child exists (and belongs to parent if not admin)
+    const whereClause = req.user!.isAdmin
+      ? 'WHERE id = ?'
+      : 'WHERE id = ? AND parent_id = ?';
+    const params = req.user!.isAdmin
+      ? [childId]
+      : [childId, req.user!.id];
+
+    console.log('[ASSIGNMENT] Query:', `SELECT id, parent_id, grade_level FROM children ${whereClause}`, 'params:', params);
+
+    const child = db.get<{ id: string; parent_id: string; grade_level: number }>(
+      `SELECT id, parent_id, grade_level FROM children ${whereClause}`,
+      params
     );
+
+    console.log('[ASSIGNMENT] Child found:', child);
 
     if (!child) {
       return res.status(404).json({ error: 'Child not found' });
@@ -379,9 +398,9 @@ router.post('/', authenticateParent, async (req, res) => {
 
     db.transaction(() => {
       db.run(
-        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
-        [assignmentId, req.user!.id, childId, type, title, grade]
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, assigned_by_id)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+        [assignmentId, child.parent_id, childId, type, title, grade, req.user!.id]  // Use child's actual parent_id, track who assigned
       );
 
       if (type === 'math' && problems && Array.isArray(problems)) {

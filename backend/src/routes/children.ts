@@ -15,6 +15,10 @@ router.get('/', authenticateParent, (req, res) => {
   try {
     const db = getDb();
 
+    // Everyone sees only their own children (use admin panel for all children)
+    const whereClause = 'WHERE c.parent_id = ?';
+    const params = [req.user!.id];
+
     // Single query fetches children with coins AND brainrot stats using LEFT JOINs and GROUP BY
     const children = db.all<{
       id: string;
@@ -25,6 +29,8 @@ router.get('/', authenticateParent, (req, res) => {
       coins: number;
       brainrotCount: number;
       brainrotValue: number;
+      parent_id?: string;
+      parent_name?: string;
     }>(
       `SELECT
          c.id,
@@ -32,17 +38,20 @@ router.get('/', authenticateParent, (req, res) => {
          c.birthdate,
          c.grade_level,
          c.pin_hash,
+         c.parent_id,
+         p.name as parent_name,
          COALESCE(cc.balance, 0) as coins,
          COUNT(chc.collectible_id) as brainrotCount,
          COALESCE(SUM(col.price), 0) as brainrotValue
        FROM children c
+       LEFT JOIN parents p ON c.parent_id = p.id
        LEFT JOIN child_coins cc ON c.id = cc.child_id
        LEFT JOIN child_collectibles chc ON c.id = chc.child_id
        LEFT JOIN collectibles col ON chc.collectible_id = col.id
-       WHERE c.parent_id = ?
-       GROUP BY c.id, c.name, c.birthdate, c.grade_level, c.pin_hash, cc.balance
+       ${whereClause}
+       GROUP BY c.id, c.name, c.birthdate, c.grade_level, c.pin_hash, c.parent_id, p.name, cc.balance
        ORDER BY c.name`,
-      [req.user!.id]
+      params
     );
 
     const childrenWithBrainrots = children.map(c => ({
@@ -53,7 +62,9 @@ router.get('/', authenticateParent, (req, res) => {
       coins: c.coins,
       hasPin: !!c.pin_hash,
       brainrotCount: c.brainrotCount,
-      brainrotValue: c.brainrotValue
+      brainrotValue: c.brainrotValue,
+      // Include parent info for admin
+      ...(req.user!.isAdmin && { parent_id: c.parent_id, parent_name: c.parent_name })
     }));
 
     res.json(childrenWithBrainrots);

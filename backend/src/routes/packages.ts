@@ -448,11 +448,22 @@ router.post('/:id/assign', authenticateParent, async (req, res) => {
     const db = getDb();
     const parentId = req.user!.id;
 
-    // Verify child belongs to parent
-    const child = db.get<{ id: string; grade_level: number }>(
-      'SELECT id, grade_level FROM children WHERE id = ? AND parent_id = ?',
-      [childId, parentId]
+    console.log('[PACKAGE ASSIGN] User:', req.user!.email, 'isAdmin:', req.user!.isAdmin, 'childId:', childId);
+
+    // Admin can assign to any child, non-admin only to their own children
+    const whereClause = req.user!.isAdmin
+      ? 'WHERE id = ?'
+      : 'WHERE id = ? AND parent_id = ?';
+    const params = req.user!.isAdmin
+      ? [childId]
+      : [childId, parentId];
+
+    const child = db.get<{ id: string; parent_id: string; grade_level: number }>(
+      `SELECT id, parent_id, grade_level FROM children ${whereClause}`,
+      params
     );
+
+    console.log('[PACKAGE ASSIGN] Child found:', child);
 
     if (!child) {
       return res.status(404).json({ error: 'Child not found' });
@@ -479,17 +490,18 @@ router.post('/:id/assign', authenticateParent, async (req, res) => {
 
     const assignmentId = uuidv4();
 
+    // Use the child's actual parent_id for data integrity (even when admin assigns)
     db.run(
-      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, hints_allowed)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-      [assignmentId, parentId, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id, hintsAllowed ? 1 : 0]
+      `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, hints_allowed, assigned_by_id)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+      [assignmentId, child.parent_id, childId, pkg.assignment_type || 'math', title || pkg.name, pkg.grade_level, req.params.id, hintsAllowed ? 1 : 0, req.user!.id]
     );
 
-    // Invalidate packages cache (assignment status changed for this package)
-    await invalidatePackagesCache(parentId);
+    // Invalidate packages cache for the child's actual parent
+    await invalidatePackagesCache(child.parent_id);
 
-    // Invalidate assignments cache for both parent and child (new assignment affects both views)
-    await invalidateAssignmentsCache(parentId, childId);
+    // Invalidate assignments cache for both child's parent and child
+    await invalidateAssignmentsCache(child.parent_id, childId);
 
     res.status(201).json({ id: assignmentId });
   } catch (error) {

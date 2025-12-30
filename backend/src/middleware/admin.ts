@@ -11,3 +11,14 @@ export function requireDevelopment(req: Request, res: Response, next: NextFuncti
   }
   next();
 }
+
+/**
+ * Middleware to restrict access to routes requiring admin privileges.
+ * Requires authenticateParent middleware to be applied first.
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.user || !req.user.isAdmin) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}

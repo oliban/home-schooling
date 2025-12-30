@@ -414,4 +414,28 @@ export const admin = {
         completedAt?: number;
       } | null;
     }>('/admin/active-job', { token }),
+
+  // Admin-only: List all parents
+  listParents: (token: string) =>
+    fetchApi<Array<{
+      id: string;
+      email: string;
+      name: string;
+      family_code: string;
+      is_admin: number;
+      created_at: string;
+    }>>('/admin/parents', { token }),
+
+  // Admin-only: List all children
+  listChildren: (token: string) =>
+    fetchApi<Array<{
+      id: string;
+      parent_id: string;
+      parent_name: string;
+      parent_email: string;
+      name: string;
+      grade_level: number;
+      birthdate: string | null;
+      created_at: string;
+    }>>('/admin/children', { token }),
 };
