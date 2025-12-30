@@ -426,7 +426,7 @@ export const admin = {
       created_at: string;
     }>>('/admin/parents', { token }),
 
-  // Admin-only: List all children
+  // Admin-only: List all children with assignment counts
   listChildren: (token: string) =>
     fetchApi<Array<{
       id: string;
@@ -437,5 +437,7 @@ export const admin = {
       grade_level: number;
       birthdate: string | null;
       created_at: string;
+      active_assignments: number;
+      completed_assignments: number;
     }>>('/admin/children', { token }),
 };
