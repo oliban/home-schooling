@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { useTranslation } from '@/lib/LanguageContext';
 
 interface FileDropZoneProps {
   onFileLoad: (data: unknown, fileName: string) => void;
@@ -12,9 +13,10 @@ interface FileDropZoneProps {
 export default function FileDropZone({
   onFileLoad,
   accept = '.json',
-  label = 'Drop file here or click to select',
-  description = 'JSON files only',
+  label,
+  description,
 }: FileDropZoneProps) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function FileDropZone({
       setFileName(file.name);
 
       if (!file.name.endsWith('.json')) {
-        setError('Please select a JSON file');
+        setError(t('fileDropZone.errors.selectJson'));
         return;
       }
 
@@ -37,17 +39,17 @@ export default function FileDropZone({
           const data = JSON.parse(content);
           onFileLoad(data, file.name);
         } catch {
-          setError('Invalid JSON file');
+          setError(t('fileDropZone.errors.invalidJson'));
           setFileName(null);
         }
       };
       reader.onerror = () => {
-        setError('Failed to read file');
+        setError(t('fileDropZone.errors.readFailed'));
         setFileName(null);
       };
       reader.readAsText(file);
     },
-    [onFileLoad]
+    [onFileLoad, t]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -112,17 +114,17 @@ export default function FileDropZone({
       {fileName && !error ? (
         <div>
           <p className="font-medium text-green-700">{fileName}</p>
-          <p className="text-sm text-green-600 mt-1">File loaded successfully</p>
+          <p className="text-sm text-green-600 mt-1">{t('fileDropZone.success')}</p>
         </div>
       ) : error ? (
         <div>
           <p className="font-medium text-red-700">{error}</p>
-          <p className="text-sm text-red-600 mt-1">Click to try again</p>
+          <p className="text-sm text-red-600 mt-1">{t('fileDropZone.retry')}</p>
         </div>
       ) : (
         <div>
-          <p className="font-medium text-gray-700">{label}</p>
-          <p className="text-sm text-gray-500 mt-1">{description}</p>
+          <p className="font-medium text-gray-700">{label || t('fileDropZone.defaultLabel')}</p>
+          <p className="text-sm text-gray-500 mt-1">{description || t('fileDropZone.defaultDescription')}</p>
         </div>
       )}
     </div>

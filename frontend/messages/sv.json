@@ -16,6 +16,33 @@
     "error": "Något gick fel",
     "success": "Klart!"
   },
+  "home": {
+    "hero": {
+      "title": "Dags för ett äventyr!",
+      "subtitle": "Utforska matte-mysterier och dyk ner i spännande berättelser",
+      "startButton": "Starta äventyret!",
+      "parentButton": "Förälder"
+    },
+    "features": {
+      "math": {
+        "title": "Matte",
+        "description": "Knäck koden!"
+      },
+      "reading": {
+        "title": "Läsning",
+        "description": "Upptäck världar"
+      },
+      "coins": {
+        "title": "Mynt",
+        "description": "Samla skatter"
+      },
+      "characters": {
+        "title": "Karaktärer",
+        "description": "Bygg din samling"
+      }
+    },
+    "imageAlt": "Magisk skolvärld"
+  },
   "login": {
     "title": "Välkommen till Brainrot-skolan!",
     "parentTitle": "Förälder-inloggning",
@@ -32,7 +59,50 @@
     "parentLink": "Förälder-inloggning",
     "childLink": "Elev-inloggning",
     "invalidCredentials": "Fel inloggningsuppgifter",
-    "familyNotFound": "Familjen hittades inte"
+    "familyNotFound": "Familjen hittades inte",
+    "errors": {
+      "noChildren": "Inga barn hittades. Lägg till ett barn på föräldrasidan först.",
+      "invalidFamilyCode": "Fel familjekod. Kontrollera koden och försök igen.",
+      "wrongPin": "Fel PIN-kod"
+    },
+    "welcome": "Välkommen till Brainrot-skolan!",
+    "enterFamilyCode": "Ange din familjekod",
+    "continue": "Fortsätt",
+    "whichChild": "Vem är du?",
+    "enterPin": "Ange din PIN:",
+    "start": "Börja!",
+    "noAccount": "Har du inget konto än?",
+    "createParent": "Skapa föräldrakonto först →"
+  },
+  "parentLogin": {
+    "title": "Föräldrarportal",
+    "subtitle": "Hantera dina barns lärande",
+    "tabs": {
+      "login": "Logga in",
+      "register": "Registrera"
+    },
+    "email": "E-post",
+    "emailPlaceholder": "din@epost.se",
+    "password": "Lösenord",
+    "passwordPlaceholder": "Ditt lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "confirmPasswordPlaceholder": "Upprepa lösenord",
+    "name": "Namn",
+    "namePlaceholder": "Ditt namn",
+    "passwordMinPlaceholder": "Minst 6 tecken",
+    "buttons": {
+      "login": "Logga in",
+      "loggingIn": "Loggar in...",
+      "register": "Skapa konto",
+      "registering": "Skapar konto..."
+    },
+    "errors": {
+      "loginFailed": "Inloggning misslyckades",
+      "passwordMismatch": "Lösenorden matchar inte",
+      "passwordLength": "Lösenordet måste vara minst 6 tecken",
+      "registrationFailed": "Registrering misslyckades"
+    },
+    "childLogin": "Barninloggning istället"
   },
   "register": {
     "title": "Skapa familj",
@@ -88,6 +158,13 @@
     "hintLabel": "Tips:",
     "explanationLabel": "Förklaring:",
     "tryAgain": "Försök igen",
+    "story": {
+      "show": "Visa berättelsen",
+      "hide": "Dölj berättelsen",
+      "title": "Läs berättelsen",
+      "showButton": "Visa",
+      "hideButton": "Dölj"
+    },
     "completed": {
       "title": "Bra jobbat!",
       "score": "{correct} av {total} rätt",
@@ -113,6 +190,14 @@
       "rare": "Sällsynt",
       "epic": "Episk",
       "legendary": "Legendarisk"
+    },
+    "errors": {
+      "purchaseFailed": "Köpet kunde inte slutföras"
+    },
+    "sessionExpired": {
+      "title": "Sessionen har gått ut",
+      "message": "Din session har gått ut eller inloggningstoken är ogiltig. Logga in igen för att fortsätta.",
+      "button": "Logga ut & Återgå till inloggning"
     }
   },
   "parent": {
@@ -147,7 +232,60 @@
       "confirmDeleteAssignment": "Är du säker på att du vill ta bort denna uppgift?",
       "deleteAssignmentError": "Kunde inte ta bort uppgiften",
       "browsePackages": "Välj paket",
-      "completedAt": "Klar:"
+      "completedAt": "Klar:",
+      "importTitle": "Importera problempaket",
+      "importAnother": "Importera ett till",
+      "batchImport": "Batchimport",
+      "shareGlobal": "Dela globalt",
+      "shareDescription": "Synlig för alla föräldrar med barn i årskurs {grade_level}",
+      "autoAssign": "Auto-tilldela efter import",
+      "autoAssignDescription": "Tilldela omedelbart alla paket till valt barn",
+      "autoAssignSingle": "Tilldela omedelbart till valt barn",
+      "selectChild": "Välj barn...",
+      "allowHints": "Tillåt tips",
+      "allowHintsDescription": "Barnet kan köpa tips efter felaktiga svar",
+      "dropZone": "Släpp problempaket-JSON här",
+      "dropZoneDescription": "Enkelt paket eller batch (flera paket)",
+      "lgr22Coverage": "LGR 22-täckning",
+      "dragToReorder": "Dra för att ändra ordning",
+      "assignedBy": "Tilldelad av: {name}",
+      "lgr22Link": "📊 LGR 22",
+      "brainrotCount": "{count} hjärnrötor",
+      "brainrotValue": "{value} mynt",
+      "shareGlobally": "Dela globalt",
+      "shareGloballyDescription": "Synlig för alla föräldrar med barn i årskurs {grade}",
+      "autoAssignSingleDescription": "Tilldela omedelbart till valt barn",
+      "packagesCount": "Paket: {count}",
+      "problemsCount": "{count} problem",
+      "packagesLabel": "Paket",
+      "totalProblems": "Totalt problem: {count}",
+      "category": "Kategori: {name}",
+      "description": "Beskrivning: {text}",
+      "importingPackages": "Importerar paket...",
+      "importing": "Importerar...",
+      "importProgress": "Importerar... {progress}%",
+      "importPackages": "Importera {count} paket",
+      "importPackagesAndAssign": "Importera {count} paket & Tilldela",
+      "importPackage": "Importera paket",
+      "importPackageAndAssign": "Importera paket & Tilldela",
+      "errors": {
+        "invalidFormat": "Ogiltigt format. Måste vara ett enskilt paket (med \"package\" och \"problems\") eller batch (med \"batch\" och \"packages\").",
+        "batchGradeRequired": "Batch måste ha \"grade_level\"-fält.",
+        "batchEmptyPackages": "Batch måste innehålla minst ett paket.",
+        "packageInvalid": "Paket {index} är ogiltigt. Måste ha \"package\" och \"problems\"-fält.",
+        "packageMissingFields": "Paket {index} måste ha \"name\"- och \"grade_level\"-fält.",
+        "packageEmptyProblems": "Paket {index} måste innehålla minst ett problem.",
+        "packageMustHaveFields": "Paket måste ha \"name\"- och \"grade_level\"-fält.",
+        "packageMustHaveProblems": "Paket måste innehålla minst ett problem.",
+        "selectChildForAutoAssign": "Välj ett barn för auto-tilldelning.",
+        "importFailed": "Misslyckades med att importera paket"
+      },
+      "import": {
+        "successBatch": "Importerade {packages} paket med {problems} totalt problem!",
+        "successBatchAssigned": "Importerade {packages} paket med {problems} totalt problem och tilldelade {assignments} till {childName}!",
+        "success": "Paket importerat med {problems} problem!",
+        "successAssigned": "Paket importerat med {problems} problem och tilldelat till {childName}!"
+      }
     },
     "packages": {
       "title": "Uppgiftspaket",
@@ -164,7 +302,40 @@
       "gradeHeader": "Årskurs {grade}",
       "packageCount": "{count} paket",
       "noPackages": "Inga paket tillgängliga än",
-      "importPackage": "Importera ett paket"
+      "importPackage": "Importera ett paket",
+      "back": "Tillbaka",
+      "badges": {
+        "global": "Global",
+        "private": "Privat"
+      },
+      "problemCount": "{count} problem",
+      "difficultyCount": "{count} {level}",
+      "deleteTitle": "Ta bort paket",
+      "difficulty": {
+        "easy": "lätt",
+        "medium": "medel",
+        "hard": "svår"
+      },
+      "assignedTo": "Tilldelad till:",
+      "status": {
+        "done": "Klar",
+        "inProgress": "Pågående",
+        "pending": "Väntande"
+      },
+      "createdByYou": "Skapad av dig",
+      "delete": {
+        "title": "Ta bort paket?",
+        "confirm": "Är du säker på att du vill ta bort \"{name}\"?",
+        "willRemove": "Detta tar också bort {count} uppgift...",
+        "willRemovePlural": "Detta tar också bort {count} uppgifter...",
+        "button": "Ta bort",
+        "deleting": "Tar bort...",
+        "cancel": "Avbryt"
+      },
+      "errors": {
+        "loadFailed": "Misslyckades med att ladda paket",
+        "deleteFailed": "Misslyckades med att ta bort paket"
+      }
     },
     "child": {
       "addTitle": "Lägg till barn",
@@ -173,13 +344,25 @@
       "namePlaceholder": "Barnets namn",
       "birthdate": "Födelsedatum",
       "gradeLevel": "Årskurs",
+      "gradeLevelLabel": "Årskurs {grade}",
       "pin": "PIN-kod",
       "pinPlaceholder": "4 siffror",
+      "pinOptional": "PIN (4 siffror, valfritt)",
       "pinHelp": "PIN-kod för barninloggning",
+      "pinHelpText": "Barnet använder denna PIN för att logga in. Du kan ställa in den senare.",
       "coins": "mynt",
       "streak": "dagsstreak",
       "hasPin": "Har PIN",
-      "noPin": "Ingen PIN"
+      "noPin": "Ingen PIN",
+      "errors": {
+        "pinLength": "PIN måste vara exakt 4 siffror",
+        "failed": "Misslyckades med att lägga till barn"
+      },
+      "buttons": {
+        "cancel": "Avbryt",
+        "add": "Lägg till barn",
+        "adding": "Lägger till..."
+      }
     },
     "assignment": {
       "createTitle": "Skapa uppgift",
@@ -192,7 +375,32 @@
       "readingTextPlaceholder": "Klistra in eller skriv en text...",
       "createButton": "Skapa uppgift",
       "creating": "Skapar...",
-      "success": "Uppgiften har skapats!"
+      "success": "Uppgiften har skapats!",
+      "child": "Barn",
+      "title": "Titel",
+      "titlePlaceholderMath": "Matte: Addition",
+      "titlePlaceholderReading": "Läsförståelse: Pippi kapitel 1",
+      "contentLabel": "Innehåll (JSON)",
+      "contentHelp": "Klistra in JSON genererad av Claude Code skills",
+      "showExample": "Visa exempelformat",
+      "types": {
+        "math": "Matte",
+        "reading": "Läsning"
+      },
+      "errors": {
+        "selectChild": "Välj ett barn",
+        "enterTitle": "Ange en titel",
+        "pasteJson": "Klistra in JSON-innehållet",
+        "invalidJson": "Ogiltigt JSON-format",
+        "failed": "Misslyckades med att skapa uppgift"
+      },
+      "addChildFirst": "Lägg till ett barn först innan du skapar uppgifter",
+      "buttons": {
+        "addChild": "Lägg till barn",
+        "cancel": "Avbryt",
+        "create": "Skapa uppgift",
+        "creating": "Skapar..."
+      }
     },
     "progress": {
       "title": "{name}s framsteg",
@@ -246,6 +454,76 @@
         "medium": "Medel",
         "hard": "Svår"
       }
+    },
+    "childDetail": {
+      "loading": "Laddar...",
+      "notFound": "Barnet hittades inte",
+      "coins": "Mynt",
+      "totalEarned": "Totalt intjänat",
+      "streak": "Streak",
+      "progress": "Framsteg",
+      "assignmentsCompleted": "Uppgifter slutförda",
+      "math": "Matte",
+      "reading": "Läsning",
+      "correctAnswers": "rätt svar",
+      "details": "Detaljer",
+      "edit": "Redigera",
+      "name": "Namn",
+      "gradeLevel": "Årskurs",
+      "arskurs": "Årskurs {grade}",
+      "newPin": "Ny PIN (lämna tom för att behålla nuvarande)",
+      "pinPlaceholder": "____",
+      "cancel": "Avbryt",
+      "saveChanges": "Spara ändringar",
+      "saving": "Sparar...",
+      "dangerZone": "Farozon",
+      "deleteWarning": "Att ta bort ett barn tar bort alla deras uppgifter, framsteg och samlarobjekt.",
+      "deleteChild": "Ta bort barn",
+      "deleteConfirm": "Är du säker på att du vill ta bort detta barn? Detta kan inte ångras.",
+      "errors": {
+        "pinLength": "PIN måste vara exakt 4 siffror",
+        "loadFailed": "Misslyckades med att ladda barnets data",
+        "saveFailed": "Misslyckades med att spara",
+        "deleteFailed": "Misslyckades med att ta bort"
+      }
+    },
+    "packagePreview": {
+      "loading": "Laddar...",
+      "notFound": "Paketet hittades inte",
+      "backToPackages": "Tillbaka till paket",
+      "grade": "Årskurs {grade}",
+      "problems": "{count} problem",
+      "global": "Globalt",
+      "private": "Privat",
+      "assignmentCreated": "Uppgift skapad!",
+      "assignedTo": "Paketet har tilldelats {childName}",
+      "assignAnother": "Tilldela till ett annat barn",
+      "backToDashboard": "Tillbaka till panelen",
+      "assignToChild": "Tilldela till barn",
+      "selectChild": "Välj barn",
+      "chooseChild": "Välj ett barn...",
+      "assignmentTitle": "Uppgiftstitel",
+      "allowHints": "Tillåt tips",
+      "allowHintsDescription": "Barnet kan köpa tips efter felaktiga svar",
+      "assigning": "Tilldelar...",
+      "assignPackage": "Tilldela paket",
+      "deletePackage": "Ta bort paket",
+      "deleteConfirm": "Är du säker på att du vill ta bort detta paket?",
+      "yesDelete": "Ja, ta bort",
+      "deleting": "Tar bort...",
+      "problemsPreview": "Problemöversikt",
+      "questionsCount": "({count} frågor)",
+      "question": "Fråga {number}",
+      "answer": "Svar:",
+      "type": "Typ:",
+      "hint": "Tips:",
+      "explanation": "Förklaring:",
+      "gradeWithParent": "Årskurs {grade}) - Förälder: {parent}",
+      "errors": {
+        "loadFailed": "Misslyckades med att ladda paket",
+        "assignFailed": "Misslyckades med att tilldela paket",
+        "deleteFailed": "Misslyckades med att ta bort paket"
+      }
     }
   },
   "language": {
@@ -261,5 +539,62 @@
     "text": "Text",
     "move": "Flytta",
     "typeHere": "Skriv här..."
+  },
+  "curriculum": {
+    "title": "LGR 22 läroplanstäckning",
+    "selectChild": "Välj barn",
+    "backToDashboard": "Tillbaka till panelen",
+    "browsePackages": "Bläddra bland paket",
+    "gradeLevel": "Årskurs {grade_level}",
+    "coverage": {
+      "title": "Läroplanstäckning",
+      "gradeChild": "Årskurs {grade} - {name}",
+      "categoriesSelected": "{count} kategori valda",
+      "categoriesSelectedPlural": "{count} kategorier valda",
+      "categories": "Kategorier",
+      "allObjectives": "Alla mål",
+      "closeAll": "← Stäng alla",
+      "overallCoverage": "Övergripande täckning",
+      "objectivesCount": "{covered} av {total} mål",
+      "categoriesCount": "{count} kategorier",
+      "accuracy": "Precision:",
+      "depth": "Djup (inre kant):",
+      "questionsRange": {
+        "light": "1-2 frågor",
+        "medium": "3-4 frågor",
+        "deep": "5+ frågor"
+      },
+      "categoryBreakdown": "Kategoriuppdelning",
+      "objectivesInCategory": "{covered}/{total} mål",
+      "notAuthenticated": "Inte autentiserad",
+      "fetchFailed": "Misslyckades med att hämta täckningsdata",
+      "loadFailed": "Misslyckades med att ladda data",
+      "tryAgain": "Försök igen",
+      "noData": "Ingen läroplandata tillgänglig",
+      "completeAssignments": "Slutför några uppgifter för att se läroplanstäckning",
+      "coverageLabel": "Täckning: ",
+      "objectivesOf": "{covered} av {total} mål",
+      "notAttempted": "Ej försökt",
+      "depthLabel": "Djup: {level} ({count} frågor)",
+      "depthLevels": {
+        "none": "Ingen",
+        "light": "Lätt",
+        "medium": "Medium",
+        "deep": "Djup"
+      },
+      "category": "kategori",
+      "categoriesPlural": "kategorier"
+    }
+  },
+  "fileDropZone": {
+    "defaultLabel": "Släpp fil här eller klicka för att välja",
+    "defaultDescription": "Endast JSON-filer",
+    "errors": {
+      "selectJson": "Välj en JSON-fil",
+      "invalidJson": "Ogiltig JSON-fil",
+      "readFailed": "Misslyckades med att läsa fil"
+    },
+    "success": "Fil laddad",
+    "retry": "Klicka för att försöka igen"
   }
 }

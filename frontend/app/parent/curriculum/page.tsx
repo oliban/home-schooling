@@ -152,7 +152,7 @@ export default function CurriculumDashboard() {
               ←
             </Link>
             <div>
-              <h1 className="text-xl font-bold">LGR 22 Curriculum Coverage</h1>
+              <h1 className="text-xl font-bold">{t('curriculum.title')}</h1>
               <p className="text-sm text-gray-600">{parent.email}</p>
             </div>
           </div>
@@ -173,10 +173,10 @@ export default function CurriculumDashboard() {
         <section className="mb-8">
           <div className="bg-white p-6 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Select Child</h2>
+              <h2 className="text-lg font-bold">{t('curriculum.selectChild')}</h2>
               {selectedChild && (
                 <span className="text-sm text-gray-600">
-                  Grade {selectedChild.grade_level}
+                  {t('curriculum.gradeLevel', { grade_level: selectedChild.grade_level })}
                 </span>
               )}
             </div>
@@ -208,7 +208,7 @@ export default function CurriculumDashboard() {
                       <span>👤</span>
                       <span>{child.name}</span>
                       <span className="text-xs opacity-75">
-                        (Grade {child.grade_level})
+                        ({t('curriculum.gradeLevel', { grade_level: child.grade_level })})
                       </span>
                     </div>
                   </button>
@@ -261,7 +261,7 @@ export default function CurriculumDashboard() {
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">🏠</div>
-              <p className="font-medium">Back to Dashboard</p>
+              <p className="font-medium">{t('curriculum.backToDashboard')}</p>
             </Link>
             <Link
               href="/parent/assignments/create"
@@ -275,7 +275,7 @@ export default function CurriculumDashboard() {
               className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow text-center"
             >
               <div className="text-3xl mb-2">📦</div>
-              <p className="font-medium">Browse Packages</p>
+              <p className="font-medium">{t('curriculum.browsePackages')}</p>
             </Link>
           </div>
         </section>

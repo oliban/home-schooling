@@ -260,7 +260,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
           <p className="font-semibold text-gray-800">{data.name}</p>
           <div className="mt-2 space-y-1">
             <p className="text-sm">
-              <span className="text-gray-600">Coverage: </span>
+              <span className="text-gray-600">{t('curriculum.coverage.coverageLabel')}</span>
               <span className={`font-medium ${
                 data.coverage === 100 ? 'text-green-700' :
                 data.coverage > 0 ? 'text-green-600' : 'text-red-600'
@@ -269,7 +269,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
               </span>
             </p>
             <p className="text-sm text-gray-600">
-              {data.coveredObjectives} of {data.totalObjectives} objectives
+              {t('curriculum.coverage.objectivesOf', { covered: data.coveredObjectives, total: data.totalObjectives })}
             </p>
           </div>
         </div>
@@ -279,7 +279,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     const correct = data.correctCount || 0;
     const total = data.totalCount || 0;
     const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const depthLabel = total >= 5 ? 'Deep' : total >= 3 ? 'Medium' : total >= 1 ? 'Light' : 'None';
+    const depthLabel = total >= 5 ? t('curriculum.coverage.depthLevels.deep') : total >= 3 ? t('curriculum.coverage.depthLevels.medium') : total >= 1 ? t('curriculum.coverage.depthLevels.light') : t('curriculum.coverage.depthLevels.none');
 
     return (
       <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 max-w-xs">
@@ -294,12 +294,12 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
                 color: correct > 0 ? '#166534' : '#991b1b'
               }}
             >
-              {total > 0 ? `${correct}/${total} (${percentage}%)` : 'Not Attempted'}
+              {total > 0 ? `${correct}/${total} (${percentage}%)` : t('curriculum.coverage.notAttempted')}
             </span>
           </div>
           {total > 0 && (
             <p className="text-xs text-amber-700">
-              Depth: {depthLabel} ({total} questions)
+              {t('curriculum.coverage.depthLabel', { level: depthLabel, count: total })}
             </p>
           )}
           {data.categoryName && (
@@ -331,7 +331,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
     try {
       const token = localStorage.getItem('parentToken');
       if (!token) {
-        setError('Not authenticated');
+        setError(t('curriculum.coverage.notAuthenticated'));
         return;
       }
 
@@ -344,7 +344,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch coverage data');
+        throw new Error(t('curriculum.coverage.fetchFailed'));
       }
 
       const data: CoverageData = await response.json();
@@ -450,7 +450,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm">
-        <h3 className="font-bold text-lg mb-4">Curriculum Coverage</h3>
+        <h3 className="font-bold text-lg mb-4">{t('curriculum.coverage.title')}</h3>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           <span className="ml-3 text-gray-600">{t('common.loading')}</span>
@@ -463,7 +463,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   if (error) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm">
-        <h3 className="font-bold text-lg mb-4">Curriculum Coverage</h3>
+        <h3 className="font-bold text-lg mb-4">{t('curriculum.coverage.title')}</h3>
         <div className="text-center py-12">
           <div className="text-4xl mb-4">⚠️</div>
           <p className="text-red-600">{error}</p>
@@ -471,7 +471,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
             onClick={fetchCoverage}
             className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            Try Again
+            {t('curriculum.coverage.tryAgain')}
           </button>
         </div>
       </div>
@@ -482,12 +482,12 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   if (!coverageData || coverageData.categories.length === 0) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm">
-        <h3 className="font-bold text-lg mb-4">Curriculum Coverage</h3>
+        <h3 className="font-bold text-lg mb-4">{t('curriculum.coverage.title')}</h3>
         <div className="text-center py-12 text-gray-500">
           <div className="text-4xl mb-4">📊</div>
-          <p>No curriculum data available</p>
+          <p>{t('curriculum.coverage.noData')}</p>
           <p className="text-sm mt-2">
-            Complete some assignments to see curriculum coverage
+            {t('curriculum.coverage.completeAssignments')}
           </p>
         </div>
       </div>
@@ -518,11 +518,11 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-bold text-lg">Curriculum Coverage</h3>
+          <h3 className="font-bold text-lg">{t('curriculum.coverage.title')}</h3>
           {childName && (
             <p className="text-sm text-gray-600">
-              Grade {coverageData.childGradeLevel} - {childName}
-              {selectedCategories.size > 0 && ` - ${selectedCategories.size} ${selectedCategories.size === 1 ? 'category' : 'categories'} selected`}
+              {t('curriculum.coverage.gradeChild', { grade: coverageData.childGradeLevel, name: childName })}
+              {selectedCategories.size > 0 && ` - ${t(selectedCategories.size === 1 ? 'curriculum.coverage.categoriesSelected' : 'curriculum.coverage.categoriesSelectedPlural', { count: selectedCategories.size })}`}
             </p>
           )}
         </div>
@@ -538,7 +538,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Categories
+            {t('curriculum.coverage.categories')}
           </button>
           <button
             onClick={() => {
@@ -551,14 +551,14 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            All Objectives
+            {t('curriculum.coverage.allObjectives')}
           </button>
           {selectedCategories.size > 0 && (
             <button
               onClick={handleBackToCategories}
               className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              ← Close All
+              {t('curriculum.coverage.closeAll')}
             </button>
           )}
         </div>
@@ -568,17 +568,17 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: getCoverageColorLight(coverageData.coveragePercentage) }}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-700">Overall Coverage</p>
+            <p className="text-sm font-medium text-gray-700">{t('curriculum.coverage.overallCoverage')}</p>
             <p className="text-2xl font-bold" style={{ color: getCoverageColor(coverageData.coveragePercentage) }}>
               {coverageData.coveragePercentage}%
             </p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">
-              {coverageData.coveredObjectives} of {coverageData.totalObjectives} objectives
+              {t('curriculum.coverage.objectivesOf', { covered: coverageData.coveredObjectives, total: coverageData.totalObjectives })}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {coverageData.categories.length} categories
+              {t('curriculum.coverage.categoriesCount', { count: coverageData.categories.length })}
             </p>
           </div>
         </div>
@@ -682,7 +682,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       <div className="mt-4 space-y-2">
         {/* Percentage legend */}
         <div className="flex flex-wrap justify-center gap-3 text-xs">
-          <span className="text-gray-500 font-medium">Accuracy:</span>
+          <span className="text-gray-500 font-medium">{t('curriculum.coverage.accuracy')}</span>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }} />
             <span className="text-gray-600">0%</span>
@@ -710,25 +710,25 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         </div>
         {/* Depth legend */}
         <div className="flex flex-wrap justify-center gap-3 text-xs">
-          <span className="text-gray-500 font-medium">Depth (inner border):</span>
+          <span className="text-gray-500 font-medium">{t('curriculum.coverage.depth')}</span>
           <div className="flex items-center gap-1">
             <div className="w-5 h-5 rounded bg-green-400" style={{ border: '2px solid #eab308' }} />
-            <span className="text-gray-600">1-2 questions</span>
+            <span className="text-gray-600">{t('curriculum.coverage.questionsRange.light')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-5 h-5 rounded bg-green-400" style={{ border: '4px solid #c2410c' }} />
-            <span className="text-gray-600">3-4 questions</span>
+            <span className="text-gray-600">{t('curriculum.coverage.questionsRange.medium')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-5 h-5 rounded bg-green-400" style={{ border: '6px solid #78350f' }} />
-            <span className="text-gray-600">5+ questions</span>
+            <span className="text-gray-600">{t('curriculum.coverage.questionsRange.deep')}</span>
           </div>
         </div>
       </div>
 
       {/* Category breakdown table */}
       <div className="mt-6">
-        <h4 className="font-semibold text-gray-800 mb-3">Category Breakdown</h4>
+        <h4 className="font-semibold text-gray-800 mb-3">{t('curriculum.coverage.categoryBreakdown')}</h4>
         <div className="space-y-2">
           {coverageData.categories.map((category) => (
             <div
@@ -744,7 +744,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
-                  {category.coveredObjectives}/{category.totalObjectives} objectives
+                  {t('curriculum.coverage.objectivesInCategory', { covered: category.coveredObjectives, total: category.totalObjectives })}
                 </span>
                 <span
                   className="font-semibold min-w-[48px] text-right"

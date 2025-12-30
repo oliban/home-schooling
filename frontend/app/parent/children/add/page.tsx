@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { children } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 export default function AddChildPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [gradeLevel, setGradeLevel] = useState(1);
   const [pin, setPin] = useState('');
@@ -25,7 +27,7 @@ export default function AddChildPage() {
     setError('');
 
     if (pin && pin.length !== 4) {
-      setError('PIN must be exactly 4 digits');
+      setError(t('parent.child.errors.pinLength'));
       return;
     }
 
@@ -41,7 +43,7 @@ export default function AddChildPage() {
       });
       router.push('/parent');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add child');
+      setError(err instanceof Error ? err.message : t('parent.child.errors.failed'));
     } finally {
       setLoading(false);
     }
@@ -57,7 +59,7 @@ export default function AddChildPage() {
           >
             ←
           </Link>
-          <h1 className="text-2xl font-bold">Add Child</h1>
+          <h1 className="text-2xl font-bold">{t('parent.child.addTitle')}</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm">
@@ -69,7 +71,7 @@ export default function AddChildPage() {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
+              {t('parent.child.name')}
             </label>
             <input
               type="text"
@@ -77,13 +79,13 @@ export default function AddChildPage() {
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-              placeholder="Child's name"
+              placeholder={t('parent.child.namePlaceholder')}
             />
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Grade Level (Arskurs)
+              {t('parent.child.gradeLevel')}
             </label>
             <select
               value={gradeLevel}
@@ -92,7 +94,7 @@ export default function AddChildPage() {
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((grade) => (
                 <option key={grade} value={grade}>
-                  Arskurs {grade}
+                  {t('parent.child.gradeLevelLabel', { grade })}
                 </option>
               ))}
             </select>
@@ -100,7 +102,7 @@ export default function AddChildPage() {
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              PIN (4 digits, optional)
+              {t('parent.child.pinOptional')}
             </label>
             <input
               type="password"
@@ -112,7 +114,7 @@ export default function AddChildPage() {
               placeholder="____"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Child uses this PIN to log in. You can set it later.
+              {t('parent.child.pinHelpText')}
             </p>
           </div>
 
@@ -121,14 +123,14 @@ export default function AddChildPage() {
               href="/parent"
               className="flex-1 py-3 text-center border border-gray-300 rounded-xl font-medium hover:bg-gray-50"
             >
-              Cancel
+              {t('parent.child.buttons.cancel')}
             </Link>
             <button
               type="submit"
               disabled={loading || !name.trim()}
               className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300 transition-colors"
             >
-              {loading ? 'Adding...' : 'Add Child'}
+              {loading ? t('parent.child.buttons.adding') : t('parent.child.buttons.add')}
             </button>
           </div>
         </form>

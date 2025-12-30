@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { children } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 interface ChildDetail {
   id: string;
@@ -27,6 +28,7 @@ interface ChildProgress {
 export default function ChildDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useTranslation();
   const childId = params.id as string;
 
   const [child, setChild] = useState<ChildDetail | null>(null);
@@ -60,7 +62,7 @@ export default function ChildDetailPage() {
       setEditGrade(childData.grade_level);
     } catch (err) {
       console.error('Failed to load child:', err);
-      setError('Failed to load child data');
+      setError(t('parent.childDetail.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ export default function ChildDetailPage() {
     if (!token) return;
 
     if (newPin && newPin.length !== 4) {
-      setError('PIN must be exactly 4 digits');
+      setError(t('parent.childDetail.errors.pinLength'));
       return;
     }
 
@@ -87,14 +89,14 @@ export default function ChildDetailPage() {
       setEditing(false);
       setNewPin('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : t('parent.childDetail.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this child? This cannot be undone.')) {
+    if (!confirm(t('parent.childDetail.deleteConfirm'))) {
       return;
     }
 
@@ -105,14 +107,14 @@ export default function ChildDetailPage() {
       await children.delete(token, childId);
       router.push('/parent');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete');
+      setError(err instanceof Error ? err.message : t('parent.childDetail.errors.deleteFailed'));
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-xl">{t('parent.childDetail.loading')}</div>
       </div>
     );
   }
@@ -120,7 +122,7 @@ export default function ChildDetailPage() {
   if (!child) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-red-600">Child not found</div>
+        <div className="text-xl text-red-600">{t('parent.childDetail.notFound')}</div>
       </div>
     );
   }
@@ -149,29 +151,29 @@ export default function ChildDetailPage() {
           <div className="bg-white p-4 rounded-xl shadow-sm text-center">
             <div className="text-2xl mb-1">💰</div>
             <div className="text-2xl font-bold text-yellow-600">{child.coins}</div>
-            <div className="text-xs text-gray-600">Coins</div>
+            <div className="text-xs text-gray-600">{t('parent.childDetail.coins')}</div>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm text-center">
             <div className="text-2xl mb-1">🏆</div>
             <div className="text-2xl font-bold text-blue-600">{child.totalEarned}</div>
-            <div className="text-xs text-gray-600">Total Earned</div>
+            <div className="text-xs text-gray-600">{t('parent.childDetail.totalEarned')}</div>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm text-center">
             <div className="text-2xl mb-1">🔥</div>
             <div className="text-2xl font-bold text-orange-600">{child.currentStreak}</div>
-            <div className="text-xs text-gray-600">Streak</div>
+            <div className="text-xs text-gray-600">{t('parent.childDetail.streak')}</div>
           </div>
         </div>
 
         {/* Progress Section */}
         {progress && (
           <div className="bg-white p-6 rounded-2xl shadow-sm mb-6">
-            <h2 className="font-bold text-lg mb-4">Progress</h2>
+            <h2 className="font-bold text-lg mb-4">{t('parent.childDetail.progress')}</h2>
 
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Assignments Completed</span>
+                  <span>{t('parent.childDetail.assignmentsCompleted')}</span>
                   <span>{progress.completed_assignments}/{progress.total_assignments}</span>
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full">
@@ -190,22 +192,22 @@ export default function ChildDetailPage() {
                 <div className="bg-blue-50 p-4 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">📐</span>
-                    <span className="font-medium">Math</span>
+                    <span className="font-medium">{t('parent.childDetail.math')}</span>
                   </div>
                   <div className="text-2xl font-bold">
                     {progress.math_correct}/{progress.math_total}
                   </div>
-                  <div className="text-xs text-gray-600">correct answers</div>
+                  <div className="text-xs text-gray-600">{t('parent.childDetail.correctAnswers')}</div>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">📖</span>
-                    <span className="font-medium">Reading</span>
+                    <span className="font-medium">{t('parent.childDetail.reading')}</span>
                   </div>
                   <div className="text-2xl font-bold">
                     {progress.reading_correct}/{progress.reading_total}
                   </div>
-                  <div className="text-xs text-gray-600">correct answers</div>
+                  <div className="text-xs text-gray-600">{t('parent.childDetail.correctAnswers')}</div>
                 </div>
               </div>
             </div>
@@ -215,13 +217,13 @@ export default function ChildDetailPage() {
         {/* Edit Section */}
         <div className="bg-white p-6 rounded-2xl shadow-sm mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-lg">Details</h2>
+            <h2 className="font-bold text-lg">{t('parent.childDetail.details')}</h2>
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
-                Edit
+                {t('parent.childDetail.edit')}
               </button>
             )}
           </div>
@@ -230,7 +232,7 @@ export default function ChildDetailPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
+                  {t('parent.childDetail.name')}
                 </label>
                 <input
                   type="text"
@@ -242,7 +244,7 @@ export default function ChildDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Grade Level
+                  {t('parent.childDetail.gradeLevel')}
                 </label>
                 <select
                   value={editGrade}
@@ -251,7 +253,7 @@ export default function ChildDetailPage() {
                 >
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((grade) => (
                     <option key={grade} value={grade}>
-                      Arskurs {grade}
+                      {t('parent.childDetail.arskurs', { grade })}
                     </option>
                   ))}
                 </select>
@@ -259,7 +261,7 @@ export default function ChildDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  New PIN (leave empty to keep current)
+                  {t('parent.childDetail.newPin')}
                 </label>
                 <input
                   type="password"
@@ -268,7 +270,7 @@ export default function ChildDetailPage() {
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
                   className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none text-center text-xl tracking-[0.5em]"
-                  placeholder="____"
+                  placeholder={t('parent.childDetail.pinPlaceholder')}
                 />
               </div>
 
@@ -282,26 +284,26 @@ export default function ChildDetailPage() {
                   }}
                   className="flex-1 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50"
                 >
-                  Cancel
+                  {t('parent.childDetail.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
                   className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300"
                 >
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? t('parent.childDetail.saving') : t('parent.childDetail.saveChanges')}
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Name</span>
+                <span className="text-gray-600">{t('parent.childDetail.name')}</span>
                 <span className="font-medium">{child.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Grade Level</span>
-                <span className="font-medium">Arskurs {child.grade_level}</span>
+                <span className="text-gray-600">{t('parent.childDetail.gradeLevel')}</span>
+                <span className="font-medium">{t('parent.childDetail.arskurs', { grade: child.grade_level })}</span>
               </div>
             </div>
           )}
@@ -309,15 +311,15 @@ export default function ChildDetailPage() {
 
         {/* Danger Zone */}
         <div className="bg-red-50 p-6 rounded-2xl border border-red-200">
-          <h2 className="font-bold text-lg text-red-700 mb-2">Danger Zone</h2>
+          <h2 className="font-bold text-lg text-red-700 mb-2">{t('parent.childDetail.dangerZone')}</h2>
           <p className="text-sm text-red-600 mb-4">
-            Deleting a child will remove all their assignments, progress, and collectibles.
+            {t('parent.childDetail.deleteWarning')}
           </p>
           <button
             onClick={handleDelete}
             className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700"
           >
-            Delete Child
+            {t('parent.childDetail.deleteChild')}
           </button>
         </div>
       </div>

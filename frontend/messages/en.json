@@ -16,6 +16,33 @@
     "error": "Something went wrong",
     "success": "Done!"
   },
+  "home": {
+    "hero": {
+      "title": "Time for an adventure!",
+      "subtitle": "Explore math mysteries and dive into exciting stories",
+      "startButton": "Start the adventure!",
+      "parentButton": "Parent"
+    },
+    "features": {
+      "math": {
+        "title": "Math",
+        "description": "Crack the code!"
+      },
+      "reading": {
+        "title": "Reading",
+        "description": "Discover worlds"
+      },
+      "coins": {
+        "title": "Coins",
+        "description": "Collect treasures"
+      },
+      "characters": {
+        "title": "Characters",
+        "description": "Build your collection"
+      }
+    },
+    "imageAlt": "Magical school world"
+  },
   "login": {
     "title": "Welcome to Brainrot-skolan!",
     "parentTitle": "Parent Login",
@@ -32,7 +59,50 @@
     "parentLink": "Parent login",
     "childLink": "Student login",
     "invalidCredentials": "Invalid credentials",
-    "familyNotFound": "Family not found"
+    "familyNotFound": "Family not found",
+    "errors": {
+      "noChildren": "No children found. Add a child on the parent page first.",
+      "invalidFamilyCode": "Wrong family code. Check the code and try again.",
+      "wrongPin": "Wrong PIN"
+    },
+    "welcome": "Welcome to Brainrot-skolan!",
+    "enterFamilyCode": "Enter your family code",
+    "continue": "Continue",
+    "whichChild": "Who are you?",
+    "enterPin": "Enter your PIN:",
+    "start": "Start!",
+    "noAccount": "Don't have an account yet?",
+    "createParent": "Create parent account first →"
+  },
+  "parentLogin": {
+    "title": "Parent Portal",
+    "subtitle": "Manage your children's learning",
+    "tabs": {
+      "login": "Login",
+      "register": "Register"
+    },
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "Your password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Repeat password",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "passwordMinPlaceholder": "Min 6 characters",
+    "buttons": {
+      "login": "Login",
+      "loggingIn": "Logging in...",
+      "register": "Create Account",
+      "registering": "Creating account..."
+    },
+    "errors": {
+      "loginFailed": "Login failed",
+      "passwordMismatch": "Passwords do not match",
+      "passwordLength": "Password must be at least 6 characters",
+      "registrationFailed": "Registration failed"
+    },
+    "childLogin": "Child login instead"
   },
   "register": {
     "title": "Create Family",
@@ -88,6 +158,13 @@
     "hintLabel": "Hint:",
     "explanationLabel": "Explanation:",
     "tryAgain": "Try Again",
+    "story": {
+      "show": "Show story",
+      "hide": "Hide story",
+      "title": "Read the story",
+      "showButton": "Show",
+      "hideButton": "Hide"
+    },
     "completed": {
       "title": "Great job!",
       "score": "{correct} of {total} correct",
@@ -113,6 +190,14 @@
       "rare": "Rare",
       "epic": "Epic",
       "legendary": "Legendary"
+    },
+    "errors": {
+      "purchaseFailed": "Could not complete purchase"
+    },
+    "sessionExpired": {
+      "title": "Session Expired",
+      "message": "Your session has expired or the login token is invalid. Please log in again to continue.",
+      "button": "Log Out & Return to Login"
     }
   },
   "parent": {
@@ -147,7 +232,60 @@
       "confirmDeleteAssignment": "Are you sure you want to delete this assignment?",
       "deleteAssignmentError": "Failed to delete assignment",
       "browsePackages": "Browse Packages",
-      "completedAt": "Completed:"
+      "completedAt": "Completed:",
+      "importTitle": "Import Problem Package",
+      "importAnother": "Import Another",
+      "batchImport": "Batch Import",
+      "shareGlobal": "Share globally",
+      "shareDescription": "Visible to all parents with children in grade {grade_level}",
+      "autoAssign": "Auto-assign after import",
+      "autoAssignDescription": "Immediately assign all packages to selected child",
+      "autoAssignSingle": "Immediately assign to selected child",
+      "selectChild": "Select child...",
+      "allowHints": "Allow Hints",
+      "allowHintsDescription": "Child can buy hints after wrong answers",
+      "dropZone": "Drop problem package JSON here",
+      "dropZoneDescription": "Single package or batch (multiple packages)",
+      "lgr22Coverage": "LGR 22 Coverage",
+      "dragToReorder": "Drag to reorder",
+      "assignedBy": "Assigned by: {name}",
+      "lgr22Link": "📊 LGR 22",
+      "brainrotCount": "{count} brainrots",
+      "brainrotValue": "{value} coins",
+      "shareGlobally": "Share globally",
+      "shareGloballyDescription": "Visible to all parents with children in grade {grade}",
+      "autoAssignSingleDescription": "Immediately assign to selected child",
+      "packagesCount": "Packages: {count}",
+      "problemsCount": "{count} problems",
+      "packagesLabel": "Packages",
+      "totalProblems": "Total Problems: {count}",
+      "category": "Category: {name}",
+      "description": "Description: {text}",
+      "importingPackages": "Importing packages...",
+      "importing": "Importing...",
+      "importProgress": "Importing... {progress}%",
+      "importPackages": "Import {count} Packages",
+      "importPackagesAndAssign": "Import {count} Packages & Assign",
+      "importPackage": "Import Package",
+      "importPackageAndAssign": "Import Package & Assign",
+      "errors": {
+        "invalidFormat": "Invalid format. Must be single package (with \"package\" and \"problems\") or batch (with \"batch\" and \"packages\").",
+        "batchGradeRequired": "Batch must have \"grade_level\" field.",
+        "batchEmptyPackages": "Batch must contain at least one package.",
+        "packageInvalid": "Package {index} is invalid. Must have \"package\" and \"problems\" fields.",
+        "packageMissingFields": "Package {index} must have \"name\" and \"grade_level\" fields.",
+        "packageEmptyProblems": "Package {index} must contain at least one problem.",
+        "packageMustHaveFields": "Package must have \"name\" and \"grade_level\" fields.",
+        "packageMustHaveProblems": "Package must contain at least one problem.",
+        "selectChildForAutoAssign": "Please select a child for auto-assignment.",
+        "importFailed": "Failed to import package"
+      },
+      "import": {
+        "successBatch": "Imported {packages} packages with {problems} total problems!",
+        "successBatchAssigned": "Imported {packages} packages with {problems} total problems and assigned {assignments} to {childName}!",
+        "success": "Package imported with {problems} problems!",
+        "successAssigned": "Package imported with {problems} problems and assigned to {childName}!"
+      }
     },
     "packages": {
       "title": "Assignment Packages",
@@ -164,7 +302,40 @@
       "gradeHeader": "Grade {grade}",
       "packageCount": "{count} packages",
       "noPackages": "No packages available yet",
-      "importPackage": "Import a Package"
+      "importPackage": "Import a Package",
+      "back": "Back",
+      "badges": {
+        "global": "Global",
+        "private": "Private"
+      },
+      "problemCount": "{count} problems",
+      "difficultyCount": "{count} {level}",
+      "deleteTitle": "Delete package",
+      "difficulty": {
+        "easy": "easy",
+        "medium": "medium",
+        "hard": "hard"
+      },
+      "assignedTo": "Assigned to:",
+      "status": {
+        "done": "Done",
+        "inProgress": "In progress",
+        "pending": "Pending"
+      },
+      "createdByYou": "Created by you",
+      "delete": {
+        "title": "Delete Package?",
+        "confirm": "Are you sure you want to delete \"{name}\"?",
+        "willRemove": "This will also remove {count} assignment...",
+        "willRemovePlural": "This will also remove {count} assignments...",
+        "button": "Delete",
+        "deleting": "Deleting...",
+        "cancel": "Cancel"
+      },
+      "errors": {
+        "loadFailed": "Failed to load packages",
+        "deleteFailed": "Failed to delete package"
+      }
     },
     "child": {
       "addTitle": "Add Child",
@@ -173,13 +344,25 @@
       "namePlaceholder": "Child's name",
       "birthdate": "Birthdate",
       "gradeLevel": "Grade Level",
+      "gradeLevelLabel": "Grade {grade}",
       "pin": "PIN Code",
       "pinPlaceholder": "4 digits",
+      "pinOptional": "PIN (4 digits, optional)",
       "pinHelp": "PIN code for child login",
+      "pinHelpText": "Child uses this PIN to log in. You can set it later.",
       "coins": "coins",
       "streak": "day streak",
       "hasPin": "Has PIN",
-      "noPin": "No PIN"
+      "noPin": "No PIN",
+      "errors": {
+        "pinLength": "PIN must be exactly 4 digits",
+        "failed": "Failed to add child"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "add": "Add Child",
+        "adding": "Adding..."
+      }
     },
     "assignment": {
       "createTitle": "Create Assignment",
@@ -192,7 +375,32 @@
       "readingTextPlaceholder": "Paste or write a text...",
       "createButton": "Create Assignment",
       "creating": "Creating...",
-      "success": "Assignment created!"
+      "success": "Assignment created!",
+      "child": "Child",
+      "title": "Title",
+      "titlePlaceholderMath": "Math: Addition",
+      "titlePlaceholderReading": "Reading Comprehension: Pippi chapter 1",
+      "contentLabel": "Content (JSON)",
+      "contentHelp": "Paste the JSON generated by Claude Code skills",
+      "showExample": "Show example format",
+      "types": {
+        "math": "Math",
+        "reading": "Reading"
+      },
+      "errors": {
+        "selectChild": "Please select a child",
+        "enterTitle": "Please enter a title",
+        "pasteJson": "Please paste the JSON content",
+        "invalidJson": "Invalid JSON format",
+        "failed": "Failed to create assignment"
+      },
+      "addChildFirst": "Add a child first before creating assignments",
+      "buttons": {
+        "addChild": "Add Child",
+        "cancel": "Cancel",
+        "create": "Create Assignment",
+        "creating": "Creating..."
+      }
     },
     "progress": {
       "title": "{name}'s Progress",
@@ -246,6 +454,76 @@
         "medium": "Medium",
         "hard": "Hard"
       }
+    },
+    "childDetail": {
+      "loading": "Loading...",
+      "notFound": "Child not found",
+      "coins": "Coins",
+      "totalEarned": "Total Earned",
+      "streak": "Streak",
+      "progress": "Progress",
+      "assignmentsCompleted": "Assignments Completed",
+      "math": "Math",
+      "reading": "Reading",
+      "correctAnswers": "correct answers",
+      "details": "Details",
+      "edit": "Edit",
+      "name": "Name",
+      "gradeLevel": "Grade Level",
+      "arskurs": "Arskurs {grade}",
+      "newPin": "New PIN (leave empty to keep current)",
+      "pinPlaceholder": "____",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "dangerZone": "Danger Zone",
+      "deleteWarning": "Deleting a child will remove all their assignments, progress, and collectibles.",
+      "deleteChild": "Delete Child",
+      "deleteConfirm": "Are you sure you want to delete this child? This cannot be undone.",
+      "errors": {
+        "pinLength": "PIN must be exactly 4 digits",
+        "loadFailed": "Failed to load child data",
+        "saveFailed": "Failed to save",
+        "deleteFailed": "Failed to delete"
+      }
+    },
+    "packagePreview": {
+      "loading": "Loading...",
+      "notFound": "Package not found",
+      "backToPackages": "Back to packages",
+      "grade": "Grade {grade}",
+      "problems": "{count} problems",
+      "global": "Global",
+      "private": "Private",
+      "assignmentCreated": "Assignment Created!",
+      "assignedTo": "The package has been assigned to {childName}",
+      "assignAnother": "Assign to Another Child",
+      "backToDashboard": "Back to Dashboard",
+      "assignToChild": "Assign to Child",
+      "selectChild": "Select Child",
+      "chooseChild": "Choose a child...",
+      "assignmentTitle": "Assignment Title",
+      "allowHints": "Allow Hints",
+      "allowHintsDescription": "Child can buy hints after wrong answers",
+      "assigning": "Assigning...",
+      "assignPackage": "Assign Package",
+      "deletePackage": "Delete Package",
+      "deleteConfirm": "Are you sure you want to delete this package?",
+      "yesDelete": "Yes, Delete",
+      "deleting": "Deleting...",
+      "problemsPreview": "Problems Preview",
+      "questionsCount": "({count} questions)",
+      "question": "Question {number}",
+      "answer": "Answer:",
+      "type": "Type:",
+      "hint": "Hint:",
+      "explanation": "Explanation:",
+      "gradeWithParent": "Grade {grade}) - Parent: {parent}",
+      "errors": {
+        "loadFailed": "Failed to load package",
+        "assignFailed": "Failed to assign package",
+        "deleteFailed": "Failed to delete package"
+      }
     }
   },
   "language": {
@@ -261,5 +539,62 @@
     "text": "Text",
     "move": "Move",
     "typeHere": "Type here..."
+  },
+  "curriculum": {
+    "title": "LGR 22 Curriculum Coverage",
+    "selectChild": "Select Child",
+    "backToDashboard": "Back to Dashboard",
+    "browsePackages": "Browse Packages",
+    "gradeLevel": "Grade {grade_level}",
+    "coverage": {
+      "title": "Curriculum Coverage",
+      "gradeChild": "Grade {grade} - {name}",
+      "categoriesSelected": "{count} category selected",
+      "categoriesSelectedPlural": "{count} categories selected",
+      "categories": "Categories",
+      "allObjectives": "All Objectives",
+      "closeAll": "← Close All",
+      "overallCoverage": "Overall Coverage",
+      "objectivesCount": "{covered} of {total} objectives",
+      "categoriesCount": "{count} categories",
+      "accuracy": "Accuracy:",
+      "depth": "Depth (inner border):",
+      "questionsRange": {
+        "light": "1-2 questions",
+        "medium": "3-4 questions",
+        "deep": "5+ questions"
+      },
+      "categoryBreakdown": "Category Breakdown",
+      "objectivesInCategory": "{covered}/{total} objectives",
+      "notAuthenticated": "Not authenticated",
+      "fetchFailed": "Failed to fetch coverage data",
+      "loadFailed": "Failed to load data",
+      "tryAgain": "Try Again",
+      "noData": "No curriculum data available",
+      "completeAssignments": "Complete some assignments to see curriculum coverage",
+      "coverageLabel": "Coverage: ",
+      "objectivesOf": "{covered} of {total} objectives",
+      "notAttempted": "Not Attempted",
+      "depthLabel": "Depth: {level} ({count} questions)",
+      "depthLevels": {
+        "none": "None",
+        "light": "Light",
+        "medium": "Medium",
+        "deep": "Deep"
+      },
+      "category": "category",
+      "categoriesPlural": "categories"
+    }
+  },
+  "fileDropZone": {
+    "defaultLabel": "Drop file here or click to select",
+    "defaultDescription": "JSON files only",
+    "errors": {
+      "selectJson": "Please select a JSON file",
+      "invalidJson": "Invalid JSON file",
+      "readFailed": "Failed to read file"
+    },
+    "success": "File loaded successfully",
+    "retry": "Click to try again"
   }
 }

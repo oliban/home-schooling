@@ -67,7 +67,7 @@ export default function PackageBrowser() {
       setAllPackages(packagesData);
       setChildrenList(childrenData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load packages');
+      setError(err instanceof Error ? err.message : t('parent.packages.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +137,7 @@ export default function PackageBrowser() {
       setPackagesList(prev => prev.filter(p => p.id !== deleteConfirm.id));
       setDeleteConfirm(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete package');
+      setError(err instanceof Error ? err.message : t('parent.packages.errors.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -164,7 +164,7 @@ export default function PackageBrowser() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-xl">{t('common.loading')}</div>
       </div>
     );
   }
@@ -175,7 +175,7 @@ export default function PackageBrowser() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/parent" className="text-gray-500 hover:text-gray-700">
-              &larr; Back
+              &larr; {t('parent.packages.back')}
             </Link>
             <h1 className="text-xl font-bold">{t('parent.packages.title')}</h1>
           </div>
@@ -323,12 +323,12 @@ export default function PackageBrowser() {
         {packagesList.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
             <div className="text-4xl mb-4">📦</div>
-            <p className="text-gray-600 mb-4">No packages available yet</p>
+            <p className="text-gray-600 mb-4">{t('parent.packages.noPackages')}</p>
             <Link
               href="/parent"
               className="inline-block px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700"
             >
-              Import a Package
+              {t('parent.packages.importPackage')}
             </Link>
           </div>
         ) : (
@@ -362,7 +362,7 @@ export default function PackageBrowser() {
                                     setDeleteConfirm(pkg);
                                   }}
                                   className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                                  title="Delete package"
+                                  title={t('parent.packages.deleteTitle')}
                                 >
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -371,18 +371,18 @@ export default function PackageBrowser() {
                               )}
                               {pkg.is_global ? (
                                 <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
-                                  Global
+                                  {t('parent.packages.badges.global')}
                                 </span>
                               ) : (
                                 <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                                  Private
+                                  {t('parent.packages.badges.private')}
                                 </span>
                               )}
                             </div>
                           </div>
 
                           <div className="text-sm text-gray-500 mb-3">
-                            {pkg.problem_count} problems
+                            {t('parent.packages.problemCount', { count: pkg.problem_count })}
                             {pkg.category_name && ` | ${pkg.category_name}`}
                           </div>
 
@@ -395,24 +395,24 @@ export default function PackageBrowser() {
                           <div className="flex gap-2 text-xs">
                             {difficulty.easy && (
                               <span className="px-2 py-1 bg-green-50 text-green-600 rounded">
-                                {difficulty.easy} easy
+                                {t('parent.packages.difficultyCount', { count: difficulty.easy, level: t('parent.packages.difficulty.easy') })}
                               </span>
                             )}
                             {difficulty.medium && (
                               <span className="px-2 py-1 bg-yellow-50 text-yellow-600 rounded">
-                                {difficulty.medium} medium
+                                {t('parent.packages.difficultyCount', { count: difficulty.medium, level: t('parent.packages.difficulty.medium') })}
                               </span>
                             )}
                             {difficulty.hard && (
                               <span className="px-2 py-1 bg-red-50 text-red-600 rounded">
-                                {difficulty.hard} hard
+                                {t('parent.packages.difficultyCount', { count: difficulty.hard, level: t('parent.packages.difficulty.hard') })}
                               </span>
                             )}
                           </div>
 
                           {pkg.childAssignments.length > 0 && (
                             <div className="mt-3 pt-3 border-t">
-                              <div className="text-xs text-gray-500 mb-1">Assigned to:</div>
+                              <div className="text-xs text-gray-500 mb-1">{t('parent.packages.assignedTo')}</div>
                               <div className="flex flex-wrap gap-1">
                                 {pkg.childAssignments.map((ca, index) => (
                                   <span
@@ -425,7 +425,7 @@ export default function PackageBrowser() {
                                         : 'bg-gray-100 text-gray-600'
                                     }`}
                                   >
-                                    {ca.childName}: {ca.status === 'completed' ? 'Done' : ca.status === 'in_progress' ? 'In progress' : 'Pending'}
+                                    {ca.childName}: {ca.status === 'completed' ? t('parent.packages.status.done') : ca.status === 'in_progress' ? t('parent.packages.status.inProgress') : t('parent.packages.status.pending')}
                                   </span>
                                 ))}
                               </div>
@@ -434,7 +434,7 @@ export default function PackageBrowser() {
 
                           {pkg.isOwner && (
                             <div className="mt-3 pt-3 border-t text-xs text-gray-400">
-                              Created by you
+                              {t('parent.packages.createdByYou')}
                             </div>
                           )}
                         </div>
@@ -451,19 +451,19 @@ export default function PackageBrowser() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <h3 className="text-xl font-bold mb-4">Delete Package?</h3>
+            <h3 className="text-xl font-bold mb-4">{t('parent.packages.delete.title')}</h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to delete &quot;{deleteConfirm.name}&quot;?
+              {t('parent.packages.delete.confirm', { name: deleteConfirm.name })}
             </p>
             {deleteConfirm.childAssignments.length > 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <p className="text-yellow-800 text-sm font-medium">
-                  This will also remove {deleteConfirm.childAssignments.length} assignment{deleteConfirm.childAssignments.length !== 1 ? 's' : ''} from:
+                  {t('parent.packages.delete.willRemove', { count: deleteConfirm.childAssignments.length })}
                 </p>
                 <ul className="mt-2 text-sm text-yellow-700">
                   {deleteConfirm.childAssignments.map((ca, index) => (
                     <li key={`${ca.childId}-${index}`}>
-                      {ca.childName} ({ca.status === 'completed' ? 'Done' : ca.status === 'in_progress' ? 'In progress' : 'Pending'})
+                      {ca.childName} ({ca.status === 'completed' ? t('parent.packages.status.done') : ca.status === 'in_progress' ? t('parent.packages.status.inProgress') : t('parent.packages.status.pending')})
                     </li>
                   ))}
                 </ul>
@@ -475,14 +475,14 @@ export default function PackageBrowser() {
                 disabled={deleting}
                 className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                Cancel
+                {t('parent.packages.delete.cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
                 className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? t('parent.packages.delete.deleting') : t('parent.packages.delete.delete')}
               </button>
             </div>
           </div>

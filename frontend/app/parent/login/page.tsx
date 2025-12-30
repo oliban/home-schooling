@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 export default function ParentLogin() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,7 @@ export default function ParentLogin() {
       localStorage.setItem('parentData', JSON.stringify(result.user));
       router.push('/parent');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : t('parentLogin.errors.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -43,12 +45,12 @@ export default function ParentLogin() {
     setError('');
 
     if (registerPassword !== registerConfirm) {
-      setError('Passwords do not match');
+      setError(t('parentLogin.errors.passwordMismatch'));
       return;
     }
 
     if (registerPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('parentLogin.errors.passwordLength'));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function ParentLogin() {
       localStorage.setItem('parentData', JSON.stringify(result.user));
       router.push('/parent');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : t('parentLogin.errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -75,8 +77,8 @@ export default function ParentLogin() {
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">👨‍👩‍👧‍👦</div>
-          <h1 className="text-2xl font-bold">Parent Portal</h1>
-          <p className="text-gray-600 text-sm">Manage your children's learning</p>
+          <h1 className="text-2xl font-bold">{t('parentLogin.title')}</h1>
+          <p className="text-gray-600 text-sm">{t('parentLogin.subtitle')}</p>
         </div>
 
         {/* Tabs */}
@@ -89,7 +91,7 @@ export default function ParentLogin() {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Login
+            {t('parentLogin.tabs.login')}
           </button>
           <button
             onClick={() => { setActiveTab('register'); setError(''); }}
@@ -99,7 +101,7 @@ export default function ParentLogin() {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Register
+            {t('parentLogin.tabs.register')}
           </button>
         </div>
 
@@ -113,7 +115,7 @@ export default function ParentLogin() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                {t('parentLogin.email')}
               </label>
               <input
                 type="email"
@@ -121,12 +123,12 @@ export default function ParentLogin() {
                 onChange={(e) => setLoginEmail(e.target.value)}
                 required
                 className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-                placeholder="your@email.com"
+                placeholder={t('parentLogin.emailPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t('parentLogin.password')}
               </label>
               <input
                 type="password"
@@ -134,7 +136,7 @@ export default function ParentLogin() {
                 onChange={(e) => setLoginPassword(e.target.value)}
                 required
                 className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-                placeholder="Your password"
+                placeholder={t('parentLogin.passwordPlaceholder')}
               />
             </div>
             <button
@@ -142,14 +144,14 @@ export default function ParentLogin() {
               disabled={loading}
               className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300 transition-colors"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? t('parentLogin.buttons.loggingIn') : t('parentLogin.buttons.login')}
             </button>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name
+                {t('parentLogin.name')}
               </label>
               <input
                 type="text"
@@ -157,12 +159,12 @@ export default function ParentLogin() {
                 onChange={(e) => setRegisterName(e.target.value)}
                 required
                 className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-                placeholder="Your name"
+                placeholder={t('parentLogin.namePlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                {t('parentLogin.email')}
               </label>
               <input
                 type="email"
@@ -170,12 +172,12 @@ export default function ParentLogin() {
                 onChange={(e) => setRegisterEmail(e.target.value)}
                 required
                 className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-                placeholder="your@email.com"
+                placeholder={t('parentLogin.emailPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t('parentLogin.password')}
               </label>
               <input
                 type="password"
@@ -184,12 +186,12 @@ export default function ParentLogin() {
                 required
                 minLength={6}
                 className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-                placeholder="Min 6 characters"
+                placeholder={t('parentLogin.passwordMinPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+                {t('parentLogin.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -197,7 +199,7 @@ export default function ParentLogin() {
                 onChange={(e) => setRegisterConfirm(e.target.value)}
                 required
                 className="w-full p-3 border rounded-xl focus:border-green-500 focus:outline-none"
-                placeholder="Repeat password"
+                placeholder={t('parentLogin.confirmPasswordPlaceholder')}
               />
             </div>
             <button
@@ -205,14 +207,14 @@ export default function ParentLogin() {
               disabled={loading}
               className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300 transition-colors"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? t('parentLogin.buttons.registering') : t('parentLogin.buttons.register')}
             </button>
           </form>
         )}
 
         <div className="mt-6 text-center">
           <Link href="/login" className="text-sm text-gray-600 hover:text-gray-800">
-            Child login instead
+            {t('parentLogin.childLogin')}
           </Link>
         </div>
       </div>

@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 export default function ChildLogin() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [children, setChildren] = useState<{ id: string; name: string }[]>([]);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
   const [pin, setPin] = useState('');
@@ -31,10 +33,10 @@ export default function ChildLogin() {
       const kids = await auth.getChildren(familyCode);
       setChildren(kids);
       if (kids.length === 0) {
-        setError('Inga barn hittades. Lägg till ett barn på föräldrasidan först.');
+        setError(t('login.errors.noChildren'));
       }
     } catch {
-      setError('Fel familjekod. Kontrollera koden och försök igen.');
+      setError(t('login.errors.invalidFamilyCode'));
     }
   };
 
@@ -58,7 +60,7 @@ export default function ChildLogin() {
       localStorage.setItem('childData', JSON.stringify(result.child));
       router.push('/child');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fel PIN-kod');
+      setError(err instanceof Error ? err.message : t('login.errors.wrongPin'));
     } finally {
       setLoading(false);
     }
@@ -77,8 +79,8 @@ export default function ChildLogin() {
       <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white">
         <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
           <div className="text-4xl mb-4">🎒</div>
-          <h1 className="text-2xl font-bold mb-2">Välkommen till Brainrot-skolan!</h1>
-          <p className="text-gray-600 mb-6">Ange din familjekod</p>
+          <h1 className="text-2xl font-bold mb-2">{t('login.welcome')}</h1>
+          <p className="text-gray-600 mb-6">{t('login.enterFamilyCode')}</p>
 
           {error && (
             <div className="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-center">
@@ -101,16 +103,16 @@ export default function ChildLogin() {
             disabled={!parentId.trim()}
             className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
           >
-            Fortsätt
+            {t('login.continue')}
           </button>
 
           <div className="mt-6 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">Har du inget konto än?</p>
+            <p className="text-sm text-gray-600 mb-2">{t('login.noAccount')}</p>
             <a
               href="/parent/login"
               className="text-blue-600 hover:text-blue-700 font-medium text-sm"
             >
-              Skapa föräldrakonto först →
+              {t('login.createParent')}
             </a>
           </div>
         </div>
@@ -122,9 +124,9 @@ export default function ChildLogin() {
     <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
         <h1 className="text-3xl font-bold text-center mb-2">
-          Välkommen till Brainrot-skolan!
+          {t('login.welcome')}
         </h1>
-        <p className="text-gray-600 text-center mb-8">Vem är du?</p>
+        <p className="text-gray-600 text-center mb-8">{t('login.whichChild')}</p>
 
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-center">
@@ -153,7 +155,7 @@ export default function ChildLogin() {
           <>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
-                Ange din PIN:
+                {t('login.enterPin')}
               </label>
               <input
                 type="password"
@@ -172,7 +174,7 @@ export default function ChildLogin() {
               disabled={pin.length !== 4 || loading}
               className="w-full py-4 bg-blue-600 text-white rounded-xl text-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Laddar...' : 'Börja!'}
+              {loading ? t('common.loading') : t('login.start')}
             </button>
           </>
         )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { packages, children, admin } from '@/lib/api';
+import { useTranslation } from '@/lib/LanguageContext';
 
 interface Problem {
   id: string;
@@ -42,6 +43,7 @@ interface ChildData {
 export default function PackagePreview() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useTranslation();
   const packageId = params.id as string;
 
   const [pkg, setPkg] = useState<PackageDetail | null>(null);
@@ -91,7 +93,7 @@ export default function PackagePreview() {
       })));
       setCustomTitle(packageData.name);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load package');
+      setError(err instanceof Error ? err.message : t('parent.packagePreview.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -114,7 +116,7 @@ export default function PackagePreview() {
       });
       setAssignSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to assign package');
+      setError(err instanceof Error ? err.message : t('parent.packagePreview.errors.assignFailed'));
     } finally {
       setAssigning(false);
     }
@@ -129,7 +131,7 @@ export default function PackagePreview() {
       await packages.delete(token, packageId);
       router.push('/parent/packages');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete package');
+      setError(err instanceof Error ? err.message : t('parent.packagePreview.errors.deleteFailed'));
       setDeleting(false);
     }
   };
@@ -150,7 +152,7 @@ export default function PackagePreview() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-xl">{t('parent.packagePreview.loading')}</div>
       </div>
     );
   }
@@ -159,9 +161,9 @@ export default function PackagePreview() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl text-red-600 mb-4">{error || 'Package not found'}</p>
+          <p className="text-xl text-red-600 mb-4">{error || t('parent.packagePreview.notFound')}</p>
           <Link href="/parent/packages" className="text-purple-600 hover:underline">
-            Back to packages
+            {t('parent.packagePreview.backToPackages')}
           </Link>
         </div>
       </div>
@@ -174,23 +176,23 @@ export default function PackagePreview() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/parent/packages" className="text-gray-500 hover:text-gray-700">
-              &larr; Back
+              &larr; {t('common.back')}
             </Link>
             <div>
               <h1 className="text-xl font-bold">{pkg.name}</h1>
               <p className="text-sm text-gray-500">
-                Grade {pkg.grade_level} | {pkg.problem_count} problems
+                {t('parent.packagePreview.grade', { grade: pkg.grade_level })} | {t('parent.packagePreview.problems', { count: pkg.problem_count })}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {pkg.is_global ? (
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                Global
+                {t('parent.packagePreview.global')}
               </span>
             ) : (
               <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
-                Private
+                {t('parent.packagePreview.private')}
               </span>
             )}
           </div>
@@ -206,11 +208,10 @@ export default function PackagePreview() {
 
         {assignSuccess ? (
           <div className="bg-white p-8 rounded-2xl shadow-sm text-center mb-6">
-            <div className="text-4xl mb-4">.</div>
-            <p className="text-xl font-bold text-green-600 mb-4">Assignment Created!</p>
+            <div className="text-4xl mb-4">✅</div>
+            <p className="text-xl font-bold text-green-600 mb-4">{t('parent.packagePreview.assignmentCreated')}</p>
             <p className="text-gray-600 mb-6">
-              The package has been assigned to{' '}
-              {childrenList.find((c) => c.id === selectedChild)?.name}
+              {t('parent.packagePreview.assignedTo', { childName: childrenList.find((c) => c.id === selectedChild)?.name })}
             </p>
             <div className="flex gap-4 justify-center">
               <button
@@ -220,13 +221,13 @@ export default function PackagePreview() {
                 }}
                 className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700"
               >
-                Assign to Another Child
+                {t('parent.packagePreview.assignAnother')}
               </button>
               <Link
                 href="/parent"
                 className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200"
               >
-                Back to Dashboard
+                {t('parent.packagePreview.backToDashboard')}
               </Link>
             </div>
           </div>
@@ -235,23 +236,23 @@ export default function PackagePreview() {
             {/* Assign Section */}
             <div className="lg:col-span-1">
               <div className="bg-white p-6 rounded-2xl shadow-sm sticky top-6">
-                <h2 className="text-lg font-bold mb-4">Assign to Child</h2>
+                <h2 className="text-lg font-bold mb-4">{t('parent.packagePreview.assignToChild')}</h2>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Select Child
+                      {t('parent.packagePreview.selectChild')}
                     </label>
                     <select
                       value={selectedChild}
                       onChange={(e) => setSelectedChild(e.target.value)}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     >
-                      <option value="">Choose a child...</option>
+                      <option value="">{t('parent.packagePreview.chooseChild')}</option>
                       {childrenList.map((child) => (
                         <option key={child.id} value={child.id}>
-                          {child.name} (Grade {child.grade_level})
-                          {child.parent_name && ` - Parent: ${child.parent_name}`}
+                          {child.name} ({t('parent.packagePreview.grade', { grade: child.grade_level })})
+                          {child.parent_name && ` - ${t('parent.packagePreview.gradeWithParent', { grade: child.grade_level, parent: child.parent_name })}`}
                         </option>
                       ))}
                     </select>
@@ -259,7 +260,7 @@ export default function PackagePreview() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Assignment Title
+                      {t('parent.packagePreview.assignmentTitle')}
                     </label>
                     <input
                       type="text"
@@ -273,10 +274,10 @@ export default function PackagePreview() {
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="text-sm font-medium text-gray-700">
-                        Allow Hints
+                        {t('parent.packagePreview.allowHints')}
                       </label>
                       <p className="text-xs text-gray-500">
-                        Child can buy hints after wrong answers
+                        {t('parent.packagePreview.allowHintsDescription')}
                       </p>
                     </div>
                     <button
@@ -299,7 +300,7 @@ export default function PackagePreview() {
                     disabled={!selectedChild || assigning}
                     className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {assigning ? 'Assigning...' : 'Assign Package'}
+                    {assigning ? t('parent.packagePreview.assigning') : t('parent.packagePreview.assignPackage')}
                   </button>
                 </div>
 
@@ -308,7 +309,7 @@ export default function PackagePreview() {
                     {showDeleteConfirm ? (
                       <div className="space-y-3">
                         <p className="text-sm text-gray-600">
-                          Are you sure you want to delete this package?
+                          {t('parent.packagePreview.deleteConfirm')}
                         </p>
                         <div className="flex gap-2">
                           <button
@@ -316,13 +317,13 @@ export default function PackagePreview() {
                             disabled={deleting}
                             className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
                           >
-                            {deleting ? 'Deleting...' : 'Yes, Delete'}
+                            {deleting ? t('parent.packagePreview.deleting') : t('parent.packagePreview.yesDelete')}
                           </button>
                           <button
                             onClick={() => setShowDeleteConfirm(false)}
                             className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
                           >
-                            Cancel
+                            {t('common.cancel')}
                           </button>
                         </div>
                       </div>
@@ -331,7 +332,7 @@ export default function PackagePreview() {
                         onClick={() => setShowDeleteConfirm(true)}
                         className="w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
                       >
-                        Delete Package
+                        {t('parent.packagePreview.deletePackage')}
                       </button>
                     )}
                   </div>
@@ -343,9 +344,9 @@ export default function PackagePreview() {
             <div className="lg:col-span-2">
               <div className="bg-white p-6 rounded-2xl shadow-sm">
                 <h2 className="text-lg font-bold mb-4">
-                  Problems Preview
+                  {t('parent.packagePreview.problemsPreview')}
                   <span className="ml-2 text-sm font-normal text-gray-500">
-                    ({pkg.problems.length} questions)
+                    {t('parent.packagePreview.questionsCount', { count: pkg.problems.length })}
                   </span>
                 </h2>
 
@@ -357,7 +358,7 @@ export default function PackagePreview() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <span className="text-sm font-medium text-gray-500">
-                          Question {index + 1}
+                          {t('parent.packagePreview.question', { number: index + 1 })}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${getDifficultyColor(
@@ -382,23 +383,23 @@ export default function PackagePreview() {
 
                       <div className="flex items-center gap-4 text-sm">
                         <span className="text-green-600">
-                          Answer: <strong>{problem.correct_answer}</strong>
+                          {t('parent.packagePreview.answer')} <strong>{problem.correct_answer}</strong>
                         </span>
                         <span className="text-gray-400">|</span>
                         <span className="text-gray-500">
-                          Type: {problem.answer_type}
+                          {t('parent.packagePreview.type')} {problem.answer_type}
                         </span>
                       </div>
 
                       {problem.hint && (
                         <div className="mt-2 text-sm text-blue-600">
-                          Hint: {problem.hint}
+                          {t('parent.packagePreview.hint')} {problem.hint}
                         </div>
                       )}
 
                       {problem.explanation && (
                         <div className="mt-2 text-sm text-gray-500">
-                          Explanation: {problem.explanation}
+                          {t('parent.packagePreview.explanation')} {problem.explanation}
                         </div>
                       )}
                     </div>

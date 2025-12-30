@@ -128,7 +128,7 @@ export default function CollectionPage() {
       if (err instanceof Error && (err.message.includes('Invalid token') || err.message.includes('Unauthorized'))) {
         setSessionError(true);
       } else {
-        alert('Could not complete purchase');
+        alert(t('collection.errors.purchaseFailed'));
       }
     } finally {
       setBuying(null);
@@ -149,15 +149,15 @@ export default function CollectionPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white">
         <div className="max-w-md p-8 bg-white rounded-2xl shadow-lg text-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Session Expired</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('collection.sessionExpired.title')}</h2>
           <p className="text-gray-600 mb-6">
-            Your session has expired or the login token is invalid. Please log in again to continue.
+            {t('collection.sessionExpired.message')}
           </p>
           <button
             onClick={handleLogout}
             className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
           >
-            Log Out & Return to Login
+            {t('collection.sessionExpired.button')}
           </button>
         </div>
       </div>

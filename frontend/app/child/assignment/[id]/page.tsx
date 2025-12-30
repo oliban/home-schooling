@@ -357,15 +357,15 @@ export default function AssignmentPage() {
               onClick={() => setStoryCollapsed(!storyCollapsed)}
               className="w-full flex items-center justify-between p-6 hover:bg-amber-100 transition-colors"
               aria-expanded={!storyCollapsed}
-              aria-label={storyCollapsed ? 'Visa berättelsen' : 'Dölj berättelsen'}
+              aria-label={storyCollapsed ? t('assignment.story.show') : t('assignment.story.hide')}
             >
               <div className="flex items-center gap-2">
                 <span className="text-2xl">📖</span>
-                <h2 className="text-xl font-bold text-amber-900">Läs berättelsen</h2>
+                <h2 className="text-xl font-bold text-amber-900">{t('assignment.story.title')}</h2>
               </div>
               <div className="flex items-center gap-2 text-amber-700">
                 <span className="text-sm font-medium">
-                  {storyCollapsed ? 'Visa' : 'Dölj'}
+                  {storyCollapsed ? t('assignment.story.showButton') : t('assignment.story.hideButton')}
                 </span>
                 <svg
                   className={`w-5 h-5 transition-transform ${storyCollapsed ? '' : 'rotate-180'}`}
