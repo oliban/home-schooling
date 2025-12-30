@@ -173,11 +173,13 @@ app.use('/api/assignments', assignmentsRoutes);
 app.use('/api/collectibles', collectiblesRoutes);
 app.use('/api/packages', packagesRoutes);
 app.use('/api/curriculum', curriculumRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Admin routes (development only)
+// Log admin routes availability
 if (isDevelopment()) {
-  app.use('/api/admin', adminRoutes);
-  console.log('✓ Admin routes enabled (development mode)');
+  console.log('✓ Admin routes enabled (all endpoints available in development mode)');
+} else {
+  console.log('✓ Admin routes enabled (backup/sync restricted to development)');
 }
 
 // Health check
