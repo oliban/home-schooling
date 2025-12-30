@@ -12,7 +12,7 @@ export function runMigrations(): void {
   const db = getDb();
 
   // Ensure schema_migrations table exists
-  db.exec(`
+  db.connection.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version TEXT PRIMARY KEY,
       applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -21,7 +21,7 @@ export function runMigrations(): void {
 
   // Get list of applied migrations
   const applied = new Set(
-    db.prepare('SELECT version FROM schema_migrations').all().map((row: any) => row.version)
+    db.all<{ version: string }>('SELECT version FROM schema_migrations', []).map((row) => row.version)
   );
 
   // Get list of migration files
@@ -53,18 +53,12 @@ export function runMigrations(): void {
     try {
       // Run migration in a transaction
       db.transaction(() => {
-        // Split by semicolons and execute each statement
-        const statements = sql
-          .split(';')
-          .map(s => s.trim())
-          .filter(s => s && !s.startsWith('--'));
+        // Execute the entire migration SQL
+        db.connection.exec(sql);
 
-        for (const statement of statements) {
-          if (statement) {
-            db.exec(statement);
-          }
-        }
-      })();
+        // Record migration as applied
+        db.run('INSERT INTO schema_migrations (version) VALUES (?)', [version]);
+      });
 
       console.log(`✓ Migration ${version} completed`);
       appliedCount++;
