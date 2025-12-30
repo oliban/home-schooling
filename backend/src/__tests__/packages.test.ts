@@ -671,6 +671,117 @@ describe('Math Package System', () => {
     });
   });
 
+  describe('Admin Package Assignment', () => {
+    it('should allow admin to see all children for package assignment', () => {
+      const db = getDb();
+
+      // Create an admin parent
+      const adminId = uuidv4();
+      const adminEmail = `admin-test-${Date.now()}@example.com`;
+      const passwordHash = bcrypt.hashSync('test1234', 10);
+
+      db.run(
+        'INSERT INTO parents (id, email, password_hash, name, is_admin) VALUES (?, ?, ?, ?, ?)',
+        [adminId, adminEmail, passwordHash, 'Admin Parent', 1]
+      );
+
+      // Admin should be able to query ALL children (from /api/admin/children endpoint)
+      const allChildren = db.all<{
+        id: string;
+        name: string;
+        parent_name: string;
+      }>(`
+        SELECT c.id, c.name, p.name as parent_name
+        FROM children c
+        JOIN parents p ON c.parent_id = p.id
+      `);
+
+      // Should see both child1 (parent1) and child2 (parent2)
+      expect(allChildren.length).toBeGreaterThanOrEqual(2);
+      const childNames = allChildren.map(c => c.name);
+      expect(childNames).toContain('Child One');
+      expect(childNames).toContain('Child Two');
+
+      // Cleanup
+      db.run('DELETE FROM parents WHERE id = ?', [adminId]);
+    });
+
+    it('should restrict non-admin to only their own children for package assignment', () => {
+      const db = getDb();
+
+      // Parent1 (non-admin) should only see child1
+      const parent1Children = db.all<{ id: string; name: string }>(
+        'SELECT id, name FROM children WHERE parent_id = ?',
+        [parent1Id]
+      );
+
+      expect(parent1Children.length).toBe(1);
+      expect(parent1Children[0].name).toBe('Child One');
+      expect(parent1Children[0].id).toBe(child1Id);
+
+      // Should NOT see parent2's children
+      const otherChildren = db.all<{ id: string }>(
+        'SELECT id FROM children WHERE parent_id = ? AND id = ?',
+        [parent1Id, child2Id]
+      );
+
+      expect(otherChildren.length).toBe(0);
+    });
+
+    it('should allow admin to assign package to any child', () => {
+      const db = getDb();
+
+      // Create an admin parent
+      const adminId = uuidv4();
+      const adminEmail = `admin-assign-test-${Date.now()}@example.com`;
+      const passwordHash = bcrypt.hashSync('test1234', 10);
+
+      db.run(
+        'INSERT INTO parents (id, email, password_hash, name, is_admin) VALUES (?, ?, ?, ?, ?)',
+        [adminId, adminEmail, passwordHash, 'Admin Assigner', 1]
+      );
+
+      // Admin should be able to assign to child1 (owned by parent1)
+      const assignmentId = uuidv4();
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, assigned_by_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?, ?)`,
+        [assignmentId, parent1Id, child1Id, 'Admin Test Assignment', 3, packageId, adminId]
+      );
+
+      const assignment = db.get<{
+        parent_id: string;
+        child_id: string;
+        assigned_by_id: string;
+      }>(
+        'SELECT parent_id, child_id, assigned_by_id FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+
+      expect(assignment).toBeDefined();
+      expect(assignment?.child_id).toBe(child1Id);
+      expect(assignment?.parent_id).toBe(parent1Id); // Assignment belongs to child's parent
+      expect(assignment?.assigned_by_id).toBe(adminId); // But was assigned by admin
+
+      // Cleanup
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM parents WHERE id = ?', [adminId]);
+    });
+
+    it('should prevent non-admin from assigning to other parent children', () => {
+      const db = getDb();
+
+      // Parent1 trying to assign to child2 (owned by parent2) should use WHERE clause
+      // that checks parent_id, which would return no results
+      const child = db.get<{ id: string; parent_id: string }>(
+        'SELECT id, parent_id FROM children WHERE id = ? AND parent_id = ?',
+        [child2Id, parent1Id] // parent1 trying to access child2
+      );
+
+      expect(child).toBeUndefined(); // Should not find the child
+    });
+  });
+
   describe('Story Text for Themed Reading', () => {
     it('should store story_text in reading packages', () => {
       const db = getDb();

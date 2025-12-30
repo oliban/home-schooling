@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { packages, children } from '@/lib/api';
+import { packages, children, admin } from '@/lib/api';
 
 interface Problem {
   id: string;
@@ -35,6 +35,8 @@ interface ChildData {
   id: string;
   name: string;
   grade_level: number;
+  parent_name?: string;
+  parent_id?: string;
 }
 
 export default function PackagePreview() {
@@ -69,12 +71,24 @@ export default function PackagePreview() {
 
   const loadData = async (token: string) => {
     try {
+      // Check if user is admin
+      const parentData = localStorage.getItem('parentData');
+      const isAdmin = parentData ? JSON.parse(parentData).isAdmin : false;
+
+      // Admin users see all children, regular users see only their own
       const [packageData, childrenData] = await Promise.all([
         packages.get(token, packageId),
-        children.list(token),
+        isAdmin ? admin.listChildren(token) : children.list(token),
       ]);
+
       setPkg(packageData);
-      setChildrenList(childrenData);
+      setChildrenList(childrenData.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        grade_level: c.grade_level,
+        parent_name: c.parent_name,
+        parent_id: c.parent_id
+      })));
       setCustomTitle(packageData.name);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load package');
@@ -237,6 +251,7 @@ export default function PackagePreview() {
                       {childrenList.map((child) => (
                         <option key={child.id} value={child.id}>
                           {child.name} (Grade {child.grade_level})
+                          {child.parent_name && ` - Parent: ${child.parent_name}`}
                         </option>
                       ))}
                     </select>
