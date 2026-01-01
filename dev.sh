@@ -28,12 +28,53 @@ cleanup() {
     echo "Stopping servers..."
     kill $BACKEND_PID 2>/dev/null
     kill $FRONTEND_PID 2>/dev/null
+    echo "Stopping Redis..."
+    cd /Users/fredriksafsten/Projects/teacher
+    docker-compose stop redis >/dev/null 2>&1
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM
 
 echo "Starting Teacher Portal..."
+
+# Check if Docker is running, launch if needed
+if ! docker info >/dev/null 2>&1; then
+    echo "Docker is not running. Starting Docker Desktop..."
+    open -a Docker
+
+    # Wait for Docker to be ready (max 60 seconds)
+    echo "Waiting for Docker to start..."
+    for i in {1..60}; do
+        if docker info >/dev/null 2>&1; then
+            echo "Docker is ready!"
+            break
+        fi
+        if [ $i -eq 60 ]; then
+            echo "Error: Docker failed to start within 60 seconds"
+            exit 1
+        fi
+        sleep 1
+    done
+fi
+
+# Start Redis if not already running
+echo "Ensuring Redis is running..."
+cd /Users/fredriksafsten/Projects/teacher
+docker-compose up -d redis
+
+# Wait for Redis to be healthy
+echo "Waiting for Redis to be ready..."
+for i in {1..30}; do
+    if docker-compose exec -T redis redis-cli ping >/dev/null 2>&1; then
+        echo "Redis is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "Warning: Redis failed to start within 30 seconds"
+    fi
+    sleep 1
+done
 
 # Start backend
 echo "Starting backend on port 6001..."
