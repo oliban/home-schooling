@@ -24,6 +24,14 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// Mock LanguageContext
+vi.mock('@/lib/LanguageContext', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    language: 'sv' as const,
+  }),
+}));
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};

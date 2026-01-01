@@ -25,6 +25,7 @@ interface PackageData {
   created_at: string;
   isOwner: boolean;
   childAssignments: ChildAssignment[];
+  lgr22_objectives?: string[];
 }
 
 interface ChildData {
@@ -428,6 +429,27 @@ export default function PackageBrowser() {
                                     {ca.childName}: {ca.status === 'completed' ? t('parent.packages.status.done') : ca.status === 'in_progress' ? t('parent.packages.status.inProgress') : t('parent.packages.status.pending')}
                                   </span>
                                 ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {pkg.lgr22_objectives && pkg.lgr22_objectives.length > 0 && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="text-xs font-medium text-gray-500 mb-1">LGR22:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {pkg.lgr22_objectives.slice(0, 3).map((code, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs"
+                                  >
+                                    {code}
+                                  </span>
+                                ))}
+                                {pkg.lgr22_objectives.length > 3 && (
+                                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
+                                    +{pkg.lgr22_objectives.length - 3}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           )}

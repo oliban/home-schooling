@@ -863,4 +863,290 @@ describe('Math Package System', () => {
       db.run('DELETE FROM math_packages WHERE id = ?', [storyPackageId]);
     });
   });
+
+  describe('LGR22 Objectives Display', () => {
+    it('should return lgr22_codes for each problem in GET /packages/:id', () => {
+      const db = getDb();
+      const testPackageId = uuidv4();
+      const problemId1 = uuidv4();
+      const problemId2 = uuidv4();
+
+      // Get some valid curriculum objectives
+      const objectives = db.all<{ id: number; code: string }>(
+        'SELECT id, code FROM curriculum_objectives LIMIT 2'
+      );
+
+      if (objectives.length < 2) {
+        throw new Error('Need at least 2 curriculum objectives in database');
+      }
+
+      // Create a package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId, parent1Id, 'LGR22 Display Test Package', 3, 2, 0]
+      );
+
+      // Insert problems
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId1, testPackageId, 1, 'Test question 1', '42']
+      );
+
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId2, testPackageId, 2, 'Test question 2', '24']
+      );
+
+      // Create curriculum mappings - problem 1 has objective 0, problem 2 has both objectives
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId1, objectives[0].id]
+      );
+
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId2, objectives[0].id]
+      );
+
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId2, objectives[1].id]
+      );
+
+      // Simulate the GET /packages/:id endpoint logic
+      const problems = db.all<{ id: string; problem_number: number; question_text: string }>(
+        'SELECT * FROM package_problems WHERE package_id = ? ORDER BY problem_number',
+        [testPackageId]
+      );
+
+      const problemIds = problems.map(p => p.id);
+      const lgr22CodesByProblem = new Map<string, string[]>();
+
+      if (problemIds.length > 0) {
+        const placeholders = problemIds.map(() => '?').join(',');
+        const mappings = db.all<{ exercise_id: string; code: string }>(
+          `SELECT ecm.exercise_id, co.code
+           FROM exercise_curriculum_mapping ecm
+           JOIN curriculum_objectives co ON ecm.objective_id = co.id
+           WHERE ecm.exercise_type = 'package_problem' AND ecm.exercise_id IN (${placeholders})`,
+          problemIds
+        );
+
+        for (const m of mappings) {
+          if (!lgr22CodesByProblem.has(m.exercise_id)) {
+            lgr22CodesByProblem.set(m.exercise_id, []);
+          }
+          lgr22CodesByProblem.get(m.exercise_id)!.push(m.code);
+        }
+      }
+
+      const problemsWithCodes = problems.map(p => ({
+        ...p,
+        lgr22_codes: lgr22CodesByProblem.get(p.id) || []
+      }));
+
+      // Verify results
+      expect(problemsWithCodes.length).toBe(2);
+      expect(problemsWithCodes[0].lgr22_codes).toContain(objectives[0].code);
+      expect(problemsWithCodes[0].lgr22_codes.length).toBe(1);
+      expect(problemsWithCodes[1].lgr22_codes).toContain(objectives[0].code);
+      expect(problemsWithCodes[1].lgr22_codes).toContain(objectives[1].code);
+      expect(problemsWithCodes[1].lgr22_codes.length).toBe(2);
+
+      // Cleanup
+      db.run('DELETE FROM exercise_curriculum_mapping WHERE exercise_id IN (?, ?)', [problemId1, problemId2]);
+      db.run('DELETE FROM package_problems WHERE id IN (?, ?)', [problemId1, problemId2]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [testPackageId]);
+    });
+
+    it('should return lgr22_objectives for each package in GET /packages', () => {
+      const db = getDb();
+      const testPackageId1 = uuidv4();
+      const testPackageId2 = uuidv4();
+      const problemId1 = uuidv4();
+      const problemId2 = uuidv4();
+      const problemId3 = uuidv4();
+
+      // Get some valid curriculum objectives
+      const objectives = db.all<{ id: number; code: string }>(
+        'SELECT id, code FROM curriculum_objectives LIMIT 3'
+      );
+
+      if (objectives.length < 3) {
+        throw new Error('Need at least 3 curriculum objectives in database');
+      }
+
+      // Create two packages
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId1, parent1Id, 'Package 1', 3, 2, 0]
+      );
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId2, parent1Id, 'Package 2', 3, 1, 0]
+      );
+
+      // Insert problems
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId1, testPackageId1, 1, 'Q1', '1']
+      );
+
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId2, testPackageId1, 2, 'Q2', '2']
+      );
+
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId3, testPackageId2, 1, 'Q3', '3']
+      );
+
+      // Create curriculum mappings
+      // Package 1: objectives 0 and 1
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId1, objectives[0].id]
+      );
+
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId2, objectives[1].id]
+      );
+
+      // Package 2: objective 2
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES (?, ?, ?)`,
+        ['package_problem', problemId3, objectives[2].id]
+      );
+
+      // Simulate the GET /packages endpoint logic
+      const packages = db.all<{ id: string; name: string }>(
+        'SELECT id, name FROM math_packages WHERE id IN (?, ?)',
+        [testPackageId1, testPackageId2]
+      );
+
+      const lgr22ObjectivesByPackage = new Map<string, string[]>();
+      if (packages.length > 0) {
+        const packageIds = packages.map(p => p.id);
+        const placeholders = packageIds.map(() => '?').join(',');
+        const objectiveResults = db.all<{ package_id: string; code: string }>(
+          `SELECT DISTINCT pp.package_id, co.code
+           FROM package_problems pp
+           JOIN exercise_curriculum_mapping ecm ON ecm.exercise_type = 'package_problem' AND ecm.exercise_id = pp.id
+           JOIN curriculum_objectives co ON ecm.objective_id = co.id
+           WHERE pp.package_id IN (${placeholders})
+           ORDER BY pp.package_id, co.code`,
+          packageIds
+        );
+
+        for (const obj of objectiveResults) {
+          if (!lgr22ObjectivesByPackage.has(obj.package_id)) {
+            lgr22ObjectivesByPackage.set(obj.package_id, []);
+          }
+          lgr22ObjectivesByPackage.get(obj.package_id)!.push(obj.code);
+        }
+      }
+
+      const packagesWithObjectives = packages.map(pkg => ({
+        ...pkg,
+        lgr22_objectives: lgr22ObjectivesByPackage.get(pkg.id) || []
+      }));
+
+      // Verify results
+      expect(packagesWithObjectives.length).toBe(2);
+
+      const package1 = packagesWithObjectives.find(p => p.id === testPackageId1);
+      const package2 = packagesWithObjectives.find(p => p.id === testPackageId2);
+
+      expect(package1).toBeDefined();
+      expect(package1!.lgr22_objectives).toContain(objectives[0].code);
+      expect(package1!.lgr22_objectives).toContain(objectives[1].code);
+      expect(package1!.lgr22_objectives.length).toBe(2);
+
+      expect(package2).toBeDefined();
+      expect(package2!.lgr22_objectives).toContain(objectives[2].code);
+      expect(package2!.lgr22_objectives.length).toBe(1);
+
+      // Cleanup
+      db.run('DELETE FROM exercise_curriculum_mapping WHERE exercise_id IN (?, ?, ?)', [problemId1, problemId2, problemId3]);
+      db.run('DELETE FROM package_problems WHERE id IN (?, ?, ?)', [problemId1, problemId2, problemId3]);
+      db.run('DELETE FROM math_packages WHERE id IN (?, ?)', [testPackageId1, testPackageId2]);
+    });
+
+    it('should return empty lgr22_codes array when problem has no curriculum mappings', () => {
+      const db = getDb();
+      const testPackageId = uuidv4();
+      const problemId = uuidv4();
+
+      // Create a package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId, parent1Id, 'No Objectives Package', 3, 1, 0]
+      );
+
+      // Insert problem without curriculum mappings
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId, testPackageId, 1, 'Test question', '42']
+      );
+
+      // Simulate the endpoint logic
+      const problems = db.all<{ id: string }>(
+        'SELECT * FROM package_problems WHERE package_id = ?',
+        [testPackageId]
+      );
+
+      const problemIds = problems.map(p => p.id);
+      const lgr22CodesByProblem = new Map<string, string[]>();
+
+      if (problemIds.length > 0) {
+        const placeholders = problemIds.map(() => '?').join(',');
+        const mappings = db.all<{ exercise_id: string; code: string }>(
+          `SELECT ecm.exercise_id, co.code
+           FROM exercise_curriculum_mapping ecm
+           JOIN curriculum_objectives co ON ecm.objective_id = co.id
+           WHERE ecm.exercise_type = 'package_problem' AND ecm.exercise_id IN (${placeholders})`,
+          problemIds
+        );
+
+        for (const m of mappings) {
+          if (!lgr22CodesByProblem.has(m.exercise_id)) {
+            lgr22CodesByProblem.set(m.exercise_id, []);
+          }
+          lgr22CodesByProblem.get(m.exercise_id)!.push(m.code);
+        }
+      }
+
+      const problemsWithCodes = problems.map(p => ({
+        ...p,
+        lgr22_codes: lgr22CodesByProblem.get(p.id) || []
+      }));
+
+      // Verify empty array is returned
+      expect(problemsWithCodes.length).toBe(1);
+      expect(problemsWithCodes[0].lgr22_codes).toEqual([]);
+
+      // Cleanup
+      db.run('DELETE FROM package_problems WHERE id = ?', [problemId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [testPackageId]);
+    });
+  });
 });

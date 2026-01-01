@@ -373,11 +373,35 @@ router.get('/', authenticateParent, async (req, res) => {
       return acc;
     }, {} as Record<string, Array<{ childId: string; childName: string; status: string }>>);
 
-    // Add isOwner flag and assignment stats to each package
+    // Get LGR22 objectives for each package
+    const lgr22ObjectivesByPackage = new Map<string, string[]>();
+    if (packages.length > 0) {
+      const packageIds = packages.map(p => p.id);
+      const placeholders = packageIds.map(() => '?').join(',');
+      const objectives = db.all<{ package_id: string; code: string }>(
+        `SELECT DISTINCT pp.package_id, co.code
+         FROM package_problems pp
+         JOIN exercise_curriculum_mapping ecm ON ecm.exercise_type = 'package_problem' AND ecm.exercise_id = pp.id
+         JOIN curriculum_objectives co ON ecm.objective_id = co.id
+         WHERE pp.package_id IN (${placeholders})
+         ORDER BY pp.package_id, co.code`,
+        packageIds
+      );
+
+      for (const obj of objectives) {
+        if (!lgr22ObjectivesByPackage.has(obj.package_id)) {
+          lgr22ObjectivesByPackage.set(obj.package_id, []);
+        }
+        lgr22ObjectivesByPackage.get(obj.package_id)!.push(obj.code);
+      }
+    }
+
+    // Add isOwner flag, assignment stats, and LGR22 objectives to each package
     const result = packages.map(pkg => ({
       ...pkg,
       isOwner: pkg.parent_id === parentId,
-      childAssignments: assignmentsByPackage[pkg.id] || []
+      childAssignments: assignmentsByPackage[pkg.id] || [],
+      lgr22_objectives: lgr22ObjectivesByPackage.get(pkg.id) || []
     }));
 
     // Store in cache
@@ -425,10 +449,38 @@ router.get('/:id', authenticateParent, (req, res) => {
       [req.params.id]
     );
 
+    // Get curriculum codes for all problems
+    const problemIds = problems.map(p => p.id);
+    const lgr22CodesByProblem = new Map<string, string[]>();
+
+    if (problemIds.length > 0) {
+      const placeholders = problemIds.map(() => '?').join(',');
+      const mappings = db.all<{ exercise_id: string; code: string }>(
+        `SELECT ecm.exercise_id, co.code
+         FROM exercise_curriculum_mapping ecm
+         JOIN curriculum_objectives co ON ecm.objective_id = co.id
+         WHERE ecm.exercise_type = 'package_problem' AND ecm.exercise_id IN (${placeholders})`,
+        problemIds
+      );
+
+      for (const m of mappings) {
+        if (!lgr22CodesByProblem.has(m.exercise_id)) {
+          lgr22CodesByProblem.set(m.exercise_id, []);
+        }
+        lgr22CodesByProblem.get(m.exercise_id)!.push(m.code);
+      }
+    }
+
+    // Add lgr22_codes to each problem
+    const problemsWithCodes = problems.map(p => ({
+      ...p,
+      lgr22_codes: lgr22CodesByProblem.get(p.id) || []
+    }));
+
     res.json({
       ...pkg,
       isOwner: pkg.parent_id === req.user!.id,
-      problems
+      problems: problemsWithCodes
     });
   } catch (error) {
     console.error('Get package error:', error);

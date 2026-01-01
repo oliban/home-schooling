@@ -16,6 +16,7 @@ interface Problem {
   explanation: string | null;
   hint: string | null;
   difficulty: string;
+  lgr22_codes?: string[];
 }
 
 interface PackageDetail {
@@ -400,6 +401,22 @@ export default function PackagePreview() {
                       {problem.explanation && (
                         <div className="mt-2 text-sm text-gray-500">
                           {t('parent.packagePreview.explanation')} {problem.explanation}
+                        </div>
+                      )}
+
+                      {problem.lgr22_codes && problem.lgr22_codes.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="text-xs font-medium text-gray-500 mb-1">LGR22 Objectives:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {problem.lgr22_codes.map((code, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs"
+                              >
+                                {code}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
