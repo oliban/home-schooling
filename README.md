@@ -46,7 +46,7 @@ homeschooling/
 │   ├── lib/                # API client, language context
 │   └── messages/           # i18n translations (sv.json, en.json)
 └── data/
-    └── homeschooling.db    # SQLite database
+    └── teacher.db          # SQLite database
 ```
 
 ## Setup
@@ -141,7 +141,7 @@ Main tables:
 ```
 PORT=6001
 JWT_SECRET=your-secret-key
-DATABASE_PATH=/path/to/homeschooling.db  # Optional, defaults to ./data/homeschooling.db
+DATABASE_PATH=/path/to/teacher.db  # Optional, defaults to ./data/teacher.db
 ALLOWED_ORIGINS=http://localhost:3000    # Comma-separated list of allowed CORS origins
 ```
 

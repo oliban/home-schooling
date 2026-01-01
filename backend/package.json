@@ -10,6 +10,8 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "migrate": "tsx src/data/run-migrations.ts",
+    "admin:set": "tsx src/scripts/set-admin.ts",
     "verify:performance": "tsx scripts/verify-performance.ts",
     "verify:ocr-job-flow": "tsx scripts/verify-ocr-job-flow.ts",
     "verify:cache-invalidation": "tsx scripts/verify-cache-invalidation.ts"

@@ -211,7 +211,7 @@ export default function PackagePreview() {
             <div className="text-4xl mb-4">✅</div>
             <p className="text-xl font-bold text-green-600 mb-4">{t('parent.packagePreview.assignmentCreated')}</p>
             <p className="text-gray-600 mb-6">
-              {t('parent.packagePreview.assignedTo', { childName: childrenList.find((c) => c.id === selectedChild)?.name })}
+              {t('parent.packagePreview.assignedTo', { childName: childrenList.find((c) => c.id === selectedChild)?.name || '' })}
             </p>
             <div className="flex gap-4 justify-center">
               <button

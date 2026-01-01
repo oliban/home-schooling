@@ -1,0 +1,19 @@
+# Fly.io configuration for redirect app
+# Redirects home-schooling.fly.dev -> brainrot-skolan.fly.dev
+app = "home-schooling"
+primary_region = "arn"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"  # Can stop when idle (just redirects)
+  auto_start_machines = true
+  min_machines_running = 0  # Save costs, start on demand
+
+[[vm]]
+  memory = "256mb"  # Minimal resources for redirects
+  cpu_kind = "shared"
+  cpus = 1

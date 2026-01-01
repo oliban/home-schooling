@@ -8,6 +8,9 @@ dist/
 
 # Database
 data/*.db
+data/*.bak
+data/generated/
+backend/data/
 
 # Environment files
 .env

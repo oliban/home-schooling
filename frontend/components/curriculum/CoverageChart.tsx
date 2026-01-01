@@ -269,7 +269,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
               </span>
             </p>
             <p className="text-sm text-gray-600">
-              {t('curriculum.coverage.objectivesOf', { covered: data.coveredObjectives, total: data.totalObjectives })}
+              {t('curriculum.coverage.objectivesOf', { covered: data.coveredObjectives ?? 0, total: data.totalObjectives ?? 0 })}
             </p>
           </div>
         </div>

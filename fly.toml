@@ -1,5 +1,5 @@
 # Fly.io configuration for Teacher Portal
-app = "home-schooling"
+app = "brainrot-skolan"
 primary_region = "arn"  # Stockholm region
 
 [build]

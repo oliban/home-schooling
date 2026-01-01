@@ -27,7 +27,7 @@ Skills are in `/claude-skills/`. To generate content:
 3. **Process book OCR**: "Use process-book skill on the OCR output"
 
 ## Database
-SQLite database at `/data/homeschooling.db`. Schema in `/backend/src/data/schema.sql`.
+SQLite database at `/data/teacher.db`. Schema in `/backend/src/data/schema.sql`.
 
 ## Key Endpoints
 - `POST /api/auth/register` - Parent registration

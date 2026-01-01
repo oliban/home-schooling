@@ -7,7 +7,7 @@
 const Database = require('../backend/node_modules/better-sqlite3');
 const path = require('path');
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../data/homeschooling.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../data/teacher.db');
 
 console.log('=== CHECKING LGR22 CURRICULUM MAPPINGS ===\n');
 console.log('Database:', DB_PATH, '\n');
