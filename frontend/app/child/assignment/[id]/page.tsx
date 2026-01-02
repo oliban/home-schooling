@@ -416,13 +416,19 @@ export default function AssignmentPage() {
                     key={i}
                     onClick={() => !isDisabled && setAnswer(letter)}
                     disabled={!!isDisabled}
-                    className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
+                    className={`w-full p-4 text-left rounded-xl border-2 transition-all flex items-center justify-between gap-3 ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     } ${isDisabled ? 'cursor-not-allowed opacity-75' : ''}`}
                   >
-                    {option}
+                    <span className="flex-1">{option}</span>
+                    <SpeakButton
+                      text={option}
+                      lang="sv-SE"
+                      size="sm"
+                      label={t('assignment.listenToAnswer')}
+                    />
                   </button>
                 );
               })}

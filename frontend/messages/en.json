@@ -151,6 +151,7 @@
     "correctAnswer": "Correct answer: {answer}",
     "streak": "Streak: {count}!",
     "listenToQuestion": "Listen to question",
+    "listenToAnswer": "Listen to answer",
     "attempt": "Attempt {current} of {max}",
     "nextReward": "Next attempt: {coins} coins",
     "buyHint": "Buy Hint ({cost} coins) 💡",

@@ -151,6 +151,7 @@
     "correctAnswer": "Rätt svar: {answer}",
     "streak": "Streak: {count}!",
     "listenToQuestion": "Lyssna på frågan",
+    "listenToAnswer": "Lyssna på svaret",
     "attempt": "Försök {current} av {max}",
     "nextReward": "Nästa försök: {coins} mynt",
     "buyHint": "Köp tips ({cost} mynt) 💡",
