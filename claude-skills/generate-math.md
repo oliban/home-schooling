@@ -163,6 +163,16 @@ The system will accept answers in any of these equivalent forms:
 - Student can answer: `1000`, `1 000`, `1,000` (all equivalent)
 - Store in JSON: `"correct_answer": "1000"`
 
+**Rounding Tolerance:**
+- The system accepts rounded answers within ±1 of the correct answer
+- Student can answer: `228` or `229` for correct answer `228.57`
+- Student can answer: `31` for correct answer `31.25`
+- Student can answer: `3` or `3.3` or `3.33` for correct answer `3.333...`
+- **IMPORTANT**: Do NOT expect specific decimal precision unless explicitly stated in the question
+  - ❌ WRONG: "Hur många procent?" with answer `31.25` (child will answer `31` and be marked wrong)
+  - ✅ CORRECT: "Hur många procent? Svara med två decimaler." with answer `31.25`
+  - ✅ CORRECT: "Hur många procent?" with answer `31` (store rounded value)
+
 ### Examples with Explanations
 
 ```json
@@ -212,6 +222,7 @@ Accepts: `25`, `25%`, `25 %`, `0.25` is NOT accepted (25 ≠ 0.25)
 3. **Use Swedish number format in explanations** - Comma for decimals (3,5 not 3.5)
 4. **Fraction format choice** - Store as fraction `"1/2"` or decimal `"0.5"` based on pedagogical intent
 5. **Percentage values** - Store as the numeric value (35), not decimal form (0.35)
+6. **Rounding is acceptable** - The system accepts rounded answers (±1 tolerance). If you need exact decimal precision, explicitly state it in the question text (e.g., "Svara med två decimaler")
 
 ### Multiple Choice Format (CRITICAL)
 

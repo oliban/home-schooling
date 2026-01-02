@@ -135,6 +135,16 @@ function validateMultipleChoiceQuestion(correctAnswer: string, options: string[]
   return { valid: true };
 }
 
+// Helper to normalize text answers (handles coordinates and other text formats)
+function normalizeTextAnswer(answer: string): string {
+  return answer
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')      // Remove all whitespace
+    .replace(/[()]/g, '')     // Remove parentheses (for coordinates)
+    .replace(/,/g, '.');      // Replace commas with periods (for coordinates like "7,9" vs "7.9")
+}
+
 // List assignments (for parent or child)
 router.get('/', authenticateAny, async (req, res) => {
   try {
@@ -561,7 +571,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
         } else if (problem.answer_type === 'number') {
           isCorrect = validateNumberAnswer(problem.correct_answer, answer as string);
         } else if (problem.answer_type === 'text') {
-          isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
+          isCorrect = normalizeTextAnswer(answer as string) === normalizeTextAnswer(problem.correct_answer);
         }
 
         // Calculate coins earned
@@ -711,7 +721,7 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
         } else if (problem.answer_type === 'number') {
           isCorrect = validateNumberAnswer(problem.correct_answer, answer as string);
         } else if (problem.answer_type === 'text') {
-          isCorrect = (answer as string).trim().toLowerCase() === problem.correct_answer.trim().toLowerCase();
+          isCorrect = normalizeTextAnswer(answer as string) === normalizeTextAnswer(problem.correct_answer);
         }
 
         // Calculate coins

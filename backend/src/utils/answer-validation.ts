@@ -9,9 +9,13 @@
  * - Percentage as formatting: 35 = 35% (NOT mathematical: 1/2 ≠ 50%)
  */
 
-// Floating-point comparison tolerance (0.1% precision for elementary math)
+// Floating-point comparison tolerance for exact matches
 // This allows 1/3 (0.333333...) to match 0.333, 0.3333, etc.
 const TOLERANCE = 0.001;
+
+// Rounding tolerance - accepts answers that differ by at most 1
+// This allows children to round answers: 228.57 can be answered as 228 or 229
+const ROUNDING_TOLERANCE = 1;
 
 // Supported units by category
 const UNITS = {
@@ -211,14 +215,32 @@ export function parseToNumber(str: string): number | null {
 }
 
 /**
- * Compare two numbers with floating-point tolerance
+ * Compare two numbers with floating-point tolerance and rounding tolerance
  * @param a - First number
  * @param b - Second number
- * @param tolerance - Tolerance for comparison (default: 0.0001)
- * @returns True if numbers are equal within tolerance
+ * @param tolerance - Tolerance for comparison (default: 0.001)
+ * @returns True if numbers are equal within tolerance or rounding tolerance
  */
 export function numbersEqual(a: number, b: number, tolerance: number = TOLERANCE): boolean {
-  return Math.abs(a - b) < tolerance;
+  const diff = Math.abs(a - b);
+
+  // First check: exact match within tight tolerance
+  // This handles floating-point precision and very close values
+  if (diff < tolerance) {
+    return true;
+  }
+
+  // Second check: rounding tolerance
+  // Accept any difference > tolerance and ≤ 1 as valid rounding
+  // This allows children to round answers in various ways:
+  // - 228.57 → 228 or 229 (integer rounding)
+  // - 3.333... → 3.33 (decimal rounding)
+  // - 12.5 → 12 or 13 (rounding)
+  if (diff <= ROUNDING_TOLERANCE) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
