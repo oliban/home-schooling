@@ -439,5 +439,7 @@ export const admin = {
       created_at: string;
       active_assignments: number;
       completed_assignments: number;
+      coins: number;
+      collectibles_count: number;
     }>>('/admin/children', { token }),
 };

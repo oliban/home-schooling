@@ -38,15 +38,33 @@ trap cleanup SIGINT SIGTERM
 
 echo "Starting Teacher Portal..."
 
+# Function to check Docker with timeout
+check_docker() {
+    ( docker info >/dev/null 2>&1 ) &
+    local pid=$!
+    local count=0
+    while kill -0 $pid 2>/dev/null && [ $count -lt 5 ]; do
+        sleep 1
+        count=$((count + 1))
+    done
+    if kill -0 $pid 2>/dev/null; then
+        kill -9 $pid 2>/dev/null
+        return 1
+    fi
+    wait $pid
+    return $?
+}
+
 # Check if Docker is running, launch if needed
-if ! docker info >/dev/null 2>&1; then
+echo "Checking Docker status..."
+if ! check_docker; then
     echo "Docker is not running. Starting Docker Desktop..."
     open -a Docker
 
     # Wait for Docker to be ready (max 60 seconds)
     echo "Waiting for Docker to start..."
     for i in {1..60}; do
-        if docker info >/dev/null 2>&1; then
+        if check_docker; then
             echo "Docker is ready!"
             break
         fi

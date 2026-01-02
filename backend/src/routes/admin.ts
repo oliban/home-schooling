@@ -114,9 +114,12 @@ router.get('/children', authenticateParent, requireAdmin, (req, res) => {
         p.name as parent_name,
         p.email as parent_email,
         (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status IN ('pending', 'in_progress')) as active_assignments,
-        (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status = 'completed') as completed_assignments
+        (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status = 'completed') as completed_assignments,
+        COALESCE(cc.balance, 0) as coins,
+        (SELECT COUNT(*) FROM child_collectibles chc WHERE chc.child_id = c.id) as collectibles_count
       FROM children c
       JOIN parents p ON c.parent_id = p.id
+      LEFT JOIN child_coins cc ON c.id = cc.child_id
       ORDER BY c.name
     `);
     res.json(children);

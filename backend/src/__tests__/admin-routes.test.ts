@@ -42,9 +42,15 @@ vi.mock('../services/script-runner.js', () => ({
   runScript: vi.fn(),
 }));
 
+vi.mock('../data/database.js', () => ({
+  getDb: vi.fn(),
+  resetDb: vi.fn(),
+}));
+
 import adminRoutes from '../routes/admin.js';
 import { adminJobManager } from '../services/admin-job-manager.js';
 import { runScript } from '../services/script-runner.js';
+import { getDb } from '../data/database.js';
 
 describe('Admin Routes', () => {
   let app: Express;
@@ -177,6 +183,116 @@ describe('Admin Routes', () => {
         type: 'backup',
         status: 'running',
       });
+    });
+  });
+
+  describe('GET /api/admin/parents', () => {
+    it('should return list of all parents', async () => {
+      const mockParents = [
+        {
+          id: 'parent-1',
+          email: 'parent1@example.com',
+          name: 'Parent One',
+          family_code: 'FAM001',
+          is_admin: 0,
+          created_at: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'parent-2',
+          email: 'parent2@example.com',
+          name: 'Parent Two',
+          family_code: 'FAM002',
+          is_admin: 1,
+          created_at: '2024-01-02T00:00:00.000Z',
+        },
+      ];
+
+      (getDb as any).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockParents),
+      });
+
+      const response = await request(app)
+        .get('/api/admin/parents')
+        .expect(200);
+
+      expect(response.body).toEqual(mockParents);
+    });
+
+    it('should return 500 on database error', async () => {
+      (getDb as any).mockReturnValue({
+        all: vi.fn().mockImplementation(() => {
+          throw new Error('Database error');
+        }),
+      });
+
+      const response = await request(app)
+        .get('/api/admin/parents')
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Failed to fetch parents' });
+    });
+  });
+
+  describe('GET /api/admin/children', () => {
+    it('should return list of all children with coins and collectibles count', async () => {
+      const mockChildren = [
+        {
+          id: 'child-1',
+          parent_id: 'parent-1',
+          parent_name: 'Parent One',
+          parent_email: 'parent1@example.com',
+          name: 'Child One',
+          grade_level: 4,
+          birthdate: '2015-06-15',
+          created_at: '2024-01-01T00:00:00.000Z',
+          active_assignments: 2,
+          completed_assignments: 10,
+          coins: 150,
+          collectibles_count: 3,
+        },
+        {
+          id: 'child-2',
+          parent_id: 'parent-2',
+          parent_name: 'Parent Two',
+          parent_email: 'parent2@example.com',
+          name: 'Child Two',
+          grade_level: 6,
+          birthdate: '2013-03-20',
+          created_at: '2024-01-02T00:00:00.000Z',
+          active_assignments: 1,
+          completed_assignments: 25,
+          coins: 0,
+          collectibles_count: 0,
+        },
+      ];
+
+      (getDb as any).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockChildren),
+      });
+
+      const response = await request(app)
+        .get('/api/admin/children')
+        .expect(200);
+
+      expect(response.body).toEqual(mockChildren);
+      expect(response.body[0]).toHaveProperty('coins', 150);
+      expect(response.body[0]).toHaveProperty('collectibles_count', 3);
+      expect(response.body[1]).toHaveProperty('coins', 0);
+      expect(response.body[1]).toHaveProperty('collectibles_count', 0);
+    });
+
+    it('should return 500 on database error', async () => {
+      (getDb as any).mockReturnValue({
+        all: vi.fn().mockImplementation(() => {
+          throw new Error('Database error');
+        }),
+      });
+
+      const response = await request(app)
+        .get('/api/admin/children')
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Failed to fetch children' });
     });
   });
 });

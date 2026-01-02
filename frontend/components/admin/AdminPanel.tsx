@@ -27,6 +27,8 @@ interface Child {
   created_at: string;
   active_assignments: number;
   completed_assignments: number;
+  coins: number;
+  collectibles_count: number;
 }
 
 export default function AdminPanel({ token }: AdminPanelProps) {
@@ -130,6 +132,14 @@ export default function AdminPanel({ token }: AdminPanelProps) {
                           <div className="text-center">
                             <p className="text-xs text-gray-500">Completed</p>
                             <p className="text-lg font-bold text-green-600">{child.completed_assignments}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500">Coins</p>
+                            <p className="text-lg font-bold text-yellow-600">{child.coins}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500">Brainrot</p>
+                            <p className="text-lg font-bold text-purple-600">{child.collectibles_count}</p>
                           </div>
                         </div>
                       </div>
