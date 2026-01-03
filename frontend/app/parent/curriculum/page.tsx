@@ -77,6 +77,7 @@ export default function CurriculumDashboard() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [isGlobal, setIsGlobal] = useState(false);
+  const [autoAssign, setAutoAssign] = useState(false); // Whether to auto-assign after import
   const [assignChildId, setAssignChildId] = useState<string>(''); // Child to assign imported package to
   const [hintsAllowed, setHintsAllowed] = useState(true);
   const [importProgress, setImportProgress] = useState(0);
@@ -195,6 +196,18 @@ export default function CurriculumDashboard() {
     return matchingChildren[0].id;
   };
 
+  // Auto-select child when checkbox is checked
+  useEffect(() => {
+    if (autoAssign && (importedData || importedBatch)) {
+      const gradeLevel = importedData?.package.grade_level || importedBatch?.batch.grade_level;
+      if (gradeLevel) {
+        setAssignChildId(autoSelectChildByGrade(gradeLevel));
+      }
+    } else if (!autoAssign) {
+      setAssignChildId('');
+    }
+  }, [autoAssign, importedData, importedBatch]);
+
   const handleFileLoad = (data: unknown) => {
     setImportError(null);
     setImportSuccess(null);
@@ -235,8 +248,9 @@ export default function CurriculumDashboard() {
 
       setImportedBatch(batch);
       setIsGlobal(batch.batch.global ?? false);
-      // Auto-select child by batch grade level
-      setAssignChildId(autoSelectChildByGrade(batch.batch.grade_level));
+      // Reset auto-assign checkbox
+      setAutoAssign(false);
+      setAssignChildId('');
       return;
     }
 
@@ -259,8 +273,9 @@ export default function CurriculumDashboard() {
 
     setImportedData(singlePkg);
     setIsGlobal(singlePkg.package.global ?? false);
-    // Auto-select child by package grade level
-    setAssignChildId(autoSelectChildByGrade(singlePkg.package.grade_level));
+    // Reset auto-assign checkbox
+    setAutoAssign(false);
+    setAssignChildId('');
   };
 
   const handleImport = async () => {
@@ -577,39 +592,52 @@ export default function CurriculumDashboard() {
                       </div>
                     )}
 
-                    {/* Child Selection Dropdown */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Assign to child (optional)
-                      </label>
-                      <select
-                        value={assignChildId}
-                        onChange={(e) => setAssignChildId(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="">Just import (don't assign yet)</option>
-                        {childrenList.map((child) => {
-                          // Check if this child matches the package grade
-                          const packageGrade = importedData?.package.grade_level || importedBatch?.batch.grade_level;
-                          const isMatch = packageGrade && child.grade_level === packageGrade;
+                    {/* Auto-assign Checkbox */}
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoAssign}
+                        onChange={(e) => setAutoAssign(e.target.checked)}
+                        className="mt-1 w-5 h-5"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">{t('parent.dashboard.autoAssign')}</span>
+                        <p className="text-xs text-gray-500">
+                          {t('parent.dashboard.autoAssignDescription')}
+                        </p>
+                      </div>
+                    </label>
 
-                          return (
-                            <option key={child.id} value={child.id}>
-                              {child.name} (Grade {child.grade_level}){isMatch ? ' ✓ Recommended' : ''}
-                            </option>
-                          );
-                        })}
-                      </select>
-                      {assignChildId ? (
-                        <p className="mt-1 text-xs text-gray-500">
-                          Will assign to {childrenList.find(c => c.id === assignChildId)?.name}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-xs text-gray-500">
-                          Package will be added to your library only
-                        </p>
-                      )}
-                    </div>
+                    {/* Child Selection Dropdown (only show if auto-assign is checked) */}
+                    {autoAssign && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Assign to child
+                        </label>
+                        <select
+                          value={assignChildId}
+                          onChange={(e) => setAssignChildId(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          {childrenList.map((child) => {
+                            // Check if this child matches the package grade
+                            const packageGrade = importedData?.package.grade_level || importedBatch?.batch.grade_level;
+                            const isMatch = packageGrade && child.grade_level === packageGrade;
+
+                            return (
+                              <option key={child.id} value={child.id}>
+                                {child.name} (Grade {child.grade_level}){isMatch ? ' ✓ Recommended' : ''}
+                              </option>
+                            );
+                          })}
+                        </select>
+                        {assignChildId && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Will assign to {childrenList.find(c => c.id === assignChildId)?.name}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {/* Import Options */}
                     <div className="space-y-3">

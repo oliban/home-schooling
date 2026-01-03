@@ -295,11 +295,15 @@
     "packages": {
       "title": "Assign Assignments",
       "createManually": "Create Manually",
+      "childLabel": "Child",
       "gradeLabel": "Grade",
       "topicLabel": "Topic",
       "categoryLabel": "Category",
       "visibilityLabel": "Visibility",
+      "availabilityLabel": "Availability",
       "all": "All",
+      "allPackages": "All packages",
+      "availableOnly": "Available only",
       "gradeAbbr": "Grade {grade}",
       "math": "Math",
       "reading": "Swedish",
@@ -332,8 +336,8 @@
       "delete": {
         "title": "Delete Package?",
         "confirm": "Are you sure you want to delete \"{name}\"?",
-        "willRemove": "This will also remove {count} assignment...",
-        "willRemovePlural": "This will also remove {count} assignments...",
+        "willRemove": "This package is assigned to {count} child. The assignment will be removed for:",
+        "willRemovePlural": "This package is assigned to {count} children. The assignments will be removed for:",
         "button": "Delete",
         "deleting": "Deleting...",
         "cancel": "Cancel"

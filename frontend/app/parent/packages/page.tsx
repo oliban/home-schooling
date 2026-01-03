@@ -46,10 +46,11 @@ export default function PackageBrowser() {
   const [scopeFilter, setScopeFilter] = useState<'all' | 'private' | 'global'>('all');
   const [topicFilter, setTopicFilter] = useState<'all' | 'math' | 'reading'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available'>('available');
   const [allPackages, setAllPackages] = useState<PackageData[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<PackageData | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [prefilledChildId, setPrefilledChildId] = useState<string | null>(null);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -76,13 +77,13 @@ export default function PackageBrowser() {
     }
   };
 
-  // Auto-filter by child's grade when childId is in URL
+  // Auto-select child and filter by child's grade when childId is in URL
   useEffect(() => {
     const childId = searchParams.get('childId');
     if (childId && childrenList.length > 0) {
       const child = childrenList.find((c) => c.id === childId);
       if (child) {
-        setPrefilledChildId(childId);
+        setSelectedChildId(childId);
         setGradeFilter(child.grade_level);
         applyFilters(child.grade_level, scopeFilter, topicFilter, categoryFilter);
       }
@@ -169,8 +170,18 @@ export default function PackageBrowser() {
       .map(p => [p.category_id, { id: p.category_id!, name: p.category_name! }])
   ).values()];
 
+  // Filter packages by availability (if a child is selected and filter is 'available')
+  const filteredPackages = packagesList.filter((pkg) => {
+    if (availabilityFilter === 'all' || !selectedChildId) {
+      return true;
+    }
+    // Hide packages that the selected child has already been assigned
+    const hasAssignment = pkg.childAssignments.some(ca => ca.childId === selectedChildId);
+    return !hasAssignment;
+  });
+
   // Group packages by grade
-  const packagesByGrade = packagesList.reduce((acc, pkg) => {
+  const packagesByGrade = filteredPackages.reduce((acc, pkg) => {
     const grade = pkg.grade_level;
     if (!acc[grade]) acc[grade] = [];
     acc[grade].push(pkg);
@@ -179,186 +190,292 @@ export default function PackageBrowser() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">{t('common.loading')}</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-slate-600 font-medium tracking-tight">{t('common.loading')}</div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
-      <header className="bg-white shadow-sm p-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/parent" className="text-gray-500 hover:text-gray-700">
-              &larr; {t('parent.packages.back')}
-            </Link>
-            <h1 className="text-xl font-bold">{t('parent.packages.title')}</h1>
+    <main className="min-h-screen bg-slate-50">
+      {/* Refined Header */}
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Link
+                href="/parent"
+                className="text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium tracking-tight flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                {t('parent.packages.back')}
+              </Link>
+              <h1 className="text-xl font-semibold text-slate-900 tracking-tight">{t('parent.packages.title')}</h1>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto p-6">
-        {/* Filters */}
-        <div className="mb-6 space-y-3">
-          {/* Grade Filter */}
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-sm text-gray-500 w-20">{t('parent.packages.gradeLabel')}:</span>
-            <button
-              onClick={() => handleGradeFilterChange(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                gradeFilter === null
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.all')}
-            </button>
-            {childGrades.map((grade) => (
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Child Selector - Prominent */}
+        {childrenList.length > 0 && (
+          <div className="mb-8">
+            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+              {t('parent.packages.childLabel')}
+            </label>
+            <div className="flex gap-2 flex-wrap">
               <button
-                key={grade}
-                onClick={() => handleGradeFilterChange(grade)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  gradeFilter === grade
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {t('parent.packages.gradeAbbr', { grade })}
-              </button>
-            ))}
-          </div>
-
-          {/* Topic Filter (Math/Svenska) */}
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-sm text-gray-500 w-20">{t('parent.packages.topicLabel')}:</span>
-            <button
-              onClick={() => handleTopicFilterChange('all')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                topicFilter === 'all'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.all')}
-            </button>
-            <button
-              onClick={() => handleTopicFilterChange('math')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                topicFilter === 'math'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.math')}
-            </button>
-            <button
-              onClick={() => handleTopicFilterChange('reading')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                topicFilter === 'reading'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.reading')}
-            </button>
-          </div>
-
-          {/* Category Filter (Algebra, Geometri etc) */}
-          {uniqueCategories.length > 0 && (
-            <div className="flex gap-2 flex-wrap items-center">
-              <span className="text-sm text-gray-500 w-20">{t('parent.packages.categoryLabel')}:</span>
-              <button
-                onClick={() => handleCategoryFilterChange(null)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  categoryFilter === null
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                onClick={() => {
+                  setSelectedChildId(null);
+                  setGradeFilter(null);
+                  applyFilters(null, scopeFilter, topicFilter, categoryFilter);
+                }}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium tracking-tight transition-all border ${
+                  selectedChildId === null
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
                 }`}
               >
                 {t('parent.packages.all')}
               </button>
-              {uniqueCategories.map((cat) => (
+              {childrenList.map((child) => (
                 <button
-                  key={cat.id}
-                  onClick={() => handleCategoryFilterChange(cat.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    categoryFilter === cat.id
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  key={child.id}
+                  onClick={() => {
+                    setSelectedChildId(child.id);
+                    setGradeFilter(child.grade_level);
+                    applyFilters(child.grade_level, scopeFilter, topicFilter, categoryFilter);
+                  }}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium tracking-tight transition-all border ${
+                    selectedChildId === child.id
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  {cat.name}
+                  {child.name}
+                  <span className="ml-1.5 text-xs opacity-60">Åk {child.grade_level}</span>
                 </button>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Scope Filter (Private/Global) */}
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-sm text-gray-500 w-20">{t('parent.packages.visibilityLabel')}:</span>
-            <button
-              onClick={() => handleScopeFilterChange('all')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                scopeFilter === 'all'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.all')}
-            </button>
-            <button
-              onClick={() => handleScopeFilterChange('private')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                scopeFilter === 'private'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.private')}
-            </button>
-            <button
-              onClick={() => handleScopeFilterChange('global')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                scopeFilter === 'global'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {t('parent.packages.global')}
-            </button>
+        {/* Refined Filter System */}
+        <div className="mb-8 bg-white border border-slate-200 rounded-xl p-6">
+          <div className="grid gap-6">
+            {/* Availability Filter (only show when child is selected) */}
+            {selectedChildId && (
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+                  {t('parent.packages.availabilityLabel')}
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAvailabilityFilter('available')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all ${
+                      availabilityFilter === 'available'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.availableOnly')}
+                  </button>
+                  <button
+                    onClick={() => setAvailabilityFilter('all')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all ${
+                      availabilityFilter === 'all'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.allPackages')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Grade Filter */}
+            <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+                {t('parent.packages.gradeLabel')}
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => handleGradeFilterChange(null)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all ${
+                    gradeFilter === null
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                  }`}
+                >
+                  {t('parent.packages.all')}
+                </button>
+                {childGrades.map((grade) => (
+                  <button
+                    key={grade}
+                    onClick={() => handleGradeFilterChange(grade)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all ${
+                      gradeFilter === grade
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.gradeAbbr', { grade })}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Topic & Visibility in Same Row */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Topic Filter */}
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+                  {t('parent.packages.topicLabel')}
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleTopicFilterChange('all')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all flex-1 ${
+                      topicFilter === 'all'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.all')}
+                  </button>
+                  <button
+                    onClick={() => handleTopicFilterChange('math')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all flex-1 ${
+                      topicFilter === 'math'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.math')}
+                  </button>
+                  <button
+                    onClick={() => handleTopicFilterChange('reading')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all flex-1 ${
+                      topicFilter === 'reading'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.reading')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Visibility Filter */}
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+                  {t('parent.packages.visibilityLabel')}
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScopeFilterChange('all')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all flex-1 ${
+                      scopeFilter === 'all'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.all')}
+                  </button>
+                  <button
+                    onClick={() => handleScopeFilterChange('private')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all flex-1 ${
+                      scopeFilter === 'private'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.private')}
+                  </button>
+                  <button
+                    onClick={() => handleScopeFilterChange('global')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all flex-1 ${
+                      scopeFilter === 'global'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.global')}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Filter (if categories exist) */}
+            {uniqueCategories.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+                  {t('parent.packages.categoryLabel')}
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => handleCategoryFilterChange(null)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all ${
+                      categoryFilter === null
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                    }`}
+                  >
+                    {t('parent.packages.all')}
+                  </button>
+                  {uniqueCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleCategoryFilterChange(cat.id)}
+                      className={`px-3 py-2 rounded-md text-sm font-medium tracking-tight transition-all ${
+                        categoryFilter === cat.id
+                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                          : 'bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         {packagesList.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
-            <div className="text-4xl mb-4">📦</div>
-            <p className="text-gray-600 mb-4">{t('parent.packages.noPackages')}</p>
+          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+            <div className="text-5xl mb-4 opacity-40">📦</div>
+            <p className="text-slate-600 mb-6 font-medium tracking-tight">{t('parent.packages.noPackages')}</p>
             <Link
               href="/parent"
-              className="inline-block px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700"
+              className="inline-block px-6 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors tracking-tight"
             >
               {t('parent.packages.importPackage')}
             </Link>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {Object.entries(packagesByGrade)
               .sort(([a], [b]) => Number(a) - Number(b))
               .map(([grade, pkgs]) => (
                 <div key={grade}>
-                  <h2 className="text-lg font-bold mb-4 text-gray-700">
-                    {t('parent.packages.gradeHeader', { grade })}
-                    <span className="ml-2 text-sm font-normal text-gray-500">
-                      ({t('parent.packages.packageCount', { count: pkgs.length })})
+                  <div className="flex items-baseline gap-3 mb-5">
+                    <h2 className="text-base font-semibold text-slate-900 tracking-tight">
+                      {t('parent.packages.gradeHeader', { grade })}
+                    </h2>
+                    <span className="text-sm text-slate-500">
+                      {t('parent.packages.packageCount', { count: pkgs.length })}
                     </span>
-                  </h2>
+                  </div>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {pkgs.map((pkg) => {
                       const difficulty = parseDifficulty(pkg.difficulty_summary);
@@ -366,117 +483,131 @@ export default function PackageBrowser() {
                         <div
                           key={pkg.id}
                           onClick={() => {
-                            const url = prefilledChildId
-                              ? `/parent/packages/${pkg.id}?childId=${prefilledChildId}`
+                            const url = selectedChildId
+                              ? `/parent/packages/${pkg.id}?childId=${selectedChildId}`
                               : `/parent/packages/${pkg.id}`;
                             router.push(url);
                           }}
-                          className="bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                          className="group bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-bold text-lg leading-tight">{pkg.name}</h3>
-                            <div className="flex items-center gap-2">
+                          {/* Header */}
+                          <div className="flex items-start justify-between gap-3 mb-4">
+                            <h3 className="font-semibold text-slate-900 leading-tight tracking-tight flex-1 group-hover:text-indigo-700 transition-colors">
+                              {pkg.name}
+                            </h3>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {/* Only show delete button if user is the owner */}
                               {pkg.isOwner && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setDeleteConfirm(pkg);
                                   }}
-                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                                   title={t('parent.packages.deleteTitle')}
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                   </svg>
                                 </button>
                               )}
                               {pkg.is_global ? (
-                                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
+                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs font-medium border border-emerald-200">
                                   {t('parent.packages.badges.global')}
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium border border-slate-200">
                                   {t('parent.packages.badges.private')}
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          <div className="text-sm text-gray-500 mb-3">
-                            {t('parent.packages.problemCount', { count: pkg.problem_count })}
-                            {pkg.category_name && ` | ${pkg.category_name}`}
+                          {/* Meta Info */}
+                          <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
+                            <span className="font-medium">{t('parent.packages.problemCount', { count: pkg.problem_count })}</span>
+                            {pkg.category_name && (
+                              <>
+                                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                <span>{pkg.category_name}</span>
+                              </>
+                            )}
                           </div>
 
+                          {/* Description */}
                           {pkg.description && (
-                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">
                               {pkg.description}
                             </p>
                           )}
 
-                          <div className="flex gap-2 text-xs">
-                            {difficulty.easy && (
-                              <span className="px-2 py-1 bg-green-50 text-green-600 rounded">
-                                {t('parent.packages.difficultyCount', { count: difficulty.easy, level: t('parent.packages.difficulty.easy') })}
-                              </span>
-                            )}
-                            {difficulty.medium && (
-                              <span className="px-2 py-1 bg-yellow-50 text-yellow-600 rounded">
-                                {t('parent.packages.difficultyCount', { count: difficulty.medium, level: t('parent.packages.difficulty.medium') })}
-                              </span>
-                            )}
-                            {difficulty.hard && (
-                              <span className="px-2 py-1 bg-red-50 text-red-600 rounded">
-                                {t('parent.packages.difficultyCount', { count: difficulty.hard, level: t('parent.packages.difficulty.hard') })}
-                              </span>
-                            )}
-                          </div>
+                          {/* Difficulty Pills */}
+                          {(difficulty.easy || difficulty.medium || difficulty.hard) && (
+                            <div className="flex gap-2 mb-4">
+                              {difficulty.easy && (
+                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-medium border border-emerald-200">
+                                  {difficulty.easy} {t('parent.packages.difficulty.easy')}
+                                </span>
+                              )}
+                              {difficulty.medium && (
+                                <span className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-md text-xs font-medium border border-amber-200">
+                                  {difficulty.medium} {t('parent.packages.difficulty.medium')}
+                                </span>
+                              )}
+                              {difficulty.hard && (
+                                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-md text-xs font-medium border border-rose-200">
+                                  {difficulty.hard} {t('parent.packages.difficulty.hard')}
+                                </span>
+                              )}
+                            </div>
+                          )}
 
+                          {/* Assignments */}
                           {pkg.childAssignments.length > 0 && (
-                            <div className="mt-3 pt-3 border-t">
-                              <div className="text-xs text-gray-500 mb-1">{t('parent.packages.assignedTo')}</div>
-                              <div className="flex flex-wrap gap-1">
+                            <div className="pt-4 border-t border-slate-100">
+                              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                                {t('parent.packages.assignedTo')}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
                                 {pkg.childAssignments.map((ca, index) => (
                                   <span
                                     key={`${ca.childId}-${index}`}
-                                    className={`px-2 py-0.5 rounded text-xs ${
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium border ${
                                       ca.status === 'completed'
-                                        ? 'bg-green-100 text-green-700'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : ca.status === 'in_progress'
-                                        ? 'bg-yellow-100 text-yellow-700'
-                                        : 'bg-gray-100 text-gray-600'
+                                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                        : 'bg-slate-100 text-slate-600 border-slate-200'
                                     }`}
                                   >
-                                    {ca.childName}: {ca.status === 'completed' ? t('parent.packages.status.done') : ca.status === 'in_progress' ? t('parent.packages.status.inProgress') : t('parent.packages.status.pending')}
+                                    {ca.childName}
                                   </span>
                                 ))}
                               </div>
                             </div>
                           )}
 
+                          {/* LGR22 Codes */}
                           {pkg.lgr22_objectives && pkg.lgr22_objectives.length > 0 && (
-                            <div className="mt-3 pt-3 border-t">
-                              <div className="text-xs font-medium text-gray-500 mb-1">LGR22:</div>
-                              <div className="flex flex-wrap gap-1">
+                            <div className="pt-4 border-t border-slate-100 mt-4">
+                              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                                LGR22
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
                                 {pkg.lgr22_objectives.slice(0, 3).map((code, idx) => (
                                   <span
                                     key={idx}
-                                    className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs"
+                                    className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-medium border border-indigo-200"
                                   >
                                     {code}
                                   </span>
                                 ))}
                                 {pkg.lgr22_objectives.length > 3 && (
-                                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
+                                  <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs font-medium border border-slate-200">
                                     +{pkg.lgr22_objectives.length - 3}
                                   </span>
                                 )}
                               </div>
-                            </div>
-                          )}
-
-                          {pkg.isOwner && (
-                            <div className="mt-3 pt-3 border-t text-xs text-gray-400">
-                              {t('parent.packages.createdByYou')}
                             </div>
                           )}
                         </div>
@@ -491,21 +622,25 @@ export default function PackageBrowser() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <h3 className="text-xl font-bold mb-4">{t('parent.packages.delete.title')}</h3>
-            <p className="text-gray-600 mb-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2 tracking-tight">
+              {t('parent.packages.delete.title')}
+            </h3>
+            <p className="text-slate-600 mb-4 text-sm leading-relaxed">
               {t('parent.packages.delete.confirm', { name: deleteConfirm.name })}
             </p>
             {deleteConfirm.childAssignments.length > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                <p className="text-yellow-800 text-sm font-medium">
-                  {t('parent.packages.delete.willRemove', { count: deleteConfirm.childAssignments.length })}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+                <p className="text-amber-900 text-sm font-medium mb-2">
+                  {deleteConfirm.childAssignments.length === 1
+                    ? t('parent.packages.delete.willRemove', { count: deleteConfirm.childAssignments.length })
+                    : t('parent.packages.delete.willRemovePlural', { count: deleteConfirm.childAssignments.length })}
                 </p>
-                <ul className="mt-2 text-sm text-yellow-700">
+                <ul className="space-y-1">
                   {deleteConfirm.childAssignments.map((ca, index) => (
-                    <li key={`${ca.childId}-${index}`}>
-                      {ca.childName} ({ca.status === 'completed' ? t('parent.packages.status.done') : ca.status === 'in_progress' ? t('parent.packages.status.inProgress') : t('parent.packages.status.pending')})
+                    <li key={`${ca.childId}-${index}`} className="text-xs text-amber-800">
+                      {ca.childName}
                     </li>
                   ))}
                 </ul>
@@ -515,16 +650,16 @@ export default function PackageBrowser() {
               <button
                 onClick={() => setDeleteConfirm(null)}
                 disabled={deleting}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 px-4 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 tracking-tight text-sm"
               >
                 {t('parent.packages.delete.cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 tracking-tight text-sm"
               >
-                {deleting ? t('parent.packages.delete.deleting') : t('parent.packages.delete.delete')}
+                {deleting ? t('parent.packages.delete.deleting') : t('parent.packages.delete.button')}
               </button>
             </div>
           </div>

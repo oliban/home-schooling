@@ -295,11 +295,15 @@
     "packages": {
       "title": "Tilldela uppgifter",
       "createManually": "Skapa manuellt",
+      "childLabel": "Barn",
       "gradeLabel": "Årskurs",
       "topicLabel": "Ämne",
       "categoryLabel": "Kategori",
       "visibilityLabel": "Synlighet",
+      "availabilityLabel": "Tillgänglighet",
       "all": "Alla",
+      "allPackages": "Alla paket",
+      "availableOnly": "Endast tillgängliga",
       "gradeAbbr": "Åk {grade}",
       "math": "Matte",
       "reading": "Svenska",
@@ -332,8 +336,8 @@
       "delete": {
         "title": "Ta bort paket?",
         "confirm": "Är du säker på att du vill ta bort \"{name}\"?",
-        "willRemove": "Detta tar också bort {count} uppgift...",
-        "willRemovePlural": "Detta tar också bort {count} uppgifter...",
+        "willRemove": "Detta paket är tilldelat till {count} barn. Uppgiften kommer tas bort för:",
+        "willRemovePlural": "Detta paket är tilldelat till {count} barn. Uppgifterna kommer tas bort för:",
         "button": "Ta bort",
         "deleting": "Tar bort...",
         "cancel": "Avbryt"
