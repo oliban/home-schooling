@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { children, assignments, packages } from '@/lib/api';
+import { children, assignments, packages, admin } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import FileDropZone from '@/components/ui/FileDropZone';
@@ -200,11 +200,20 @@ function SortableAssignmentCard({
 
 export default function ParentDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [parent, setParent] = useState<ParentData | null>(null);
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [assignmentsList, setAssignmentsList] = useState<AssignmentData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Sync banner state
+  const [syncInfo, setSyncInfo] = useState<{
+    syncedAt: number | null;
+    sourceFile: string | null;
+    syncedAtHuman: string | null;
+  } | null>(null);
+  const [showSyncBanner, setShowSyncBanner] = useState(false);
 
   // Import state
   const [importedData, setImportedData] = useState<ImportedPackage | null>(null);
@@ -270,6 +279,26 @@ export default function ParentDashboard() {
         .catch(err => console.error('Failed to load stats:', err));
     }
   }, [statsPeriod, loading]);
+
+  // Check for sync completion and show banner
+  useEffect(() => {
+    if (searchParams.get('synced') === '1') {
+      admin.getSyncInfo()
+        .then(info => {
+          if (info.syncedAt) {
+            // Only show if synced within last 5 minutes
+            const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+            if (info.syncedAt > fiveMinutesAgo) {
+              setSyncInfo(info);
+              setShowSyncBanner(true);
+            }
+          }
+          // Remove the query param from URL
+          router.replace('/parent', { scroll: false });
+        })
+        .catch(err => console.error('Failed to get sync info:', err));
+    }
+  }, [searchParams, router]);
 
   const handleLogout = () => {
     localStorage.removeItem('parentToken');
@@ -623,6 +652,29 @@ export default function ParentDashboard() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      {/* Sync Success Banner */}
+      {showSyncBanner && syncInfo && (
+        <div className="bg-green-600 text-white px-4 py-3">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">✅</span>
+              <div>
+                <p className="font-medium">Database synced from production</p>
+                <p className="text-sm text-green-100">
+                  Synced at {syncInfo.syncedAtHuman} from {syncInfo.sourceFile}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSyncBanner(false)}
+              className="text-green-200 hover:text-white text-xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white shadow-sm p-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -885,20 +937,21 @@ export default function ParentDashboard() {
 
                 return childrenWithoutActive.length > 0 && (
                   <div className="mt-6">
+                    <h3 className="text-sm font-semibold text-gray-600 mb-2">
+                      No active assignments
+                    </h3>
                     {childrenWithoutActive.map((child) => (
                       <div key={child.id} className="mb-3">
                         <div className="flex items-center justify-between mb-2 pl-1">
                           <p className="text-xs font-medium text-gray-500">{child.name}</p>
-                          <Link
-                            href={`/parent/packages?childId=${child.id}`}
-                            className="text-xs text-purple-600 hover:text-purple-700 font-medium hover:underline"
-                          >
-                            {t('parent.dashboard.addAssignment')}
-                          </Link>
                         </div>
-                        <div className="bg-gray-50 p-4 rounded-xl text-center text-sm text-gray-500">
-                          No active assignments
-                        </div>
+                        <Link
+                          href={`/parent/packages?childId=${child.id}`}
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+                        >
+                          <span className="text-lg">📚</span>
+                          <span>{t('parent.dashboard.addAssignment')}</span>
+                        </Link>
                       </div>
                     ))}
                   </div>
