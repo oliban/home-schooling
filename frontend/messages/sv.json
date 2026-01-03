@@ -250,9 +250,13 @@
       "lgr22Coverage": "LGR 22-täckning",
       "dragToReorder": "Dra för att ändra ordning",
       "assignedBy": "Tilldelad av: {name}",
-      "lgr22Link": "📊 LGR 22",
+      "lgr22Link": "📊 Uppgiftsplanering",
       "brainrotCount": "{count} hjärnrötor",
       "brainrotValue": "{value} mynt",
+      "familyCodeLabel": "Familjekod:",
+      "activeAssignmentsCount": "{count} aktiva",
+      "completedAssignmentsCount": "{count} slutförda",
+      "addAssignment": "+ lägg till uppgift",
       "shareGlobally": "Dela globalt",
       "shareGloballyDescription": "Synlig för alla föräldrar med barn i årskurs {grade}",
       "autoAssignSingleDescription": "Tilldela omedelbart till valt barn",
@@ -289,7 +293,8 @@
       }
     },
     "packages": {
-      "title": "Uppgiftspaket",
+      "title": "Tilldela uppgifter",
+      "createManually": "Skapa manuellt",
       "gradeLabel": "Årskurs",
       "topicLabel": "Ämne",
       "categoryLabel": "Kategori",
@@ -542,10 +547,11 @@
     "typeHere": "Skriv här..."
   },
   "curriculum": {
-    "title": "LGR 22 läroplanstäckning",
+    "title": "Uppgiftsplanering",
     "selectChild": "Välj barn",
     "backToDashboard": "Tillbaka till panelen",
     "browsePackages": "Bläddra bland paket",
+    "importTitle": "Importera uppgiftspaket",
     "gradeLevel": "Årskurs {grade_level}",
     "coverage": {
       "title": "Läroplanstäckning",

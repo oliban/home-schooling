@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { packages, children, admin } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
@@ -44,6 +44,7 @@ interface ChildData {
 export default function PackagePreview() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const packageId = params.id as string;
 
@@ -99,6 +100,17 @@ export default function PackagePreview() {
       setLoading(false);
     }
   };
+
+  // Auto-select child from URL parameter
+  useEffect(() => {
+    const childId = searchParams.get('childId');
+    if (childId && childrenList.length > 0) {
+      const child = childrenList.find((c) => c.id === childId);
+      if (child) {
+        setSelectedChild(childId);
+      }
+    }
+  }, [searchParams, childrenList]);
 
   const handleAssign = async () => {
     if (!selectedChild || !pkg) return;

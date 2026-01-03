@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { packages, children } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
@@ -36,6 +36,7 @@ interface ChildData {
 
 export default function PackageBrowser() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [packagesList, setPackagesList] = useState<PackageData[]>([]);
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
@@ -48,6 +49,7 @@ export default function PackageBrowser() {
   const [allPackages, setAllPackages] = useState<PackageData[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<PackageData | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [prefilledChildId, setPrefilledChildId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -73,6 +75,19 @@ export default function PackageBrowser() {
       setLoading(false);
     }
   };
+
+  // Auto-filter by child's grade when childId is in URL
+  useEffect(() => {
+    const childId = searchParams.get('childId');
+    if (childId && childrenList.length > 0) {
+      const child = childrenList.find((c) => c.id === childId);
+      if (child) {
+        setPrefilledChildId(childId);
+        setGradeFilter(child.grade_level);
+        applyFilters(child.grade_level, scopeFilter, topicFilter, categoryFilter);
+      }
+    }
+  }, [searchParams, childrenList]);
 
   const applyFilters = async (
     grade: number | null,
@@ -350,7 +365,12 @@ export default function PackageBrowser() {
                       return (
                         <div
                           key={pkg.id}
-                          onClick={() => router.push(`/parent/packages/${pkg.id}`)}
+                          onClick={() => {
+                            const url = prefilledChildId
+                              ? `/parent/packages/${pkg.id}?childId=${prefilledChildId}`
+                              : `/parent/packages/${pkg.id}`;
+                            router.push(url);
+                          }}
                           className="bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                         >
                           <div className="flex items-start justify-between mb-2">

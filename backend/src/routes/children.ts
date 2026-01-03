@@ -29,6 +29,8 @@ router.get('/', authenticateParent, (req, res) => {
       coins: number;
       brainrotCount: number;
       brainrotValue: number;
+      activeAssignments: number;
+      completedAssignments: number;
       parent_id?: string;
       parent_name?: string;
     }>(
@@ -42,7 +44,9 @@ router.get('/', authenticateParent, (req, res) => {
          p.name as parent_name,
          COALESCE(cc.balance, 0) as coins,
          COUNT(chc.collectible_id) as brainrotCount,
-         COALESCE(SUM(col.price), 0) as brainrotValue
+         COALESCE(SUM(col.price), 0) as brainrotValue,
+         (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status IN ('pending', 'in_progress')) as activeAssignments,
+         (SELECT COUNT(*) FROM assignments a WHERE a.child_id = c.id AND a.status = 'completed') as completedAssignments
        FROM children c
        LEFT JOIN parents p ON c.parent_id = p.id
        LEFT JOIN child_coins cc ON c.id = cc.child_id
@@ -63,6 +67,8 @@ router.get('/', authenticateParent, (req, res) => {
       hasPin: !!c.pin_hash,
       brainrotCount: c.brainrotCount,
       brainrotValue: c.brainrotValue,
+      activeAssignments: c.activeAssignments,
+      completedAssignments: c.completedAssignments,
       // Include parent info for admin
       ...(req.user!.isAdmin && { parent_id: c.parent_id, parent_name: c.parent_name })
     }));

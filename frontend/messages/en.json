@@ -250,9 +250,13 @@
       "lgr22Coverage": "LGR 22 Coverage",
       "dragToReorder": "Drag to reorder",
       "assignedBy": "Assigned by: {name}",
-      "lgr22Link": "📊 LGR 22",
+      "lgr22Link": "📊 Assignment Planning",
       "brainrotCount": "{count} brainrots",
       "brainrotValue": "{value} coins",
+      "familyCodeLabel": "Family Code:",
+      "activeAssignmentsCount": "{count} active",
+      "completedAssignmentsCount": "{count} completed",
+      "addAssignment": "+ add assignment",
       "shareGlobally": "Share globally",
       "shareGloballyDescription": "Visible to all parents with children in grade {grade}",
       "autoAssignSingleDescription": "Immediately assign to selected child",
@@ -289,7 +293,8 @@
       }
     },
     "packages": {
-      "title": "Assignment Packages",
+      "title": "Assign Assignments",
+      "createManually": "Create Manually",
       "gradeLabel": "Grade",
       "topicLabel": "Topic",
       "categoryLabel": "Category",
@@ -542,10 +547,11 @@
     "typeHere": "Type here..."
   },
   "curriculum": {
-    "title": "LGR 22 Curriculum Coverage",
+    "title": "Assignment Planning",
     "selectChild": "Select Child",
     "backToDashboard": "Back to Dashboard",
     "browsePackages": "Browse Packages",
+    "importTitle": "Import Problem Package",
     "gradeLevel": "Grade {grade_level}",
     "coverage": {
       "title": "Curriculum Coverage",

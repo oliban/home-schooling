@@ -203,6 +203,9 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Brainrot-skolan API running on http://localhost:${PORT}`);
-});
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+  app.listen(PORT, () => {
+    console.log(`Brainrot-skolan API running on http://localhost:${PORT}`);
+  });
+}

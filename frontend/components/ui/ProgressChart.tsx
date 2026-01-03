@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '@/lib/LanguageContext';
 import {
   BarChart,
@@ -63,11 +63,36 @@ const CHILD_COLORS = [
 export default function ProgressChart({ data, period, onPeriodChange }: ProgressChartProps) {
   const { t, locale } = useTranslation();
   const [dateRange, setDateRange] = useState('');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Compute date range only on client to avoid hydration mismatch
   useEffect(() => {
     setDateRange(getDateRangeString(period, locale));
   }, [period, locale]);
+
+  // Auto-scroll to the right (most recent days) when data changes
+  useEffect(() => {
+    const scrollToEnd = () => {
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        // Scroll to the far right
+        container.scrollTo({
+          left: container.scrollWidth,
+          behavior: 'auto' // Use 'auto' instead of 'smooth' for initial load
+        });
+      }
+    };
+
+    // Try multiple times to ensure chart has rendered
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToEnd);
+    });
+
+    // Fallback with longer delay for complex charts
+    const timer = setTimeout(scrollToEnd, 300);
+
+    return () => clearTimeout(timer);
+  }, [data, period]);
 
   if (!data || data.length === 0) {
     return (
@@ -212,7 +237,7 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
         </select>
       </div>
 
-      <div className="overflow-x-auto">
+      <div ref={scrollContainerRef} className="overflow-x-auto">
         <div style={{ minWidth: minWidth }}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart
