@@ -71,6 +71,8 @@ export const children = {
       hasPin: boolean;
       brainrotCount: number;
       brainrotValue: number;
+      activeAssignments: number;
+      completedAssignments: number;
     }[]>('/children', { token }),
 
   create: (token: string, data: { name: string; birthdate?: string; grade_level: number; pin?: string }) =>
