@@ -54,7 +54,7 @@ export default function DevAdminPanel() {
             }
           } else {
             // Job was cleaned up, mark as completed (we don't know actual status)
-            setActiveJob(prev => prev ? { ...prev, status: 'completed' } : null);
+            setActiveJob((prev: any) => prev ? { ...prev, status: 'completed' } : null);
             const data = await admin.getBackupStatus(token);
             setStatus(data);
           }
