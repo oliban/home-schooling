@@ -9,6 +9,7 @@ dist/
 # Database
 data/*.db
 data/*.bak
+data/.last-sync
 data/generated/
 backend/data/
 

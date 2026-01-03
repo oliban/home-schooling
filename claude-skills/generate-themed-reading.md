@@ -443,3 +443,195 @@ Before saving output, verify:
 - ✅ Maximum 1 out of 3 stories has an explicit moral lesson
 - ✅ Not all protagonists are children with siblings
 - ✅ At least one story should be primarily fun/entertaining without a teaching moment
+
+## Hybrid Generation Workflow (Recommended for Production)
+
+For best quality/cost ratio with maximum story variety, use the **parallel-selection** hybrid approach.
+
+### When to Use Hybrid
+- Generating 2+ stories for production use
+- When story variety is critical (avoiding repetitive patterns)
+- When you want highest quality at reasonable cost
+
+### Why Hybrid is Especially Good for Themed Reading
+
+1. **Variety guarantee** - Each Haiku agent gets a DIFFERENT structure assignment
+2. **Best-of-N stories** - Opus can select the most engaging stories from candidates
+3. **Question polish** - Opus fixes option balance issues Haiku often creates
+4. **Cost efficient** - 54% cheaper than pure Opus with equal or better quality
+
+### Workflow Steps (Be Verbose!)
+
+**Step 1: Parallel Haiku Generation with Structure Assignments**
+
+📢 Tell the user: *"Launching 3 Haiku agents in parallel with different story structures..."*
+
+Launch 3 Haiku agents simultaneously, each with a DIFFERENT structure assignment:
+```
+Agent 1: Structure = "problem-solution" or "humorous misunderstanding"
+         Tone = funny/silly
+         Characters = animals or fantasy creatures
+
+Agent 2: Structure = "mystery/discovery" or "unexpected adventure"
+         Tone = exciting/mysterious
+         Characters = human children or mixed
+
+Agent 3: Structure = "slice-of-life" or "fantasy/imagination"
+         Tone = magical/wonder
+         Characters = different from agents 1 & 2
+```
+
+Each agent generates: story (150-250 words) + questions for their assigned theme(s).
+
+📢 When agents complete, tell the user:
+```
+✓ All 3 Haiku batches complete
+✓ Generated 3 candidate story packages
+✓ Batch 1: Humorous animal story + 4 questions
+✓ Batch 2: Mystery adventure story + 4 questions
+✓ Batch 3: Magical fantasy story + 4 questions
+✓ Total: 9 candidate stories with 36 questions (if 3 themes × 3 agents)
+```
+
+**Step 2: Opus Selection & Polish**
+
+📢 Tell the user: *"Now using Opus to select best stories and polish questions..."*
+
+Pass all candidates to Opus with selection criteria:
+- **Story selection**: Pick most engaging, well-written stories
+- **Variety check**: Ensure selected stories have different structures/tones
+- **Question review**: Fix option balance, verify answers match story
+- **Swedish quality**: Natural phrasing, age-appropriate vocabulary
+- **LGR22 balance**: Ensure objective distribution across questions
+
+📢 When selection completes, report to user:
+```
+Selection complete:
+✓ Selected 3 stories from 9 candidates
+✓ Story variety achieved:
+  - Story 1: Humorous misunderstanding (funny tone)
+  - Story 2: Mystery discovery (exciting tone)
+  - Story 3: Fantasy adventure (magical tone)
+✓ Excluded 6 stories:
+  - 2 too similar to other stories
+  - 2 stories too short (<150 words)
+  - 1 theme not well integrated
+  - 1 less engaging narrative
+✓ Fixed questions:
+  - Balanced option lengths on 4 questions
+  - Corrected 1 answer that didn't match story
+✓ Question distribution: 4 per story, all objectives covered
+```
+
+**Step 3: Save with Metadata**
+
+📢 Tell the user: *"Saving final output..."*
+
+Save directly to `/data/generated/` without asking permission.
+
+📢 When done, show summary:
+```
+✓ Saved: /data/generated/themed-reading-arskurs6-2026-01-03-143022.json
+
+Final Content:
+| Story | Theme | Structure | Tone | Questions |
+|-------|-------|-----------|------|-----------|
+| 1 | Pokemon | Humorous | Funny | 4 |
+| 2 | Zebror | Mystery | Exciting | 4 |
+| 3 | Katter | Fantasy | Magical | 4 |
+
+Question Types:
+| Code         | Count |
+|--------------|-------|
+| SV-LITERAL   |   3   |
+| SV-VOCABULARY|   3   |
+| SV-CHARACTER |   3   |
+| SV-MAIN-IDEA |   3   |
+
+Cost: $0.04 (Haiku) + $0.08 (Opus) = $0.12 total
+Time: ~12 seconds
+```
+
+### Performance Comparison
+
+| Approach | Time | Cost | Story Quality | Variety | Overall |
+|----------|------|------|---------------|---------|---------|
+| Pure Opus | ~10s | $0.26 | ★★★★★ | ★★★★☆ | A |
+| Pure Haiku | ~4s | $0.014 | ★★★☆☆ | ★★☆☆☆ | C |
+| **Hybrid** | ~12s | $0.12 | ★★★★☆ | ★★★★★ | **A** |
+
+### Example Prompt for Haiku Agents
+
+```
+Generate a Swedish short story (150-250 words) with comprehension questions.
+
+Grade: Årskurs [N]
+Theme: [THEME]
+Questions: [N] questions
+
+**ASSIGNED STRUCTURE**: [problem-solution | mystery | humorous | fantasy | slice-of-life]
+**ASSIGNED TONE**: [funny | exciting | mysterious | magical | realistic]
+**ASSIGNED CHARACTERS**: [animals | fantasy creatures | human children | objects]
+
+Output JSON format:
+{
+  "batch": [1|2|3],
+  "package": {
+    "name": "[Theme name]",
+    "story_text": "...",
+    "description": "..."
+  },
+  "problems": [{ ... }]
+}
+
+Rules:
+- Story MUST follow assigned structure and tone
+- 150-250 words exactly
+- All options similar length
+- Include story_text in package
+```
+
+### Example Prompt for Opus Selection
+
+```
+Review [N] themed reading packages. Select best [M] based on:
+
+1. Story quality: Engaging, well-written, appropriate length
+2. Story variety: Different structures, tones, character types
+3. Theme integration: Theme used creatively, not forced
+4. Question quality: Options balanced, answers correct
+5. LGR22 coverage: All objectives represented
+
+Exclude packages where:
+- Story is too short (<150 words) or too long (>300 words)
+- Story structure is too similar to another selected story
+- Correct answers are obviously longer than distractors
+- Questions don't match story content
+
+Output final JSON with selected packages and metadata.
+```
+
+## Description Guidelines
+
+**IMPORTANT:** Package descriptions should be human-readable for parents.
+- ✅ "En rolig berättelse om Pikachus äventyr i skogen"
+- ❌ "AI-generated story with Haiku+Opus hybrid approach"
+
+Never include model names (Haiku, Opus, Claude) in descriptions visible to parents.
+
+## Metadata Format
+
+Include generation metadata in output for tracking:
+```json
+"metadata": {
+  "generated_at": "YYYY-MM-DD",
+  "generation_method": "parallel-selection",
+  "models": {
+    "generation": "claude-haiku-4-5",
+    "selection": "claude-opus-4-5"
+  },
+  "candidates_generated": 9,
+  "candidates_selected": 3,
+  "story_structures": ["humorous", "mystery", "fantasy"]
+}
+```
