@@ -27,6 +27,7 @@ interface ParentData {
   id: string;
   email: string;
   name: string;
+  isAdmin?: boolean;
 }
 
 interface ImportedPackage {
