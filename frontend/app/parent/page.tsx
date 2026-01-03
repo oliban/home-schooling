@@ -280,9 +280,9 @@ export default function ParentDashboard() {
     }
   }, [statsPeriod, loading]);
 
-  // Check for sync completion and show banner
+  // Check for sync completion and show banner (dev only)
   useEffect(() => {
-    if (searchParams.get('synced') === '1') {
+    if (isDevelopment() && searchParams.get('synced') === '1') {
       admin.getSyncInfo()
         .then(info => {
           if (info.syncedAt) {
@@ -652,8 +652,8 @@ export default function ParentDashboard() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      {/* Sync Success Banner */}
-      {showSyncBanner && syncInfo && (
+      {/* Sync Success Banner (dev only) */}
+      {isDevelopment() && showSyncBanner && syncInfo && (
         <div className="bg-green-600 text-white px-4 py-3">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
