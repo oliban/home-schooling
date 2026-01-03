@@ -63,8 +63,23 @@ Use this format when generating a package of problems:
 - `name`: Descriptive name for the package
 - `grade_level`: 1-9 (årskurs)
 - `category_id`: Optional, one of the LGR 22 categories (or null for mixed)
-- `description`: Optional description of the package content
+- `description`: Human-readable description for parents (in Swedish). **NEVER include model names** like "Haiku", "Opus", "Claude" etc. Focus on themes and content.
 - `global`: true = visible to all parents with children in this grade, false = private
+
+**Metadata section (optional but recommended):**
+```json
+"metadata": {
+  "generated_at": "YYYY-MM-DD",
+  "generation_method": "direct|parallel-selection|draft-review",
+  "models": {
+    "generation": "claude-haiku-4-5",
+    "selection": "claude-opus-4-5"
+  },
+  "candidates_generated": 36,
+  "candidates_selected": 12
+}
+```
+Include this section to track which models were used for generation - this is for internal tracking only, not visible to parents.
 
 ### Batch Format (20 packages of 10 problems)
 
@@ -354,8 +369,140 @@ For `answer_type: "multiple_choice"`:
 4. Use Swedish number format (comma for decimals: 3,5 not 3.5)
 5. Currency is always "kr" (kronor)
 6. **Always include `lgr22_codes`** - an array of objective codes for curriculum tracking
-7. **Always save generated files to `/data/generated/` directory** - use descriptive filenames like `math-arskurs3-geometri-YYYY-MM-DD-HHMMSS.json` (timestamp prevents overwriting if multiple runs happen on the same day)
+7. **Always save generated files to `/data/generated/` directory** - use descriptive filenames like `math-arskurs3-geometri-YYYY-MM-DD-HHMMSS.json` (timestamp prevents overwriting if multiple runs happen on the same day). **Save directly without asking for permission** - just inform the user when the file is saved.
 8. **Text-to-Speech Pronunciation**: When using the multiplication symbol, write "×" (multiplication sign) or spell out "gånger" instead of using "x" (lowercase letter x), as text-to-speech will pronounce "x" as the letter "X" rather than "times/gånger". Example: Write "3 × 4" or "3 gånger 4", NOT "3 x 4".
+
+## Hybrid Generation Workflow (Recommended for Production)
+
+For best quality/cost ratio, use the **parallel-selection** hybrid approach:
+
+### When to Use Hybrid
+- Generating 10+ problems for production use
+- When curriculum balance matters
+- When you want highest quality at reasonable cost
+
+### Workflow Steps (Be Verbose!)
+
+**Step 1: Parallel Haiku Generation**
+
+📢 Tell the user: *"Launching 3 Haiku agents in parallel to generate candidate problems..."*
+
+Launch 3 Haiku agents simultaneously (single message, multiple Task tool calls):
+```
+Agent 1: Themes A + B (e.g., lego + fängelse) - 12 problems
+Agent 2: Themes C + D (e.g., pulka + universum) - 12 problems
+Agent 3: Mixed themes with variety focus - 12 problems
+```
+
+📢 When agents complete, tell the user:
+```
+✓ All 3 Haiku batches complete
+✓ Generated 36 candidate problems total
+✓ Batch 1: 12 problems (lego/fängelse themes)
+✓ Batch 2: 12 problems (pulka/universum themes)
+✓ Batch 3: 12 problems (mixed themes)
+```
+
+**Step 2: Opus Selection**
+
+📢 Tell the user: *"Now using Opus to review all 36 candidates and select the best 12..."*
+
+Pass all candidates to Opus with explicit selection criteria:
+- Curriculum code balance (equal distribution across requested codes)
+- Theme balance (equal distribution across requested themes)
+- Age-appropriateness verification for the target årskurs
+- Mathematical correctness check (verify all answers are correct)
+- Swedish language quality (natural phrasing, correct grammar)
+- Exclude: too advanced concepts, confusing wording, wrong answer types
+
+📢 When selection completes, report to user:
+```
+Selection complete:
+✓ Selected 12 problems from 36 candidates
+✓ Excluded 24 problems:
+  - 3 too advanced for grade level
+  - 2 incorrect math
+  - 1 confusing wording
+  - 18 duplicates/less engaging
+✓ Fixed: "fängelseguard" → "fängelsevakt"
+✓ Distribution: 3 per curriculum code, 3 per theme
+```
+
+**Step 3: Save with Metadata**
+
+📢 Tell the user: *"Saving final output..."*
+
+Save directly to `/data/generated/` without asking permission.
+
+📢 When done, show summary:
+```
+✓ Saved: /data/generated/math-arskurs3-hybrid-2026-01-03.json
+
+Final Distribution:
+| Code      | lego | fängelse | pulka | universum |
+|-----------|------|----------|-------|-----------|
+| MA-PRO-02 |  1   |    0     |   1   |     1     |
+| MA-ALG-01 |  1   |    1     |   1   |     0     |
+| MA-GEO-01 |  0   |    1     |   1   |     1     |
+| MA-GEO-02 |  1   |    1     |   0   |     1     |
+
+Cost: $0.024 (Haiku) + $0.035 (Opus) = $0.059 total
+Time: ~9 seconds
+```
+
+### Performance Comparison
+
+| Approach | Time | Cost | Quality |
+|----------|------|------|---------|
+| Pure Opus | ~9s | $0.20 | A- (4.45/5) |
+| Pure Haiku | ~4s | $0.008 | C+ (2.90/5) |
+| **Hybrid** | ~9s | $0.06 | **A (4.75/5)** |
+
+### Why Hybrid Wins
+1. **Better curriculum balance** - Selection from 3× candidates ensures perfect distribution
+2. **Quality filtering** - Opus removes Haiku's age-inappropriate or incorrect problems
+3. **Cost efficient** - 70% cheaper than pure Opus
+4. **Higher quality** - Selection step actually improves on pure Opus output
+
+### Example Prompt for Haiku Agents
+
+```
+Generate 12 Swedish math problems for årskurs [N].
+
+Curriculum codes: [list codes]
+Themes: Focus on [THEME_A] and [THEME_B]
+
+Output JSON format:
+{
+  "batch": [1|2|3],
+  "problems": [{ "id": "H[batch]-01", "question_text": "...", ... }]
+}
+
+Rules:
+- All text in Swedish
+- Use "×" not "x" for multiplication
+- Include hints for ALL problems
+- Ensure age-appropriate difficulty
+```
+
+### Example Prompt for Opus Selection
+
+```
+Review [N] candidate problems. Select best [M] based on:
+1. Curriculum balance: [X] per code
+2. Theme balance: [Y] per theme
+3. Age-appropriateness for årskurs [Z]
+4. Mathematical correctness
+5. Swedish language quality
+
+Exclude problems with:
+- 3D geometry (too advanced for lower grades)
+- Numbers too large for age group
+- Confusing or ambiguous wording
+- Incorrect curriculum code assignments
+
+Output final JSON with metadata.
+```
 
 ## LGR 22 Objective Codes Reference
 

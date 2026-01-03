@@ -132,7 +132,7 @@ Use this format when generating reading questions for an entire book:
 - `difficulty`: "easy", "medium", or "hard"
 - `lgr22_codes`: Array of reading objective codes (see reference below)
 
-**Output location:** Save generated JSON files to `data/generated/`
+**Output location:** Save generated JSON files to `data/generated/`. **Save directly without asking for permission** - just inform the user when the file is saved.
 
 ## Always Generate Exactly 5 Questions
 
@@ -320,3 +320,181 @@ D: Han ville skydda Harry från människor som kunde vara farliga för honom
 ```
 
 **Note:** Some questions may cover multiple skills. For example, understanding why a character felt a certain way involves both SV-CHARACTER and SV-INFERENCE.
+
+## Hybrid Generation Workflow (Recommended for Production)
+
+For best quality/cost ratio, use the **parallel-selection** hybrid approach:
+
+### When to Use Hybrid
+- Generating questions for longer chapters
+- When you want variety in question types
+- When curriculum code balance matters
+- For production-quality content
+
+### Workflow Steps (Be Verbose!)
+
+**Step 1: Parallel Haiku Generation**
+
+📢 Tell the user: *"Launching 2-3 Haiku agents in parallel to generate candidate questions..."*
+
+Launch agents simultaneously (single message, multiple Task tool calls):
+```
+Agent 1: Focus on SV-LITERAL + SV-VOCABULARY (factual questions) - 5 questions
+Agent 2: Focus on SV-INFERENCE + SV-CHARACTER (interpretive questions) - 5 questions
+Agent 3: Focus on SV-MAIN-IDEA + mixed (thematic questions) - 5 questions
+```
+
+📢 When agents complete, tell the user:
+```
+✓ All Haiku batches complete
+✓ Generated 15 candidate questions total
+✓ Batch 1: 5 literal/vocabulary questions
+✓ Batch 2: 5 inference/character questions
+✓ Batch 3: 5 main-idea/mixed questions
+```
+
+**Step 2: Opus Selection**
+
+📢 Tell the user: *"Now using Opus to review all 15 candidates and select the best 5..."*
+
+Pass all candidates to Opus with explicit selection criteria:
+- Select best 5 questions
+- Ensure code balance (mix of literal, inference, character, main-idea)
+- Difficulty distribution per grade level
+- Verify answers match actual chapter content
+- Check option balance (no obviously longer correct answers)
+- Swedish language quality
+
+📢 When selection completes, report to user:
+```
+Selection complete:
+✓ Selected 5 questions from 15 candidates
+✓ Excluded 10 questions:
+  - 2 had obviously longer correct answers
+  - 1 asked about content not in chapter
+  - 1 had ambiguous correct answer
+  - 6 duplicates/less engaging
+✓ Fixed option lengths on question 3
+✓ Distribution: 2 literal, 1 inference, 1 character, 1 main-idea
+```
+
+**Step 3: Save with Metadata**
+
+📢 Tell the user: *"Saving final output..."*
+
+Save directly to `/data/generated/` without asking permission.
+
+📢 When done, show summary:
+```
+✓ Saved: /data/generated/harry-potter-chapter6-reading.json
+
+Final Question Types:
+| Code         | Count | Difficulty |
+|--------------|-------|------------|
+| SV-LITERAL   |   2   | easy, medium |
+| SV-INFERENCE |   1   | medium |
+| SV-CHARACTER |   1   | medium |
+| SV-MAIN-IDEA |   1   | hard |
+
+Cost: $0.018 (Haiku) + $0.025 (Opus) = $0.043 total
+Time: ~7 seconds
+```
+
+Include generation metadata in output:
+```json
+"metadata": {
+  "generated_at": "YYYY-MM-DD",
+  "generation_method": "parallel-selection",
+  "models": {
+    "generation": "claude-haiku-4-5",
+    "selection": "claude-opus-4-5"
+  },
+  "candidates_generated": 15,
+  "candidates_selected": 5,
+  "chapter_text_file": "data/generated/{book}-chapter{N}-text.txt"
+}
+```
+
+### Performance Comparison
+
+| Approach | Time | Cost | Quality |
+|----------|------|------|---------|
+| Pure Opus | ~8s | $0.15 | A- |
+| Pure Haiku | ~3s | $0.006 | C+ |
+| **Hybrid** | ~7s | $0.04 | **A** |
+
+### Why Hybrid Works for Reading
+
+1. **Haiku strength**: Good at extracting literal facts from text
+2. **Haiku weakness**: Struggles with balanced options, may create obviously correct answers
+3. **Opus strength**: Excellent at option balancing and verifying text accuracy
+4. **Selection benefit**: Can discard questions where correct answer is too obvious
+
+### Common Haiku Issues (What Opus Filters)
+
+- ❌ Correct answer significantly longer than distractors
+- ❌ Question about content not in the chapter
+- ❌ Ambiguous questions with multiple valid answers
+- ❌ Too easy questions (answer obvious without reading)
+- ❌ Distractors that are obviously silly
+
+### Example Prompt for Haiku Agents
+
+```
+Generate 5 Swedish reading comprehension questions for årskurs [N].
+
+Book: [TITLE]
+Chapter: [N]
+Chapter text: [paste text or reference file]
+
+Focus on: [SV-LITERAL + SV-VOCABULARY] OR [SV-INFERENCE + SV-CHARACTER]
+
+Output JSON format:
+{
+  "batch": [1|2|3],
+  "problems": [{
+    "id": "H[batch]-01",
+    "question_text": "...",
+    "correct_answer": "A|B|C|D",
+    "options": ["A: ...", "B: ...", "C: ...", "D: ..."],
+    "lgr22_codes": ["SV-XXX"],
+    "difficulty": "easy|medium|hard"
+  }]
+}
+
+Rules:
+- All options must be similar length
+- Only ask about content in the chapter
+- 4 options always (A, B, C, D)
+```
+
+### Example Prompt for Opus Selection
+
+```
+Review [N] reading comprehension questions for [BOOK] chapter [X].
+
+Chapter text reference: [file path or summary]
+
+Select best 5 questions based on:
+1. Code balance: mix of SV-LITERAL, SV-INFERENCE, SV-CHARACTER, SV-MAIN-IDEA
+2. Difficulty: [distribution based on grade]
+3. Option balance: all options similar length
+4. Text accuracy: answers must match chapter content
+5. Question clarity: unambiguous single correct answer
+
+Exclude questions where:
+- Correct answer is obviously longer/more detailed
+- Question asks about content not in chapter
+- Multiple options could be correct
+- Distractors are obviously wrong
+
+Output final JSON with 5 selected questions.
+```
+
+## Description Guidelines
+
+**IMPORTANT:** Package descriptions should be human-readable for parents.
+- ✅ "Läsförståelse om hur Harry får sitt Hogwartsbrev"
+- ❌ "5 questions generated with Haiku+Opus hybrid"
+
+Never include model names (Haiku, Opus, Claude) in descriptions visible to parents.
