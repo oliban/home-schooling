@@ -8,6 +8,7 @@ import {
   getLastBackupTimestamp,
   getLastSyncTimestamp,
   getBackupFileCount,
+  getSyncInfo,
 } from '../utils/backup-timestamps.js';
 
 const router = express.Router();
@@ -22,6 +23,15 @@ router.get('/backup-status', requireDevelopment, authenticateParent, (req, res) 
   const backupFiles = getBackupFileCount();
 
   res.json({ lastBackup, lastSync, backupFiles });
+});
+
+/**
+ * GET /api/admin/sync-info
+ * Returns detailed sync info from the last restore operation
+ */
+router.get('/sync-info', requireDevelopment, (req, res) => {
+  const syncInfo = getSyncInfo();
+  res.json(syncInfo);
 });
 
 /**
@@ -76,6 +86,15 @@ router.post('/sync', requireDevelopment, authenticateParent, async (req, res) =>
  */
 router.get('/active-job', requireDevelopment, authenticateParent, (req, res) => {
   const job = adminJobManager.getActiveJob();
+  res.json({ job });
+});
+
+/**
+ * GET /api/admin/job/:id
+ * Returns a specific job by ID (for fetching final status after completion)
+ */
+router.get('/job/:id', requireDevelopment, authenticateParent, (req, res) => {
+  const job = adminJobManager.getJob(req.params.id);
   res.json({ job });
 });
 

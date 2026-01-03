@@ -42,5 +42,16 @@ fi
 # Replace local db with backup
 cp "$BACKUP_FILE" "$LOCAL_DB"
 
+# Write sync metadata file for verification
+SYNC_INFO_FILE="$PROJECT_DIR/data/.last-sync"
+cat > "$SYNC_INFO_FILE" << EOF
+{
+  "syncedAt": $(date +%s)000,
+  "sourceFile": "$(basename "$BACKUP_FILE")",
+  "syncedAtHuman": "$(date '+%Y-%m-%d %H:%M:%S')"
+}
+EOF
+
 echo "Local database restored from $BACKUP_FILE"
 echo "Location: $LOCAL_DB"
+echo "Sync info written to $SYNC_INFO_FILE"

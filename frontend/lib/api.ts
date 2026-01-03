@@ -415,6 +415,19 @@ export const admin = {
       } | null;
     }>('/admin/active-job', { token }),
 
+  getJob: (token: string, jobId: string) =>
+    fetchApi<{
+      job: {
+        id: string;
+        type: 'backup' | 'sync';
+        status: 'running' | 'completed' | 'failed';
+        output: string;
+        error?: string;
+        startedAt: number;
+        completedAt?: number;
+      } | null;
+    }>(`/admin/job/${jobId}`, { token }),
+
   // Admin-only: List all parents
   listParents: (token: string) =>
     fetchApi<Array<{
@@ -442,4 +455,12 @@ export const admin = {
       coins: number;
       collectibles_count: number;
     }>>('/admin/children', { token }),
+
+  // Get sync info (no auth required - used after logout)
+  getSyncInfo: () =>
+    fetchApi<{
+      syncedAt: number | null;
+      sourceFile: string | null;
+      syncedAtHuman: string | null;
+    }>('/admin/sync-info'),
 };

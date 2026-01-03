@@ -24,15 +24,15 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting backup..." >> "$LOG_FILE"
 echo "Ensuring app is running..."
 # Get machine ID - use jq if available, otherwise parse text output
 if command -v jq &> /dev/null; then
-    MACHINE_ID=$(fly machines list -a home-schooling -j 2>/dev/null | jq -r '.[0].id' 2>/dev/null)
+    MACHINE_ID=$(fly machines list -a brainrot-skolan -j 2>/dev/null | jq -r '.[0].id' 2>/dev/null)
 else
     # Parse text output: strip ANSI codes and get first machine ID
-    MACHINE_ID=$(fly machines list -a home-schooling 2>/dev/null | perl -pe 's/\e\[[0-9;]*m//g' | awk 'NR>2 && length($1)==14 {print $1; exit}')
+    MACHINE_ID=$(fly machines list -a brainrot-skolan 2>/dev/null | perl -pe 's/\e\[[0-9;]*m//g' | awk 'NR>2 && length($1)==14 {print $1; exit}')
 fi
 
 if [ -n "$MACHINE_ID" ] && [ "$MACHINE_ID" != "null" ]; then
     echo "Starting machine $MACHINE_ID..."
-    fly machine start "$MACHINE_ID" -a home-schooling 2>&1 | grep -v "already started" || true
+    fly machine start "$MACHINE_ID" -a brainrot-skolan 2>&1 | grep -v "already started" || true
     echo "Waiting for machine to be ready..."
     sleep 8
 else
@@ -43,7 +43,7 @@ echo "Downloading production database..."
 
 # Download from Fly.io using sftp
 TEMP_FILE="$BACKUP_FILE.tmp"
-if fly ssh sftp get /data/teacher.db "$TEMP_FILE" -a home-schooling; then
+if fly ssh sftp get /data/teacher.db "$TEMP_FILE" -a brainrot-skolan; then
     # Verify the downloaded file is a valid SQLite database
     if file "$TEMP_FILE" | grep -q "SQLite"; then
         # Move temp file to final location

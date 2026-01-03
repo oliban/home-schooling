@@ -53,6 +53,13 @@ export class AdminJobManager {
   }
 
   /**
+   * Returns a specific job by ID, or null if not found.
+   */
+  getJob(jobId: string): AdminJob | null {
+    return this.jobs.get(jobId) || null;
+  }
+
+  /**
    * Appends output to a job, limiting to last 100 lines.
    */
   appendOutput(jobId: string, data: string): void {

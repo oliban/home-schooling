@@ -31,11 +31,54 @@ export default function DevAdminPanel() {
         if (!token) return;
 
         const { job } = await admin.getActiveJob(token);
-        setActiveJob(job);
 
-        if (job && job.status !== 'running') {
-          // Job finished, reload status
-          loadStatus();
+        // If backend returns null but we have a running job, fetch by ID to get final state
+        if (!job && activeJob?.id) {
+          const { job: completedJob } = await admin.getJob(token, activeJob.id);
+
+          if (completedJob) {
+            // Got the final job state from backend
+            setActiveJob(completedJob);
+
+            // Refresh backup status
+            const data = await admin.getBackupStatus(token);
+            setStatus(data);
+
+            // If sync completed successfully, logout after showing success message
+            if (completedJob.type === 'sync' && completedJob.status === 'completed') {
+              setTimeout(() => {
+                localStorage.removeItem('parentToken');
+                localStorage.removeItem('parentData');
+                window.location.href = '/parent/login?synced=1';
+              }, 3000);
+            }
+          } else {
+            // Job was cleaned up, mark as completed (we don't know actual status)
+            setActiveJob(prev => prev ? { ...prev, status: 'completed' } : null);
+            const data = await admin.getBackupStatus(token);
+            setStatus(data);
+          }
+          return;
+        }
+
+        // Update with backend job state
+        if (job) {
+          setActiveJob(job);
+
+          if (job.status !== 'running') {
+            // Job finished, reload status timestamps
+            const data = await admin.getBackupStatus(token);
+            setStatus(data);
+
+            // If sync completed successfully, logout after showing success message
+            if (job.type === 'sync' && job.status === 'completed') {
+              setTimeout(() => {
+                localStorage.removeItem('parentToken');
+                localStorage.removeItem('parentData');
+                window.location.href = '/parent/login?synced=1';
+              }, 3000);
+            }
+          }
         }
       } catch (err) {
         console.error('Poll error:', err);
@@ -53,8 +96,11 @@ export default function DevAdminPanel() {
       const data = await admin.getBackupStatus(token);
       setStatus(data);
 
-      const { job } = await admin.getActiveJob(token);
-      setActiveJob(job);
+      // Only fetch active job on initial load (when we don't have one)
+      if (!activeJob) {
+        const { job } = await admin.getActiveJob(token);
+        setActiveJob(job);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load status');
     }
@@ -81,7 +127,7 @@ export default function DevAdminPanel() {
     // Show confirmation dialog
     const confirmed = confirm(
       'Sync to Dev will replace your local database with production data.\n\n' +
-      'You will be logged out automatically.\n\n' +
+      'You will be logged out when sync completes.\n\n' +
       'Continue?'
     );
 
@@ -96,13 +142,7 @@ export default function DevAdminPanel() {
     try {
       const { jobId } = await admin.triggerSync(token);
       setActiveJob({ id: jobId, type: 'sync', status: 'running', output: '', startedAt: Date.now() });
-
-      // Auto-logout after starting sync
-      setTimeout(() => {
-        localStorage.removeItem('parentToken');
-        localStorage.removeItem('parentData');
-        window.location.href = '/parent/login';
-      }, 2000);
+      // Don't auto-logout - let the polling handle it when sync completes
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start sync');
     } finally {
@@ -208,20 +248,39 @@ export default function DevAdminPanel() {
             </span>
           </div>
 
-          {/* Sync completion warning */}
-          {activeJob.type === 'sync' && activeJob.status === 'completed' && (
-            <div className="bg-yellow-900 text-yellow-100 p-3 rounded mb-2 text-sm">
-              <div className="font-bold mb-1">⚠️ Sync Complete - Action Required:</div>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Restart the backend server</li>
-                <li>Log out and log back in (old session won&apos;t work)</li>
-                <li>The database has been replaced with production data</li>
-              </ol>
+          {/* Backup completion message */}
+          {activeJob.type === 'backup' && activeJob.status === 'completed' && (
+            <div className="bg-green-900 text-green-100 p-3 rounded mb-2 text-sm">
+              <div className="font-bold mb-1">✅ Backup Complete!</div>
+              <p>Production database backed up successfully.</p>
             </div>
           )}
 
-          {activeJob.error && (
-            <div className="text-red-400 mb-2">Error: {activeJob.error}</div>
+          {/* Sync completion message */}
+          {activeJob.type === 'sync' && activeJob.status === 'completed' && (
+            <div className="bg-green-900 text-green-100 p-3 rounded mb-2 text-sm">
+              <div className="font-bold mb-1">✅ Sync Complete!</div>
+              <p>Database synced from production. Redirecting to login in 3 seconds...</p>
+              <p className="mt-2 text-green-300 text-xs">Note: Restart the backend server to ensure fresh connections.</p>
+            </div>
+          )}
+
+          {/* Failed job message */}
+          {activeJob.status === 'failed' && (
+            <div className="bg-red-900 text-red-100 p-3 rounded mb-2 text-sm">
+              <div className="font-bold mb-1">❌ {activeJob.type === 'backup' ? 'Backup' : 'Sync'} Failed</div>
+              <p>{activeJob.error || 'Unknown error occurred'}</p>
+            </div>
+          )}
+
+          {/* Dismiss button for completed/failed jobs */}
+          {activeJob.status !== 'running' && (
+            <button
+              onClick={() => setActiveJob(null)}
+              className="text-xs text-gray-400 hover:text-gray-200 mb-2"
+            >
+              Dismiss
+            </button>
           )}
           <pre className="whitespace-pre-wrap">
             {activeJob.output || 'Starting...'}
