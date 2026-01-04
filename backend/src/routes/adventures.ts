@@ -320,8 +320,15 @@ async function generateMathContent(
   const systemPrompt = `Du är en svensk matematiklärare som skapar uppgifter för grundskolan baserat på LGR 22.
 All text MÅSTE vara på svenska. Skapa ${questionCount} matteuppgifter med temat "${theme}".
 
-VIKTIGT: Uppgifterna SKA träna följande LGR22-mål: ${objectiveCodes.join(', ')}
-Fördela uppgifterna jämnt över dessa mål.
+KRITISKT VIKTIGT - ÅRSKURS ${gradeLevel}:
+Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALL matematik till vad ett barn i årskurs ${gradeLevel} kan.
+- Årskurs 1-2: Endast addition och subtraktion med tal upp till 20. Inga bråk, inga area/omkrets.
+- Årskurs 3: Addition, subtraktion, enkel multiplikation (tabellerna 1-5). Tal upp till 100. Inga bråk, ingen area.
+- Årskurs 4: Multiplikation och division, alla tabeller. Tal upp till 1000. Introduktion till bråk (1/2, 1/4). Enkel geometri.
+- Årskurs 5-6: Bråk, decimaltal, procent, area och omkrets.
+Om LGR22-målen nedan verkar för avancerade för årskurs ${gradeLevel}, anpassa dem till enklare nivå eller hoppa över dem.
+
+LGR22-mål att träna (anpassa till årskurs ${gradeLevel}!): ${objectiveCodes.join(', ')}
 
 Svara med JSON i exakt detta format:
 {
@@ -342,10 +349,7 @@ Svara med JSON i exakt detta format:
   ]
 }
 
-Årskurs: ${gradeLevel}
-- Använd åldersanpassade tal och begrepp
-- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra
-- Variera uppgiftstyper: addition, subtraktion, multiplikation, division, bråk, procent beroende på årskurs
+- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra (men ALLTID inom årskurs ${gradeLevel} nivå!)
 - För Ja/Nej-frågor, använd answer_type: "multiple_choice" med options: ["A: Ja", "B: Nej"]
 - Gör uppgifterna roliga och engagerande med temat "${theme}"`;
 
@@ -395,7 +399,14 @@ async function generateReadingContent(
   const systemPrompt = `Du är en svensk lärare som skapar läsförståelseuppgifter för grundskolan.
 Skapa en kort berättelse (150-250 ord) med temat "${theme}" och ${questionCount} flervalsfrågor.
 
-VIKTIGT: Frågorna SKA träna följande LGR22-mål: ${objectiveCodes.join(', ')}
+KRITISKT VIKTIGT - ÅRSKURS ${gradeLevel}:
+Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALLT innehåll till vad ett barn i årskurs ${gradeLevel} kan läsa och förstå.
+- Årskurs 1-2: Mycket korta meningar (5-8 ord). Enkla vanliga ord. Inga svåra begrepp. Berättelse max 100 ord.
+- Årskurs 3: Korta meningar. Enkelt språk. Konkreta händelser. Berättelse 100-150 ord.
+- Årskurs 4: Något längre meningar. Kan ha några svårare ord med kontext. Berättelse 150-200 ord.
+- Årskurs 5-6: Mer avancerat språk och längre berättelser tillåtna. Berättelse 200-250 ord.
+
+LGR22-mål att träna: ${objectiveCodes.join(', ')}
 Förklaring av målen:
 - SV-LITERAL: Direkt förståelse (fakta från texten)
 - SV-INFERENCE: Dra slutsatser
@@ -408,11 +419,11 @@ Svara med JSON i exakt detta format:
   "package": {
     "name": "[Kreativ titel på svenska]",
     "description": "[Kort beskrivning på svenska]",
-    "story_text": "[Berättelsen på svenska, 150-250 ord. Anpassad för årskurs ${gradeLevel}.]"
+    "story_text": "[Berättelsen på svenska, anpassad längd för årskurs ${gradeLevel}]"
   },
   "problems": [
     {
-      "question_text": "[Fråga på svenska]",
+      "question_text": "[Fråga på svenska - enkelt språk för årskurs ${gradeLevel}]",
       "correct_answer": "A",
       "answer_type": "multiple_choice",
       "options": ["A: [Rätt svar]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
@@ -424,11 +435,10 @@ Svara med JSON i exakt detta format:
   ]
 }
 
-Årskurs: ${gradeLevel}
-- Använd åldersanpassat språk
+- Använd åldersanpassat språk för ÅRSKURS ${gradeLevel}
 - Alla alternativ ska ha liknande längd (inget uppenbart längre rätt svar)
 - Distraktorer ska vara trovärdiga men tydligt fel
-- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra`;
+- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra (men ALLTID inom årskurs ${gradeLevel} nivå!)`;
 
   const response = await client.messages.create({
     model: 'claude-3-5-haiku-20241022',
