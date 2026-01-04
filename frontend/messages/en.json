@@ -133,6 +133,8 @@
     "inProgressCountPlural": "{count} in progress",
     "myCollections": "My Collections",
     "questions": "{count} questions",
+    "createAdventure": "Create your own adventure",
+    "adventureQuotaExceeded": "Complete your active adventures first!",
     "newItemAlert": {
       "title": "New collectible unlocked!",
       "message": "A new brainrot artwork is now available in the shop!",

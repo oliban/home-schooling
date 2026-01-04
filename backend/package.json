@@ -17,11 +17,13 @@
     "verify:cache-invalidation": "tsx scripts/verify-cache-invalidation.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "adm-zip": "^0.5.16",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.6.0",
     "bullmq": "^5.66.2",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.21.0",
     "fluent-ffmpeg": "^2.1.3",
     "heic-convert": "^2.1.0",

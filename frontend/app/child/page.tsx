@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { assignments } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { AdventureCreator } from '@/components/child/AdventureCreator';
 
 interface ChildData {
   id: string;
@@ -23,6 +24,13 @@ interface Assignment {
   status: string;
 }
 
+interface AdventureQuota {
+  maxActive: number;
+  activeCount: number;
+  remaining: number;
+  canCreate: boolean;
+}
+
 export default function ChildDashboard() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -32,6 +40,8 @@ export default function ChildDashboard() {
   const [showNewItemAlert, setShowNewItemAlert] = useState(false);
   const [mathPendingExpanded, setMathPendingExpanded] = useState(false);
   const [readingPendingExpanded, setReadingPendingExpanded] = useState(false);
+  const [showAdventureCreator, setShowAdventureCreator] = useState(false);
+  const [adventureQuota, setAdventureQuota] = useState<AdventureQuota | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('childToken');
@@ -46,6 +56,7 @@ export default function ChildDashboard() {
     setChild(parsed);
     loadAssignments(token);
     refreshCoins(token, parsed.id);
+    loadAdventureQuota(token);
 
     // Check if new item was unlocked today
     if (parsed.newItemUnlocked) {
@@ -91,6 +102,32 @@ export default function ChildDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAdventureQuota = async (token: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/adventures/quota`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAdventureQuota(data);
+      }
+    } catch (err) {
+      console.error('Failed to load adventure quota:', err);
+    }
+  };
+
+  const handleAdventureSuccess = (adventureId: string, assignmentId: string) => {
+    setShowAdventureCreator(false);
+    // Reload assignments and quota
+    const token = localStorage.getItem('childToken');
+    if (token) {
+      loadAssignments(token);
+      loadAdventureQuota(token);
+    }
+    // Navigate to the new assignment
+    router.push(`/child/assignment/${assignmentId}`);
   };
 
   const handleLogout = () => {
@@ -313,6 +350,34 @@ export default function ChildDashboard() {
           </div>
         </div>
 
+        {/* Create Your Own Adventure button */}
+        {adventureQuota && (
+          <div className="text-center mb-8">
+            <button
+              onClick={() => setShowAdventureCreator(true)}
+              disabled={!adventureQuota.canCreate}
+              className={`
+                inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105
+                ${adventureQuota.canCreate
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }
+              `}
+            >
+              <span className="text-xl">✨</span>
+              <span>{t('childDashboard.createAdventure')}</span>
+              <span className="text-sm opacity-75">
+                ({adventureQuota.remaining}/{adventureQuota.maxActive})
+              </span>
+            </button>
+            {!adventureQuota.canCreate && (
+              <p className="text-sm text-gray-500 mt-2">
+                {t('childDashboard.adventureQuotaExceeded')}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Collection link */}
         <div className="text-center">
           <Link
@@ -324,6 +389,15 @@ export default function ChildDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Adventure Creator Modal */}
+      {showAdventureCreator && adventureQuota && (
+        <AdventureCreator
+          quota={adventureQuota}
+          onClose={() => setShowAdventureCreator(false)}
+          onSuccess={handleAdventureSuccess}
+        />
+      )}
 
       <style jsx>{`
         @keyframes pulse-slow {

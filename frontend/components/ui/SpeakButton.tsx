@@ -31,7 +31,8 @@ export function SpeakButton({
 }: SpeakButtonProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const handleSpeak = () => {
+  const handleSpeak = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent click from bubbling to parent
     if ('speechSynthesis' in window) {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);

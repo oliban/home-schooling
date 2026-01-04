@@ -133,6 +133,8 @@
     "inProgressCountPlural": "{count} pågående",
     "myCollections": "Mina samlingar",
     "questions": "{count} frågor",
+    "createAdventure": "Skapa eget äventyr",
+    "adventureQuotaExceeded": "Slutför dina aktiva äventyr först!",
     "newItemAlert": {
       "title": "Nytt samlarobjekt upplåst!",
       "message": "Ett nytt brainrot-konstverk finns nu i butiken!",

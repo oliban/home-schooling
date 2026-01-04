@@ -412,15 +412,22 @@ export default function AssignmentPage() {
                 const isDisabled = feedback?.show;
 
                 return (
-                  <button
+                  <div
                     key={i}
+                    role="button"
+                    tabIndex={isDisabled ? -1 : 0}
                     onClick={() => !isDisabled && setAnswer(letter)}
-                    disabled={!!isDisabled}
-                    className={`w-full p-4 text-left rounded-xl border-2 transition-all flex items-center justify-between gap-3 ${
+                    onKeyDown={(e) => {
+                      if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        setAnswer(letter);
+                      }
+                    }}
+                    className={`w-full p-4 text-left rounded-xl border-2 transition-all flex items-center justify-between gap-3 cursor-pointer ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    } ${isDisabled ? 'cursor-not-allowed opacity-75' : ''}`}
+                    } ${isDisabled ? 'cursor-not-allowed opacity-75 pointer-events-none' : ''}`}
                   >
                     <span className="flex-1">{option}</span>
                     <SpeakButton
@@ -429,7 +436,7 @@ export default function AssignmentPage() {
                       size="sm"
                       label={t('assignment.listenToAnswer')}
                     />
-                  </button>
+                  </div>
                 );
               })}
             </div>

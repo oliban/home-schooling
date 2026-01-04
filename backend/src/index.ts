@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -15,6 +16,7 @@ import collectiblesRoutes from './routes/collectibles.js';
 import packagesRoutes from './routes/packages.js';
 import curriculumRoutes from './routes/curriculum.js';
 import adminRoutes from './routes/admin.js';
+import adventuresRoutes from './routes/adventures.js';
 import { isDevelopment } from './config/cors.js';
 
 // Re-export OCR queue types and functions for external use
@@ -174,6 +176,7 @@ app.use('/api/collectibles', collectiblesRoutes);
 app.use('/api/packages', packagesRoutes);
 app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/adventures', adventuresRoutes);
 
 // Log admin routes availability
 if (isDevelopment()) {

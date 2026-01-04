@@ -7,6 +7,7 @@ import { getDb } from '../data/database.js';
 import { redis, cacheHits, cacheMisses } from '../index.js';
 import { authenticateParent, authenticateChild, authenticateAny } from '../middleware/auth.js';
 import { validateNumberAnswer } from '../utils/answer-validation.js';
+import { updateAdventureOnCompletion } from './adventures.js';
 import type { Assignment, MathProblem, ReadingQuestion, PackageProblem, AssignmentAnswer } from '../types/index.js';
 
 // Cache TTL in seconds (shorter for active assignments that change frequently)
@@ -781,6 +782,51 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
       }
     });
 
+    // Update adventure status if this assignment is part of an adventure
+    if (questionComplete) {
+      // Calculate success rate for this assignment
+      let correctCount = 0;
+      let totalCount = 0;
+
+      if (assignment.package_id) {
+        // Package-based assignment
+        const stats = db.get<{ correct: number; total: number }>(
+          `SELECT
+             SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct,
+             COUNT(*) as total
+           FROM assignment_answers WHERE assignment_id = ?`,
+          [req.params.id]
+        );
+        correctCount = stats?.correct || 0;
+        totalCount = stats?.total || 0;
+      } else if (isReadingAssignment) {
+        // Legacy reading assignment
+        const stats = db.get<{ correct: number; total: number }>(
+          `SELECT
+             SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct,
+             COUNT(*) as total
+           FROM reading_questions WHERE assignment_id = ?`,
+          [req.params.id]
+        );
+        correctCount = stats?.correct || 0;
+        totalCount = stats?.total || 0;
+      } else {
+        // Legacy math assignment
+        const stats = db.get<{ correct: number; total: number }>(
+          `SELECT
+             SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct,
+             COUNT(*) as total
+           FROM math_problems WHERE assignment_id = ?`,
+          [req.params.id]
+        );
+        correctCount = stats?.correct || 0;
+        totalCount = stats?.total || 0;
+      }
+
+      const successRate = totalCount > 0 ? correctCount / totalCount : 0;
+      updateAdventureOnCompletion(req.params.id, successRate);
+    }
+
     // Get updated child coins and streak
     const childCoins = db.get<{ balance: number; current_streak: number }>(
       'SELECT balance, current_streak FROM child_coins WHERE child_id = ?',
@@ -957,6 +1003,53 @@ router.post('/:id/hint/:questionId', authenticateChild, async (req, res) => {
   } catch (error) {
     console.error('Purchase hint error:', error);
     res.status(500).json({ error: 'Failed to purchase hint' });
+  }
+});
+
+// Delete assignment (parent only, admin can delete any)
+router.delete('/:id', authenticateParent, async (req, res) => {
+  try {
+    const db = getDb();
+    const assignmentId = req.params.id;
+
+    // Get assignment to verify ownership (unless admin)
+    const assignment = db.get<Assignment>(
+      'SELECT * FROM assignments WHERE id = ?',
+      [assignmentId]
+    );
+
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    // Check permission: admin can delete any, parent can only delete their own
+    if (!req.user!.isAdmin && assignment.parent_id !== req.user!.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const childId = assignment.child_id;
+    const parentId = assignment.parent_id;
+
+    db.transaction(() => {
+      // Delete related records first (cascade manually for safety)
+      db.run('DELETE FROM assignment_answers WHERE assignment_id = ?', [assignmentId]);
+      db.run('DELETE FROM math_problems WHERE assignment_id = ?', [assignmentId]);
+      db.run('DELETE FROM reading_questions WHERE assignment_id = ?', [assignmentId]);
+
+      // Delete adventure generation record if exists
+      db.run('DELETE FROM adventure_generations WHERE assignment_id = ?', [assignmentId]);
+
+      // Delete the assignment itself
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+    });
+
+    // Invalidate cache
+    await invalidateAssignmentsCache(parentId, childId, assignmentId);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete assignment error:', error);
+    res.status(500).json({ error: 'Failed to delete assignment' });
   }
 });
 
