@@ -39,6 +39,7 @@ interface AssignmentDetail {
   created_at: string;
   completed_at: string | null;
   questions: Problem[];
+  story_text?: string | null;
 }
 
 export default function AssignmentPreview() {
@@ -212,6 +213,21 @@ export default function AssignmentPreview() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Story Text (for reading assignments) */}
+        {assignment.assignment_type === 'reading' && assignment.story_text && (
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl shadow-sm mb-6 overflow-hidden">
+            <div className="flex items-center gap-2 p-6 border-b border-amber-200">
+              <span className="text-2xl">📖</span>
+              <h2 className="text-xl font-bold text-amber-900">{t('assignment.story.title')}</h2>
+            </div>
+            <div className="p-6 prose max-w-none text-gray-800 leading-relaxed">
+              {assignment.story_text.split('\n\n').map((paragraph, i) => (
+                <p key={i} className="mb-4">{paragraph}</p>
+              ))}
             </div>
           </div>
         )}
