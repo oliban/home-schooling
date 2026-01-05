@@ -192,7 +192,8 @@
       "common": "Vanlig",
       "rare": "Sällsynt",
       "epic": "Episk",
-      "legendary": "Legendarisk"
+      "legendary": "Legendarisk",
+      "mythic": "Mytisk"
     },
     "errors": {
       "purchaseFailed": "Köpet kunde inte slutföras"
@@ -549,7 +550,8 @@
     "eraser": "Suddgummi",
     "pen": "Penna",
     "text": "Text",
-    "move": "Flytta",
+    "arrow": "Flytta text",
+    "move": "Flytta vy",
     "typeHere": "Skriv här..."
   },
   "curriculum": {

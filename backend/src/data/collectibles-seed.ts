@@ -5,7 +5,7 @@ export interface CollectibleSeed {
   name: string;
   ascii_art: string;
   price: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 }
 
 export const collectibles: CollectibleSeed[] = [
@@ -1476,6 +1476,24 @@ export const collectibles: CollectibleSeed[] = [
     POWER`,
     price: 1950,
     rarity: 'legendary'
+  },
+
+  // ==========================================
+  // MYTHIC (1 character) - Ultimate rarity
+  // ==========================================
+  {
+    name: "Bajsalero Bajsalo",
+    ascii_art: `    @@@@@@
+   @  ~~  @
+  @  @@@@  @
+  @ @@  @@ @
+   @ ~~~~ @
+    \\    /
+     \\  /
+      \\/
+    ~~~~~~`,
+    price: 2000,
+    rarity: 'mythic'
   }
 ];
 

@@ -192,7 +192,8 @@
       "common": "Common",
       "rare": "Rare",
       "epic": "Epic",
-      "legendary": "Legendary"
+      "legendary": "Legendary",
+      "mythic": "Mythic"
     },
     "errors": {
       "purchaseFailed": "Could not complete purchase"
@@ -549,7 +550,8 @@
     "eraser": "Eraser",
     "pen": "Pen",
     "text": "Text",
-    "move": "Move",
+    "arrow": "Move text",
+    "move": "Pan view",
     "typeHere": "Type here..."
   },
   "curriculum": {

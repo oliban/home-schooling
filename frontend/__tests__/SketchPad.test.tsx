@@ -60,7 +60,8 @@ vi.mock('@/lib/LanguageContext', () => ({
         'sketchPad.eraser': 'Eraser',
         'sketchPad.pen': 'Pen',
         'sketchPad.text': 'Text',
-        'sketchPad.move': 'Move',
+        'sketchPad.arrow': 'Move text',
+        'sketchPad.move': 'Pan view',
         'sketchPad.typeHere': 'Type here...',
       };
       return translations[key] || key;
@@ -93,7 +94,8 @@ describe('SketchPad', () => {
       render(<SketchPad />);
       expect(screen.getByTitle('Pen')).toBeInTheDocument();
       expect(screen.getByTitle('Text')).toBeInTheDocument();
-      expect(screen.getByTitle('Move')).toBeInTheDocument();
+      expect(screen.getByTitle('Move text')).toBeInTheDocument();
+      expect(screen.getByTitle('Pan view')).toBeInTheDocument();
       expect(screen.getByTitle('Eraser')).toBeInTheDocument();
       expect(screen.getByTitle('Clear')).toBeInTheDocument();
     });
@@ -112,11 +114,18 @@ describe('SketchPad', () => {
       expect(penButton).toHaveClass('bg-blue-500');
     });
 
-    it('should switch to move tool when clicked', () => {
+    it('should switch to pan tool when clicked', () => {
       render(<SketchPad />);
-      const moveButton = screen.getByTitle('Move');
-      fireEvent.click(moveButton);
-      expect(moveButton).toHaveClass('bg-blue-500');
+      const panButton = screen.getByTitle('Pan view');
+      fireEvent.click(panButton);
+      expect(panButton).toHaveClass('bg-blue-500');
+    });
+
+    it('should switch to arrow tool when clicked', () => {
+      render(<SketchPad />);
+      const arrowButton = screen.getByTitle('Move text');
+      fireEvent.click(arrowButton);
+      expect(arrowButton).toHaveClass('bg-blue-500');
     });
 
     it('should switch to eraser tool when clicked', () => {
@@ -275,13 +284,22 @@ describe('SketchPad', () => {
       expect(canvas.style.cursor).toBe('crosshair');
     });
 
-    it('should have grab cursor for move tool', () => {
+    it('should have grab cursor for pan tool', () => {
       const { container } = render(<SketchPad />);
-      const moveButton = screen.getByTitle('Move');
-      fireEvent.click(moveButton);
+      const panButton = screen.getByTitle('Pan view');
+      fireEvent.click(panButton);
 
       const canvas = container.querySelector('canvas') as HTMLCanvasElement;
       expect(canvas.style.cursor).toBe('grab');
+    });
+
+    it('should have default cursor for arrow tool', () => {
+      const { container } = render(<SketchPad />);
+      const arrowButton = screen.getByTitle('Move text');
+      fireEvent.click(arrowButton);
+
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
+      expect(canvas.style.cursor).toBe('default');
     });
 
     it('should have pointer cursor for eraser tool', () => {

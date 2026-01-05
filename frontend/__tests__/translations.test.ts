@@ -94,6 +94,7 @@ describe('Translation files', () => {
       'sketchPad.eraser',
       'sketchPad.pen',
       'sketchPad.text',
+      'sketchPad.arrow',
       'sketchPad.move',
       'sketchPad.typeHere',
     ];

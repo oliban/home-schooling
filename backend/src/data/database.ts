@@ -186,6 +186,9 @@ class HomeSchoolingDatabase {
     const recordMigration = this.db.prepare('INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)');
 
     let migrationsRun = 0;
+    let migrationsSkipped = 0;
+
+    console.log(`[Migrations] Checking ${migrationFiles.length} migration file(s)...`);
 
     for (const file of migrationFiles) {
       const version = file.replace('.sql', ''); // e.g., "007_add_missing_lgr22_mappings"
@@ -195,6 +198,7 @@ class HomeSchoolingDatabase {
 
       if (existing) {
         // Migration already applied, skip it
+        migrationsSkipped++;
         continue;
       }
 
@@ -203,19 +207,18 @@ class HomeSchoolingDatabase {
       const sql = fs.readFileSync(filePath, 'utf-8');
 
       try {
+        console.log(`[Migrations] Applying: ${version}...`);
         this.db.exec(sql);
         recordMigration.run(version);
         migrationsRun++;
-        console.log(`✓ Applied migration: ${version}`);
+        console.log(`[Migrations] ✓ Applied: ${version}`);
       } catch (err) {
-        console.error(`✗ Failed to apply migration ${version}:`, err);
+        console.error(`[Migrations] ✗ Failed: ${version}`, err);
         throw err; // Don't continue if a migration fails
       }
     }
 
-    if (migrationsRun > 0) {
-      console.log(`Applied ${migrationsRun} new migration(s)`);
-    }
+    console.log(`[Migrations] Summary: ${migrationsRun} applied, ${migrationsSkipped} already applied`);
   }
 
   get connection(): Database.Database {
