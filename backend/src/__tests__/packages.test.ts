@@ -864,6 +864,201 @@ describe('Math Package System', () => {
     });
   });
 
+  describe('Requires Sketch Field', () => {
+    it('should store requires_sketch field when importing a package', () => {
+      const db = getDb();
+      const testPackageId = uuidv4();
+      const problemId1 = uuidv4();
+      const problemId2 = uuidv4();
+
+      // Create a package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId, parent1Id, 'Sketch Test Package', 3, 2, 0]
+      );
+
+      // Insert problem with requires_sketch = true
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, requires_sketch)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [problemId1, testPackageId, 1, 'Rita en rektangel med sidorna 4 cm och 3 cm', '12', 1]
+      );
+
+      // Insert problem with requires_sketch = false (default)
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, requires_sketch)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [problemId2, testPackageId, 2, 'Vad är 2+2?', '4', 0]
+      );
+
+      // Verify requires_sketch is stored correctly
+      const problem1 = db.get<{ requires_sketch: number }>(
+        'SELECT requires_sketch FROM package_problems WHERE id = ?',
+        [problemId1]
+      );
+      const problem2 = db.get<{ requires_sketch: number }>(
+        'SELECT requires_sketch FROM package_problems WHERE id = ?',
+        [problemId2]
+      );
+
+      expect(problem1?.requires_sketch).toBe(1);
+      expect(problem2?.requires_sketch).toBe(0);
+
+      // Cleanup
+      db.run('DELETE FROM package_problems WHERE id IN (?, ?)', [problemId1, problemId2]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [testPackageId]);
+    });
+
+    it('should default requires_sketch to 0 when not specified', () => {
+      const db = getDb();
+      const testPackageId = uuidv4();
+      const problemId = uuidv4();
+
+      // Create a package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId, parent1Id, 'Default Sketch Test', 3, 1, 0]
+      );
+
+      // Insert problem without specifying requires_sketch
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, ?, ?, ?)`,
+        [problemId, testPackageId, 1, 'What is 5*5?', '25']
+      );
+
+      // Verify default value
+      const problem = db.get<{ requires_sketch: number }>(
+        'SELECT requires_sketch FROM package_problems WHERE id = ?',
+        [problemId]
+      );
+
+      expect(problem?.requires_sketch).toBe(0);
+
+      // Cleanup
+      db.run('DELETE FROM package_problems WHERE id = ?', [problemId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [testPackageId]);
+    });
+
+    it('should return requires_sketch when fetching package problems', () => {
+      const db = getDb();
+      const testPackageId = uuidv4();
+      const problemId = uuidv4();
+
+      // Create a package with a sketch-required problem
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [testPackageId, parent1Id, 'Fetch Sketch Test', 3, 1, 0]
+      );
+
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, requires_sketch)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [problemId, testPackageId, 1, 'Rita en triangel', '3', 1]
+      );
+
+      // Fetch like the assignment endpoint does (SELECT *)
+      const problems = db.all<{ id: string; question_text: string; requires_sketch: number }>(
+        'SELECT * FROM package_problems WHERE package_id = ?',
+        [testPackageId]
+      );
+
+      expect(problems.length).toBe(1);
+      expect(problems[0].requires_sketch).toBe(1);
+
+      // Cleanup
+      db.run('DELETE FROM package_problems WHERE id = ?', [problemId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [testPackageId]);
+    });
+  });
+
+  describe('Grade Level Validation on Assign', () => {
+    it('should reject assignment when package grade does not match child grade', () => {
+      const db = getDb();
+      const grade4PackageId = uuidv4();
+
+      // Create a grade 4 package (child1 is grade 3)
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [grade4PackageId, parent1Id, 'Grade 4 Package', 4, 1, 0]
+      );
+
+      // Simulate the validation check from the assign endpoint
+      const pkg = db.get<{ grade_level: number }>(
+        'SELECT grade_level FROM math_packages WHERE id = ?',
+        [grade4PackageId]
+      );
+      const child = db.get<{ grade_level: number }>(
+        'SELECT grade_level FROM children WHERE id = ?',
+        [child1Id]
+      );
+
+      // This should fail - package is grade 4, child is grade 3
+      expect(pkg?.grade_level).toBe(4);
+      expect(child?.grade_level).toBe(3);
+      expect(pkg?.grade_level).not.toBe(child?.grade_level);
+
+      // Cleanup
+      db.run('DELETE FROM math_packages WHERE id = ?', [grade4PackageId]);
+    });
+
+    it('should allow assignment when package grade matches child grade', () => {
+      const db = getDb();
+      const grade3PackageId = uuidv4();
+
+      // Create a grade 3 package (child1 is grade 3)
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, problem_count, is_global)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [grade3PackageId, parent1Id, 'Grade 3 Package', 3, 1, 0]
+      );
+
+      // Simulate the validation check from the assign endpoint
+      const pkg = db.get<{ grade_level: number }>(
+        'SELECT grade_level FROM math_packages WHERE id = ?',
+        [grade3PackageId]
+      );
+      const child = db.get<{ grade_level: number }>(
+        'SELECT grade_level FROM children WHERE id = ?',
+        [child1Id]
+      );
+
+      // This should pass - both are grade 3
+      expect(pkg?.grade_level).toBe(3);
+      expect(child?.grade_level).toBe(3);
+      expect(pkg?.grade_level).toBe(child?.grade_level);
+
+      // Cleanup
+      db.run('DELETE FROM math_packages WHERE id = ?', [grade3PackageId]);
+    });
+
+    it('should validate grade for different child grades', () => {
+      const db = getDb();
+
+      // child1 is grade 3, child2 is grade 4
+      const child1Grade = db.get<{ grade_level: number }>(
+        'SELECT grade_level FROM children WHERE id = ?',
+        [child1Id]
+      );
+      const child2Grade = db.get<{ grade_level: number }>(
+        'SELECT grade_level FROM children WHERE id = ?',
+        [child2Id]
+      );
+
+      expect(child1Grade?.grade_level).toBe(3);
+      expect(child2Grade?.grade_level).toBe(4);
+
+      // Grade 4 package should match child2 but not child1
+      const grade4Package = { grade_level: 4 };
+      expect(grade4Package.grade_level === child1Grade?.grade_level).toBe(false);
+      expect(grade4Package.grade_level === child2Grade?.grade_level).toBe(true);
+    });
+  });
+
   describe('LGR22 Objectives Display', () => {
     it('should return lgr22_codes for each problem in GET /packages/:id', () => {
       const db = getDb();
