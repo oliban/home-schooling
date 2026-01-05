@@ -327,38 +327,55 @@ describe('Multi-Attempt Answer System', () => {
   });
 
   describe('Streak Bonus', () => {
-    // Streak bonus: +1 coin per streak level, capped at +10
+    // Streak bonus: starts after 2 correct answers (+1), then +1 per additional correct
     // Base coins: 10 (first attempt)
-    // Formula: baseCoins + Math.min(currentStreak, 10)
+    // Formula: baseCoins + Math.max(0, Math.min(currentStreak - 1, 10))
+    // Streak 1 = no bonus (first correct), Streak 2 = +1, ..., Streak 11+ = +10 (capped)
 
     it('should give 10 coins with 0 streak (no bonus)', () => {
       const streak = 0;
       const baseCoins = 10;
-      const streakBonus = Math.min(streak, 10);
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
       const totalCoins = baseCoins + streakBonus;
       expect(totalCoins).toBe(10);
     });
 
-    it('should give 15 coins with 5 streak (+5 bonus)', () => {
+    it('should give 10 coins with 1 streak (first correct, no bonus yet)', () => {
+      const streak = 1;
+      const baseCoins = 10;
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(10);
+    });
+
+    it('should give 11 coins with 2 streak (+1 bonus, first streak bonus)', () => {
+      const streak = 2;
+      const baseCoins = 10;
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(11);
+    });
+
+    it('should give 14 coins with 5 streak (+4 bonus)', () => {
       const streak = 5;
       const baseCoins = 10;
-      const streakBonus = Math.min(streak, 10);
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
       const totalCoins = baseCoins + streakBonus;
-      expect(totalCoins).toBe(15);
+      expect(totalCoins).toBe(14);
     });
 
-    it('should give 17 coins with 7 streak (+7 bonus)', () => {
+    it('should give 16 coins with 7 streak (+6 bonus)', () => {
       const streak = 7;
       const baseCoins = 10;
-      const streakBonus = Math.min(streak, 10);
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
       const totalCoins = baseCoins + streakBonus;
-      expect(totalCoins).toBe(17);
+      expect(totalCoins).toBe(16);
     });
 
-    it('should cap bonus at 10 coins (20 total) for high streaks', () => {
+    it('should cap bonus at 10 coins (20 total) for streak 11+', () => {
       const streak = 15;
       const baseCoins = 10;
-      const streakBonus = Math.min(streak, 10);
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
       const totalCoins = baseCoins + streakBonus;
       expect(totalCoins).toBe(20);
     });
@@ -367,16 +384,16 @@ describe('Multi-Attempt Answer System', () => {
       // Second attempt (66% multiplier) with streak of 5
       const streak = 5;
       const baseCoins = Math.round(10 * 0.66); // 7 coins (rounded from 6.6)
-      const streakBonus = Math.min(streak, 10);
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
       const totalCoins = baseCoins + streakBonus;
-      expect(totalCoins).toBe(12); // 7 + 5 = 12
+      expect(totalCoins).toBe(11); // 7 + 4 = 11
     });
 
     it('should apply streak bonus on top of third attempt multiplier', () => {
-      // Third attempt (33% multiplier) with streak of 10
-      const streak = 10;
+      // Third attempt (33% multiplier) with streak of 11
+      const streak = 11;
       const baseCoins = Math.round(10 * 0.33); // 3 coins
-      const streakBonus = Math.min(streak, 10);
+      const streakBonus = Math.max(0, Math.min(streak - 1, 10));
       const totalCoins = baseCoins + streakBonus;
       expect(totalCoins).toBe(13); // 3 + 10 = 13
     });

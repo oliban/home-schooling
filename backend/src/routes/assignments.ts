@@ -580,12 +580,14 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
           const baseCoins = Math.round(10 * multiplier);
 
-          // Streak bonus: +1 coin per streak level, capped at +10
+          // Streak bonus: starts after 2 correct (+1), then +1 per additional, capped at +10
+          // Streak 1 = no bonus, Streak 2 = +1, ..., Streak 11+ = +10
           const childCoins = db.get<{ current_streak: number }>(
             'SELECT current_streak FROM child_coins WHERE child_id = ?',
             [req.child!.id]
           );
-          const streakBonus = Math.min(childCoins?.current_streak || 0, 10);
+          const streak = childCoins?.current_streak || 0;
+          const streakBonus = Math.max(0, Math.min(streak - 1, 10));
           coinsEarned = baseCoins + streakBonus;
         }
 
@@ -738,12 +740,14 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
           const baseCoins = Math.round(10 * multiplier);
 
-          // Streak bonus: +1 coin per streak level, capped at +10
+          // Streak bonus: starts after 2 correct (+1), then +1 per additional, capped at +10
+          // Streak 1 = no bonus, Streak 2 = +1, ..., Streak 11+ = +10
           const childCoins = db.get<{ current_streak: number }>(
             'SELECT current_streak FROM child_coins WHERE child_id = ?',
             [req.child!.id]
           );
-          const streakBonus = Math.min(childCoins?.current_streak || 0, 10);
+          const streak = childCoins?.current_streak || 0;
+          const streakBonus = Math.max(0, Math.min(streak - 1, 10));
           coinsEarned = baseCoins + streakBonus;
         }
 
