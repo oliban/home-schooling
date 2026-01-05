@@ -192,6 +192,33 @@ Every problem MUST have:
 - `answer_type`: "multiple_choice" (required for reading)
 - `options`: Array with at least 2 items (usually 4: A, B, C, D)
 
+### Multiple Choice Format (CRITICAL)
+
+For ALL reading questions, you MUST follow this exact format:
+
+```json
+{
+  "answer_type": "multiple_choice",
+  "options": ["A: Han var arg", "B: Han var ledsen", "C: Han var glad", "D: Han var rädd"],
+  "correct_answer": "B"
+}
+```
+
+**VALIDATION RULES:**
+
+1. **`correct_answer` must be ONLY the letter** (A, B, C, or D), NOT the full text
+   - ✅ CORRECT: `"correct_answer": "C"`
+   - ❌ WRONG: `"correct_answer": "C: Han var glad"`
+   - ❌ WRONG: `"correct_answer": "Han var glad"`
+
+2. **The letter in `correct_answer` must match an option**
+   - If options are A, B, C, D → correct_answer must be one of A, B, C, D
+   - The import will reject problems where the answer doesn't match any option
+
+3. **Self-check before generating**: For each question, verify:
+   - The correct answer letter matches the option with the correct content
+   - Example: If the answer is "Han var ledsen" and it's option B, then `correct_answer: "B"`
+
 **Example of VALID problem:**
 ```json
 {

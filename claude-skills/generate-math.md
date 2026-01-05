@@ -149,6 +149,27 @@ Example:
 }
 ```
 
+### Multiple Choice Format (CRITICAL)
+
+**VALIDATION RULES for ALL `multiple_choice` questions:**
+
+1. **`correct_answer` must be ONLY the letter** (A, B, C, or D), NOT the full text
+   - ✅ CORRECT: `"correct_answer": "A"`
+   - ❌ WRONG: `"correct_answer": "A: Ja"`
+   - ❌ WRONG: `"correct_answer": "Ja"`
+
+2. **The letter in `correct_answer` must exist in the options**
+   - If options are A, B, C, D → correct_answer must be one of A, B, C, D
+   - The import will reject problems where the answer doesn't match any option
+
+3. **Options must start with the letter followed by colon and space**
+   - ✅ CORRECT: `"A: Ja"`, `"B: Nej"`
+   - ❌ WRONG: `"Ja"`, `"Nej"`, `"A) Ja"`
+
+4. **Self-check before generating**: For each multiple choice problem, verify:
+   - The correct answer letter matches the option with the correct content
+   - Example: If the answer is "Ja" and it's option A, then `correct_answer: "A"`
+
 ## Answer Format Guidelines (For Number Answers)
 
 When setting `correct_answer` for `answer_type: "number"`, you should **store the canonical numeric value without units or currency**. The validation system automatically accepts multiple equivalent formats:
@@ -238,37 +259,6 @@ Accepts: `25`, `25%`, `25 %`, `0.25` is NOT accepted (25 ≠ 0.25)
 4. **Fraction format choice** - Store as fraction `"1/2"` or decimal `"0.5"` based on pedagogical intent
 5. **Percentage values** - Store as the numeric value (35), not decimal form (0.35)
 6. **Rounding is acceptable** - The system accepts rounded answers (±1 tolerance). If you need exact decimal precision, explicitly state it in the question text (e.g., "Svara med två decimaler")
-
-### Multiple Choice Format (CRITICAL)
-
-For multiple choice questions, you MUST follow this exact format:
-
-```json
-{
-  "answer_type": "multiple_choice",
-  "options": ["A: 7", "B: 8", "C: 9", "D: 10"],
-  "correct_answer": "B"
-}
-```
-
-**VALIDATION RULES for `multiple_choice`:**
-
-1. **`correct_answer` must be ONLY the letter** (A, B, C, or D), NOT the full text
-   - ✅ CORRECT: `"correct_answer": "C"`
-   - ❌ WRONG: `"correct_answer": "C: en fjärdedel"`
-   - ❌ WRONG: `"correct_answer": "en fjärdedel"`
-
-2. **The letter in `correct_answer` must exist in the options**
-   - If options are A, B, C, D → correct_answer must be one of A, B, C, D
-   - The import will reject problems where the answer doesn't match any option
-
-3. **Options must start with the letter followed by colon and space**
-   - ✅ CORRECT: `"A: sju"`, `"B: åtta"`
-   - ❌ WRONG: `"7"`, `"åtta"`, `"A) sju"`
-
-4. **Self-check before generating**: For each multiple choice problem, verify:
-   - The correct answer letter matches the option with the correct content
-   - Example: If the answer is "en fjärdedel" and it's option C, then `correct_answer: "C"`
 
 ## LGR 22 Curriculum Guidelines
 
