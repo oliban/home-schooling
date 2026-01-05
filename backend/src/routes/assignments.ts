@@ -575,10 +575,18 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           isCorrect = normalizeTextAnswer(answer as string) === normalizeTextAnswer(problem.correct_answer);
         }
 
-        // Calculate coins earned
+        // Calculate coins earned (with streak bonus)
         if (isCorrect) {
           const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
-          coinsEarned = Math.round(10 * multiplier);
+          const baseCoins = Math.round(10 * multiplier);
+
+          // Streak bonus: +1 coin per streak level, capped at +10
+          const childCoins = db.get<{ current_streak: number }>(
+            'SELECT current_streak FROM child_coins WHERE child_id = ?',
+            [req.child!.id]
+          );
+          const streakBonus = Math.min(childCoins?.current_streak || 0, 10);
+          coinsEarned = baseCoins + streakBonus;
         }
 
         if (existingAnswer) {
@@ -725,10 +733,18 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           isCorrect = normalizeTextAnswer(answer as string) === normalizeTextAnswer(problem.correct_answer);
         }
 
-        // Calculate coins
+        // Calculate coins (with streak bonus)
         if (isCorrect) {
           const multiplier = ATTEMPT_MULTIPLIERS[attemptNumber - 1] || ATTEMPT_MULTIPLIERS[ATTEMPT_MULTIPLIERS.length - 1];
-          coinsEarned = Math.round(10 * multiplier);
+          const baseCoins = Math.round(10 * multiplier);
+
+          // Streak bonus: +1 coin per streak level, capped at +10
+          const childCoins = db.get<{ current_streak: number }>(
+            'SELECT current_streak FROM child_coins WHERE child_id = ?',
+            [req.child!.id]
+          );
+          const streakBonus = Math.min(childCoins?.current_streak || 0, 10);
+          coinsEarned = baseCoins + streakBonus;
         }
 
         // Update problem attempts and answer

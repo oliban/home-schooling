@@ -143,6 +143,18 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
   const canProceedFromTheme = customTheme.trim() !== '';
   const canProceedFromSize = selectedSize !== null;
 
+  // Get emojis for selected themes
+  const getSelectedEmojis = (): string[] => {
+    if (!customTheme.trim()) return [];
+    const selectedNames = customTheme.split(',').map(s => s.trim().toLowerCase());
+    return themes
+      .filter(t =>
+        selectedNames.includes(t.nameSv.toLowerCase()) ||
+        selectedNames.includes(t.nameEn.toLowerCase())
+      )
+      .map(t => t.emoji);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -250,8 +262,34 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
 
           {/* Generating state */}
           {step === 'generating' && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4 animate-bounce">✨</div>
+            <div className="text-center py-12 relative overflow-hidden">
+              {/* Dancing theme emojis */}
+              <div className="flex justify-center gap-4 mb-6 min-h-[80px]">
+                {getSelectedEmojis().length > 0 ? (
+                  getSelectedEmojis().map((emoji, i) => (
+                    <span
+                      key={i}
+                      className="text-5xl"
+                      style={{
+                        animation: 'float 2s ease-in-out infinite',
+                        animationDelay: `${i * 0.3}s`
+                      }}
+                    >
+                      {emoji}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-6xl animate-bounce">✨</span>
+                )}
+              </div>
+              <style jsx>{`
+                @keyframes float {
+                  0%, 100% { transform: translateY(0) rotate(0deg); }
+                  25% { transform: translateY(-20px) rotate(10deg); }
+                  50% { transform: translateY(-10px) rotate(-5deg); }
+                  75% { transform: translateY(-25px) rotate(5deg); }
+                }
+              `}</style>
               <h3 className="text-xl font-bold text-gray-800 mb-2">
                 {locale === 'sv' ? 'Skapar ditt äventyr...' : 'Creating your adventure...'}
               </h3>

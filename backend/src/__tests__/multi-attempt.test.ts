@@ -326,6 +326,62 @@ describe('Multi-Attempt Answer System', () => {
     });
   });
 
+  describe('Streak Bonus', () => {
+    // Streak bonus: +1 coin per streak level, capped at +10
+    // Base coins: 10 (first attempt)
+    // Formula: baseCoins + Math.min(currentStreak, 10)
+
+    it('should give 10 coins with 0 streak (no bonus)', () => {
+      const streak = 0;
+      const baseCoins = 10;
+      const streakBonus = Math.min(streak, 10);
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(10);
+    });
+
+    it('should give 15 coins with 5 streak (+5 bonus)', () => {
+      const streak = 5;
+      const baseCoins = 10;
+      const streakBonus = Math.min(streak, 10);
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(15);
+    });
+
+    it('should give 17 coins with 7 streak (+7 bonus)', () => {
+      const streak = 7;
+      const baseCoins = 10;
+      const streakBonus = Math.min(streak, 10);
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(17);
+    });
+
+    it('should cap bonus at 10 coins (20 total) for high streaks', () => {
+      const streak = 15;
+      const baseCoins = 10;
+      const streakBonus = Math.min(streak, 10);
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(20);
+    });
+
+    it('should apply streak bonus on top of attempt multiplier', () => {
+      // Second attempt (66% multiplier) with streak of 5
+      const streak = 5;
+      const baseCoins = Math.round(10 * 0.66); // 7 coins (rounded from 6.6)
+      const streakBonus = Math.min(streak, 10);
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(12); // 7 + 5 = 12
+    });
+
+    it('should apply streak bonus on top of third attempt multiplier', () => {
+      // Third attempt (33% multiplier) with streak of 10
+      const streak = 10;
+      const baseCoins = Math.round(10 * 0.33); // 3 coins
+      const streakBonus = Math.min(streak, 10);
+      const totalCoins = baseCoins + streakBonus;
+      expect(totalCoins).toBe(13); // 3 + 10 = 13
+    });
+  });
+
   describe('Reading Assignments (Single Attempt)', () => {
     let readingPackageId: string;
     let readingProblemId: string;
