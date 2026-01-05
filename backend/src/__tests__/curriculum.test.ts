@@ -408,6 +408,264 @@ describe('Curriculum Coverage Calculation', () => {
     });
   });
 
+  describe('Success rate based coverage percentage', () => {
+    let assignmentId: string;
+
+    beforeEach(() => {
+      assignmentId = uuidv4();
+    });
+
+    afterEach(() => {
+      const db = getDb();
+      db.run('DELETE FROM assignment_answers WHERE assignment_id = ?', [assignmentId]);
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM child_curriculum_progress WHERE child_id = ?', [childId]);
+    });
+
+    it('should calculate coverage percentage based on totalCorrect/totalQuestions', () => {
+      const db = getDb();
+
+      // Create a completed assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+         VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+        [assignmentId, parentId, childId, 'Success Rate Test', 3, packageId]
+      );
+
+      // Add 3 correct and 2 incorrect answers
+      // Problems 0, 1, 2 correct; Problems 3, 4 incorrect
+      for (let i = 0; i < 5; i++) {
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          [uuidv4(), assignmentId, problemIds[i], i < 3 ? String(i * 2) : 'wrong', i < 3 ? 1 : 0]
+        );
+      }
+
+      // Query the coverage calculation matching curriculum.ts logic
+      const result = db.all<{ objective_id: number; correct_count: number; total_count: number }>(
+        `SELECT ecm.objective_id,
+                COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL AND aa.is_correct = 1 AND COALESCE(aa.hint_purchased, 0) = 0 THEN aa.id
+                END) as correct_count,
+                COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL THEN aa.id
+                END) as total_count
+         FROM exercise_curriculum_mapping ecm
+         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id
+           AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
+         WHERE aa.id IS NOT NULL
+         GROUP BY ecm.objective_id`,
+        [childId]
+      );
+
+      // Aggregate totals
+      let totalCorrect = 0;
+      let totalQuestions = 0;
+      for (const row of result) {
+        totalCorrect += row.correct_count;
+        totalQuestions += row.total_count;
+      }
+
+      expect(totalQuestions).toBe(5);
+      expect(totalCorrect).toBe(3);
+
+      // Coverage should be 60% (3/5 * 100)
+      const coveragePercentage = totalQuestions > 0
+        ? Math.round((totalCorrect / totalQuestions) * 100)
+        : 0;
+
+      expect(coveragePercentage).toBe(60);
+    });
+
+    it('should return 0% coverage when all answers are incorrect', () => {
+      const db = getDb();
+
+      // Create a completed assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+         VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+        [assignmentId, parentId, childId, 'All Wrong Test', 3, packageId]
+      );
+
+      // Add only incorrect answers
+      for (let i = 0; i < 3; i++) {
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          [uuidv4(), assignmentId, problemIds[i], 'wrong', 0]
+        );
+      }
+
+      // Query the coverage calculation
+      const result = db.all<{ correct_count: number; total_count: number }>(
+        `SELECT COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL AND aa.is_correct = 1 AND COALESCE(aa.hint_purchased, 0) = 0 THEN aa.id
+                END) as correct_count,
+                COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL THEN aa.id
+                END) as total_count
+         FROM exercise_curriculum_mapping ecm
+         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id
+           AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
+         WHERE aa.id IS NOT NULL`,
+        [childId]
+      );
+
+      const totalCorrect = result[0]?.correct_count || 0;
+      const totalQuestions = result[0]?.total_count || 0;
+
+      expect(totalQuestions).toBe(3);
+      expect(totalCorrect).toBe(0);
+
+      const coveragePercentage = totalQuestions > 0
+        ? Math.round((totalCorrect / totalQuestions) * 100)
+        : 0;
+
+      expect(coveragePercentage).toBe(0);
+    });
+
+    it('should return 100% coverage when all answers are correct', () => {
+      const db = getDb();
+
+      // Create a completed assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+         VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+        [assignmentId, parentId, childId, 'All Correct Test', 3, packageId]
+      );
+
+      // Add all correct answers
+      for (let i = 0; i < 5; i++) {
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          [uuidv4(), assignmentId, problemIds[i], String(i * 2), 1]
+        );
+      }
+
+      // Query the coverage calculation
+      const result = db.all<{ correct_count: number; total_count: number }>(
+        `SELECT COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL AND aa.is_correct = 1 AND COALESCE(aa.hint_purchased, 0) = 0 THEN aa.id
+                END) as correct_count,
+                COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL THEN aa.id
+                END) as total_count
+         FROM exercise_curriculum_mapping ecm
+         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id
+           AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
+         WHERE aa.id IS NOT NULL`,
+        [childId]
+      );
+
+      const totalCorrect = result[0]?.correct_count || 0;
+      const totalQuestions = result[0]?.total_count || 0;
+
+      expect(totalQuestions).toBe(5);
+      expect(totalCorrect).toBe(5);
+
+      const coveragePercentage = totalQuestions > 0
+        ? Math.round((totalCorrect / totalQuestions) * 100)
+        : 0;
+
+      expect(coveragePercentage).toBe(100);
+    });
+
+    it('should exclude hint-purchased answers from correct count', () => {
+      const db = getDb();
+
+      // Create a completed assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, completed_at)
+         VALUES (?, ?, ?, 'math', ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+        [assignmentId, parentId, childId, 'Hint Test', 3, packageId]
+      );
+
+      // Add answers: 2 correct without hints, 1 correct WITH hint, 1 incorrect
+      const answerId1 = uuidv4();
+      const answerId2 = uuidv4();
+      const answerId3 = uuidv4();
+      const answerId4 = uuidv4();
+
+      // Correct without hint
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, hint_purchased, answered_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [answerId1, assignmentId, problemIds[0], '0', 1, 0]
+      );
+
+      // Correct without hint
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, hint_purchased, answered_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [answerId2, assignmentId, problemIds[1], '2', 1, 0]
+      );
+
+      // Correct WITH hint (should not count as correct for coverage)
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, hint_purchased, answered_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [answerId3, assignmentId, problemIds[2], '4', 1, 1]
+      );
+
+      // Incorrect
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [answerId4, assignmentId, problemIds[3], 'wrong', 0]
+      );
+
+      // Query the coverage calculation
+      const result = db.all<{ correct_count: number; total_count: number }>(
+        `SELECT COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL AND aa.is_correct = 1 AND COALESCE(aa.hint_purchased, 0) = 0 THEN aa.id
+                END) as correct_count,
+                COUNT(DISTINCT CASE
+                  WHEN aa.id IS NOT NULL THEN aa.id
+                END) as total_count
+         FROM exercise_curriculum_mapping ecm
+         JOIN assignments a ON a.status = 'completed' AND a.child_id = ?
+         LEFT JOIN assignment_answers aa ON aa.assignment_id = a.id
+           AND ecm.exercise_type = 'package_problem' AND ecm.exercise_id = aa.problem_id
+         WHERE aa.id IS NOT NULL`,
+        [childId]
+      );
+
+      const totalCorrect = result[0]?.correct_count || 0;
+      const totalQuestions = result[0]?.total_count || 0;
+
+      // 4 total questions, 2 correct (hint-purchased one doesn't count)
+      expect(totalQuestions).toBe(4);
+      expect(totalCorrect).toBe(2);
+
+      const coveragePercentage = totalQuestions > 0
+        ? Math.round((totalCorrect / totalQuestions) * 100)
+        : 0;
+
+      expect(coveragePercentage).toBe(50);
+    });
+
+    it('should round coverage percentage correctly', () => {
+      // Test the rounding logic with success rate
+      const testCases = [
+        { correct: 1, total: 3, expected: 33 },   // 33.33% -> 33%
+        { correct: 2, total: 3, expected: 67 },   // 66.67% -> 67%
+        { correct: 15, total: 25, expected: 60 }, // 60% -> 60%
+        { correct: 7, total: 10, expected: 70 },  // 70% -> 70%
+        { correct: 1, total: 6, expected: 17 },   // 16.67% -> 17%
+      ];
+
+      for (const { correct, total, expected } of testCases) {
+        const percentage = Math.round((correct / total) * 100);
+        expect(percentage).toBe(expected);
+      }
+    });
+  });
+
   describe('Category-based coverage grouping', () => {
     it('should group objectives by category correctly', () => {
       const db = getDb();

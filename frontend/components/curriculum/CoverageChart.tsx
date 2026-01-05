@@ -24,6 +24,8 @@ interface CategoryCoverage {
   categoryName: string;
   totalObjectives: number;
   coveredObjectives: number;
+  totalCorrect: number;
+  totalQuestions: number;
   coveragePercentage: number;
   objectives: ObjectiveCoverage[];
 }
@@ -34,6 +36,8 @@ interface CoverageData {
   categories: CategoryCoverage[];
   totalObjectives: number;
   coveredObjectives: number;
+  totalCorrect: number;
+  totalQuestions: number;
   coveragePercentage: number;
 }
 
@@ -60,6 +64,8 @@ interface TreemapCategoryItem {
   coverage: number;
   totalObjectives: number;
   coveredObjectives: number;
+  totalCorrect: number;
+  totalQuestions: number;
   isSelected?: boolean;
   size?: number;
   [key: string]: string | number | boolean | TreemapItem[] | undefined;
@@ -70,44 +76,42 @@ interface CoverageChartProps {
   childName?: string;
 }
 
-// Color functions based on percentage correct (10 levels)
-// For objectives: darker green = higher percentage correct
+// Color functions based on percentage correct
+// For objectives: ≤50% = red, then gradually to green at 100%
 const getPercentageColor = (correctCount: number, totalCount: number): string => {
   if (totalCount === 0) return '#ef4444';  // red-500 - not attempted
 
   const percentage = (correctCount / totalCount) * 100;
 
-  if (percentage === 0) return '#ef4444';   // red-500 - 0%
-  if (percentage < 20) return '#fca5a5';    // red-300 - 1-19%
-  if (percentage < 30) return '#fcd34d';    // yellow-300 - 20-29%
-  if (percentage < 40) return '#fde047';    // yellow-300 - 30-39%
-  if (percentage < 50) return '#bef264';    // lime-300 - 40-49%
-  if (percentage < 60) return '#86efac';    // green-300 - 50-59%
-  if (percentage < 70) return '#4ade80';    // green-400 - 60-69%
-  if (percentage < 80) return '#22c55e';    // green-500 - 70-79%
-  if (percentage < 90) return '#16a34a';    // green-600 - 80-89%
-  return '#15803d';                          // green-700 - 90-100%
+  if (percentage <= 50) return '#ef4444';   // red-500 - poor (≤50%)
+  if (percentage < 60) return '#f97316';    // orange-500 (50-60%)
+  if (percentage < 70) return '#fb923c';    // orange-400 (60-70%)
+  if (percentage < 80) return '#eab308';    // yellow-500 (70-80%)
+  if (percentage < 90) return '#84cc16';    // lime-500 (80-90%)
+  if (percentage < 95) return '#22c55e';    // green-500 (90-95%)
+  return '#15803d';                          // green-700 - perfect (95-100%)
 };
 
 // For categories: use gradient based on coverage percentage
+// Scale: ≤50% = red, then gradually to green at 100%
 const getCoverageColor = (coverage: number): string => {
-  if (coverage === 0) return '#ef4444';   // red-500 - not covered
-  if (coverage < 20) return '#fca5a5';    // red-300 - minimal coverage
-  if (coverage < 40) return '#fde047';    // yellow-300 - low coverage
-  if (coverage < 60) return '#bef264';    // lime-300 - moderate coverage
-  if (coverage < 80) return '#4ade80';    // green-400 - good coverage
-  if (coverage < 100) return '#22c55e';   // green-500 - high coverage
-  return '#15803d';                        // green-700 - fully covered
+  if (coverage <= 50) return '#ef4444';    // red-500 - poor (≤50%)
+  if (coverage < 60) return '#f97316';     // orange-500 (50-60%)
+  if (coverage < 70) return '#fb923c';     // orange-400 (60-70%)
+  if (coverage < 80) return '#eab308';     // yellow-500 (70-80%)
+  if (coverage < 90) return '#84cc16';     // lime-500 (80-90%)
+  if (coverage < 95) return '#22c55e';     // green-500 (90-95%)
+  return '#15803d';                         // green-700 - perfect (95-100%)
 };
 
 const getCoverageColorLight = (coverage: number): string => {
-  if (coverage === 0) return '#fee2e2';   // red-100 - not covered
-  if (coverage < 20) return '#fecaca';    // red-200 - minimal coverage
-  if (coverage < 40) return '#fef3c7';    // yellow-100 - low coverage
-  if (coverage < 60) return '#ecfccb';    // lime-100 - moderate coverage
-  if (coverage < 80) return '#dcfce7';    // green-100 - good coverage
-  if (coverage < 100) return '#bbf7d0';   // green-200 - high coverage
-  return '#86efac';                        // green-300 - fully covered
+  if (coverage <= 50) return '#fee2e2';    // red-100 - poor
+  if (coverage < 60) return '#ffedd5';     // orange-100
+  if (coverage < 70) return '#fed7aa';     // orange-200
+  if (coverage < 80) return '#fef3c7';     // yellow-100
+  if (coverage < 90) return '#ecfccb';     // lime-100
+  if (coverage < 95) return '#dcfce7';     // green-100
+  return '#bbf7d0';                         // green-200 - perfect
 };
 
 // Custom content renderer for Treemap
@@ -125,11 +129,13 @@ interface CustomContentProps {
   totalCount?: number;
   totalObjectives?: number;
   coveredObjectives?: number;
+  totalCorrect?: number;
+  totalQuestions?: number;
   onClick?: (name: string, position: {x: number, y: number, width: number, height: number}) => void;
 }
 
 const CustomContent = (props: CustomContentProps) => {
-  const { x, y, width, height, name, coverage, depth, isCategory, code, correctCount, totalCount, totalObjectives, coveredObjectives, onClick } = props;
+  const { x, y, width, height, name, coverage, depth, isCategory, code, correctCount, totalCount, totalObjectives, coveredObjectives, totalCorrect, totalQuestions, onClick } = props;
 
   // Don't render if too small
   if (width < 20 || height < 20) return null;
@@ -146,10 +152,26 @@ const CustomContent = (props: CustomContentProps) => {
     strokeColor = '#374151';
     strokeWidth = 2;
   } else {
-    // Much more visible depth differences - thicker = more tested
-    // Using high contrast: thin yellow → medium orange → thick dark brown
-    strokeColor = total >= 5 ? '#78350f' : total >= 3 ? '#c2410c' : '#eab308'; // yellow → orange → brown
-    strokeWidth = total >= 5 ? 6 : total >= 3 ? 4 : total >= 1 ? 2 : 1;
+    // Depth scale: red (shallow) → dark green (well-tested at 50+)
+    if (total >= 50) {
+      strokeColor = '#15803d'; // dark green - well tested
+      strokeWidth = 7;
+    } else if (total >= 25) {
+      strokeColor = '#22c55e'; // green
+      strokeWidth = 6;
+    } else if (total >= 15) {
+      strokeColor = '#84cc16'; // lime - green starts here
+      strokeWidth = 5;
+    } else if (total >= 10) {
+      strokeColor = '#eab308'; // yellow
+      strokeWidth = 4;
+    } else if (total >= 5) {
+      strokeColor = '#f97316'; // orange
+      strokeWidth = 3;
+    } else {
+      strokeColor = '#ef4444'; // red - shallow
+      strokeWidth = 2;
+    }
   }
 
   // Calculate text to display
@@ -218,7 +240,7 @@ const CustomContent = (props: CustomContentProps) => {
           style={{ pointerEvents: 'none' }}
         >
           {isCategory
-            ? `${coveredObjectives}/${totalObjectives}`
+            ? `${totalCorrect ?? 0}/${totalQuestions ?? 0}`
             : (totalCount || 0) > 0 ? `${correctCount || 0}/${totalCount}` : '0'}
         </text>
       )}
@@ -240,6 +262,8 @@ interface TooltipPayload {
     isCategory?: boolean;
     totalObjectives?: number;
     coveredObjectives?: number;
+    totalCorrect?: number;
+    totalQuestions?: number;
   };
 }
 
@@ -269,7 +293,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
               </span>
             </p>
             <p className="text-sm text-gray-600">
-              {t('curriculum.coverage.objectivesOf', { covered: data.coveredObjectives ?? 0, total: data.totalObjectives ?? 0 })}
+              {data.totalCorrect ?? 0}/{data.totalQuestions ?? 0} rätt
             </p>
           </div>
         </div>
@@ -432,6 +456,8 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       coverage: category.coveragePercentage,
       totalObjectives: category.totalObjectives,
       coveredObjectives: category.coveredObjectives,
+      totalCorrect: category.totalCorrect,
+      totalQuestions: category.totalQuestions,
       children: category.objectives.map(obj => ({
         name: obj.code,
         size: 100,
@@ -503,6 +529,8 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
     coverage: item.coverage,
     totalObjectives: item.totalObjectives,
     coveredObjectives: item.coveredObjectives,
+    totalCorrect: item.totalCorrect,
+    totalQuestions: item.totalQuestions,
     isCategory: true,
   }));
 
@@ -575,7 +603,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">
-              {t('curriculum.coverage.objectivesOf', { covered: coverageData.coveredObjectives, total: coverageData.totalObjectives })}
+              {coverageData.totalCorrect} av {coverageData.totalQuestions} rätt
             </p>
             <p className="text-xs text-gray-500 mt-1">
               {t('curriculum.coverage.categoriesCount', { count: coverageData.categories.length })}
@@ -685,23 +713,27 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
           <span className="text-gray-500 font-medium">{t('curriculum.coverage.accuracy')}</span>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }} />
-            <span className="text-gray-600">0%</span>
+            <span className="text-gray-600">≤50%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fcd34d' }} />
-            <span className="text-gray-600">20%</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#bef264' }} />
-            <span className="text-gray-600">40%</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }} />
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f97316' }} />
             <span className="text-gray-600">60%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }} />
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb923c' }} />
+            <span className="text-gray-600">70%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }} />
             <span className="text-gray-600">80%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#84cc16' }} />
+            <span className="text-gray-600">90%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }} />
+            <span className="text-gray-600">95%</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded" style={{ backgroundColor: '#15803d' }} />
@@ -712,16 +744,28 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         <div className="flex flex-wrap justify-center gap-3 text-xs">
           <span className="text-gray-500 font-medium">{t('curriculum.coverage.depth')}</span>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-green-400" style={{ border: '2px solid #eab308' }} />
-            <span className="text-gray-600">{t('curriculum.coverage.questionsRange.light')}</span>
+            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '2px solid #ef4444' }} />
+            <span className="text-gray-600">&lt;5</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-green-400" style={{ border: '4px solid #c2410c' }} />
-            <span className="text-gray-600">{t('curriculum.coverage.questionsRange.medium')}</span>
+            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '3px solid #f97316' }} />
+            <span className="text-gray-600">5-10</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-green-400" style={{ border: '6px solid #78350f' }} />
-            <span className="text-gray-600">{t('curriculum.coverage.questionsRange.deep')}</span>
+            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '4px solid #eab308' }} />
+            <span className="text-gray-600">10-15</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '5px solid #84cc16' }} />
+            <span className="text-gray-600">15-25</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '6px solid #22c55e' }} />
+            <span className="text-gray-600">25-50</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '7px solid #15803d' }} />
+            <span className="text-gray-600">50+</span>
           </div>
         </div>
       </div>
@@ -742,15 +786,15 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
                 />
                 <span className="font-medium text-gray-800">{category.categoryName}</span>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
-                  {t('curriculum.coverage.objectivesInCategory', { covered: category.coveredObjectives, total: category.totalObjectives })}
-                </span>
+              <div className="flex items-center gap-2">
                 <span
-                  className="font-semibold min-w-[48px] text-right"
+                  className="font-semibold"
                   style={{ color: getCoverageColor(category.coveragePercentage) }}
                 >
                   {category.coveragePercentage}%
+                </span>
+                <span className="text-sm text-gray-500">
+                  ({category.totalCorrect}/{category.totalQuestions})
                 </span>
               </div>
             </div>

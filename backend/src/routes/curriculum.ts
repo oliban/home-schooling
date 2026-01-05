@@ -42,6 +42,8 @@ interface CategoryCoverage {
   categoryName: string;
   totalObjectives: number;
   coveredObjectives: number;
+  totalCorrect: number;
+  totalQuestions: number;
   coveragePercentage: number;
   objectives: ObjectiveCoverage[];
 }
@@ -173,6 +175,8 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
           categoryName: obj.category_name_sv,
           totalObjectives: 0,
           coveredObjectives: 0,
+          totalCorrect: 0,
+          totalQuestions: 0,
           coveragePercentage: 0,
           objectives: []
         });
@@ -189,6 +193,8 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
       if (isCovered) {
         category.coveredObjectives++;
       }
+      category.totalCorrect += correctCount;
+      category.totalQuestions += totalCount;
 
       category.objectives.push({
         id: obj.id,
@@ -205,14 +211,19 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
     const categories: CategoryCoverage[] = [];
     let totalObjectives = 0;
     let totalCovered = 0;
+    let grandTotalCorrect = 0;
+    let grandTotalQuestions = 0;
 
     for (const category of categoryMap.values()) {
-      category.coveragePercentage = category.totalObjectives > 0
-        ? Math.round((category.coveredObjectives / category.totalObjectives) * 100)
+      // Calculate percentage based on actual success rate (correct/total questions)
+      category.coveragePercentage = category.totalQuestions > 0
+        ? Math.round((category.totalCorrect / category.totalQuestions) * 100)
         : 0;
       categories.push(category);
       totalObjectives += category.totalObjectives;
       totalCovered += category.coveredObjectives;
+      grandTotalCorrect += category.totalCorrect;
+      grandTotalQuestions += category.totalQuestions;
     }
 
     // Sort categories alphabetically by name
@@ -224,8 +235,10 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
       categories,
       totalObjectives,
       coveredObjectives: totalCovered,
-      coveragePercentage: totalObjectives > 0
-        ? Math.round((totalCovered / totalObjectives) * 100)
+      totalCorrect: grandTotalCorrect,
+      totalQuestions: grandTotalQuestions,
+      coveragePercentage: grandTotalQuestions > 0
+        ? Math.round((grandTotalCorrect / grandTotalQuestions) * 100)
         : 0
     };
 
