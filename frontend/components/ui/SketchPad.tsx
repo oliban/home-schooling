@@ -3,7 +3,7 @@
 import { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useTranslation } from '@/lib/LanguageContext';
 
-type Tool = 'pen' | 'select' | 'eraser';
+type Tool = 'pen' | 'select' | 'eraser' | 'text';
 
 interface Point {
   x: number;
@@ -39,6 +39,7 @@ const COLORS = [
 
 const TOOLS: { id: Tool; icon: string; labelKey: string }[] = [
   { id: 'pen', icon: '✏️', labelKey: 'sketchPad.pen' },
+  { id: 'text', icon: '🔤', labelKey: 'sketchPad.text' },
   { id: 'select', icon: '✋', labelKey: 'sketchPad.move' },
 ];
 
@@ -77,6 +78,12 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
 
     // Multi-sketch state
     const [savedSketches, setSavedSketches] = useState<string[]>([]);
+
+    // Text input state
+    const [isTextInputVisible, setIsTextInputVisible] = useState(false);
+    const [textInputPosition, setTextInputPosition] = useState<Point>({ x: 0, y: 0 });
+    const [textInputValue, setTextInputValue] = useState('');
+    const textInputRef = useRef<HTMLInputElement>(null);
 
     // Parse height value
     const heightNum = parseInt(height.replace('px', ''), 10) || 300;
@@ -257,6 +264,34 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
       renderFrame();
     };
 
+    // Draw text at point
+    const drawText = (text: string, point: Point) => {
+      const ctx = bufferCtxRef.current;
+      if (!ctx || !text.trim()) return;
+
+      ctx.fillStyle = currentColor;
+      ctx.font = '16px sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillText(text, point.x, point.y);
+
+      // Update content bounds for the text
+      const metrics = ctx.measureText(text);
+      updateContentBounds(point.x, point.y);
+      updateContentBounds(point.x + metrics.width, point.y + 20);
+
+      renderFrame();
+    };
+
+    // Handle text input submission
+    const handleTextSubmit = () => {
+      if (textInputValue.trim()) {
+        drawText(textInputValue, textInputPosition);
+      }
+      setIsTextInputVisible(false);
+      setTextInputValue('');
+    };
+
     // Mouse/touch event handlers
     const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
       const point = getEventPoint(e);
@@ -275,6 +310,13 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
         setIsDrawing(true);
         eraseAt(canvasPoint);
         setLastPoint(canvasPoint);
+      } else if (currentTool === 'text') {
+        // Show text input at clicked position
+        setTextInputPosition(canvasPoint);
+        setIsTextInputVisible(true);
+        setTextInputValue('');
+        // Focus the input after it appears
+        setTimeout(() => textInputRef.current?.focus(), 0);
       }
     };
 
@@ -353,6 +395,8 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
           return isPanning ? 'grabbing' : 'grab';
         case 'eraser':
           return 'pointer';
+        case 'text':
+          return 'text';
         default:
           return 'default';
       }
@@ -571,6 +615,32 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
               display: 'block',
             }}
           />
+          {/* Text input overlay */}
+          {isTextInputVisible && (
+            <input
+              ref={textInputRef}
+              type="text"
+              value={textInputValue}
+              onChange={(e) => setTextInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleTextSubmit();
+                } else if (e.key === 'Escape') {
+                  setIsTextInputVisible(false);
+                  setTextInputValue('');
+                }
+              }}
+              onBlur={handleTextSubmit}
+              placeholder={t('sketchPad.typeHere')}
+              className="absolute bg-white border border-blue-500 rounded px-2 py-1 text-sm outline-none shadow-lg"
+              style={{
+                left: textInputPosition.x + panX,
+                top: textInputPosition.y + panY,
+                minWidth: '120px',
+                color: currentColor,
+              }}
+            />
+          )}
         </div>
       </div>
     );

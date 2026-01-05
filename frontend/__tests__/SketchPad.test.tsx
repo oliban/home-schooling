@@ -30,6 +30,8 @@ beforeEach(() => {
       height: 1,
     })),
     putImageData: vi.fn(),
+    fillText: vi.fn(),
+    measureText: vi.fn(() => ({ width: 50 })),
   };
 
   // Mock HTMLCanvasElement methods
@@ -57,6 +59,7 @@ vi.mock('@/lib/LanguageContext', () => ({
         'sketchPad.clear': 'Clear',
         'sketchPad.eraser': 'Eraser',
         'sketchPad.pen': 'Pen',
+        'sketchPad.text': 'Text',
         'sketchPad.move': 'Move',
         'sketchPad.typeHere': 'Type here...',
       };
@@ -89,6 +92,7 @@ describe('SketchPad', () => {
     it('should render all tool buttons', () => {
       render(<SketchPad />);
       expect(screen.getByTitle('Pen')).toBeInTheDocument();
+      expect(screen.getByTitle('Text')).toBeInTheDocument();
       expect(screen.getByTitle('Move')).toBeInTheDocument();
       expect(screen.getByTitle('Eraser')).toBeInTheDocument();
       expect(screen.getByTitle('Clear')).toBeInTheDocument();
@@ -120,6 +124,13 @@ describe('SketchPad', () => {
       const eraserButton = screen.getByTitle('Eraser');
       fireEvent.click(eraserButton);
       expect(eraserButton).toHaveClass('bg-blue-500');
+    });
+
+    it('should switch to text tool when clicked', () => {
+      render(<SketchPad />);
+      const textButton = screen.getByTitle('Text');
+      fireEvent.click(textButton);
+      expect(textButton).toHaveClass('bg-blue-500');
     });
   });
 
@@ -280,6 +291,75 @@ describe('SketchPad', () => {
 
       const canvas = container.querySelector('canvas') as HTMLCanvasElement;
       expect(canvas.style.cursor).toBe('pointer');
+    });
+
+    it('should have text cursor for text tool', () => {
+      const { container } = render(<SketchPad />);
+      const textButton = screen.getByTitle('Text');
+      fireEvent.click(textButton);
+
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
+      expect(canvas.style.cursor).toBe('text');
+    });
+  });
+
+  describe('Text tool', () => {
+    it('should show text input when clicking on canvas with text tool', () => {
+      const { container } = render(<SketchPad />);
+      const textButton = screen.getByTitle('Text');
+      fireEvent.click(textButton);
+
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
+      fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 });
+
+      const textInput = screen.getByPlaceholderText('Type here...');
+      expect(textInput).toBeInTheDocument();
+    });
+
+    it('should hide text input when pressing Escape', () => {
+      const { container } = render(<SketchPad />);
+      const textButton = screen.getByTitle('Text');
+      fireEvent.click(textButton);
+
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
+      fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 });
+
+      const textInput = screen.getByPlaceholderText('Type here...');
+      fireEvent.keyDown(textInput, { key: 'Escape' });
+
+      expect(screen.queryByPlaceholderText('Type here...')).not.toBeInTheDocument();
+    });
+
+    it('should submit text when pressing Enter', () => {
+      const { container } = render(<SketchPad />);
+      const textButton = screen.getByTitle('Text');
+      fireEvent.click(textButton);
+
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
+      fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 });
+
+      const textInput = screen.getByPlaceholderText('Type here...');
+      fireEvent.change(textInput, { target: { value: 'Hello' } });
+      fireEvent.keyDown(textInput, { key: 'Enter' });
+
+      // Input should be hidden after submission
+      expect(screen.queryByPlaceholderText('Type here...')).not.toBeInTheDocument();
+    });
+
+    it('should submit text on blur', () => {
+      const { container } = render(<SketchPad />);
+      const textButton = screen.getByTitle('Text');
+      fireEvent.click(textButton);
+
+      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
+      fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 });
+
+      const textInput = screen.getByPlaceholderText('Type here...');
+      fireEvent.change(textInput, { target: { value: 'Hello' } });
+      fireEvent.blur(textInput);
+
+      // Input should be hidden after blur
+      expect(screen.queryByPlaceholderText('Type here...')).not.toBeInTheDocument();
     });
   });
 });
