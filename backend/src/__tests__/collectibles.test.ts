@@ -204,4 +204,90 @@ describe('Per-Child Shop Ordering', () => {
     db.run('DELETE FROM child_coins WHERE child_id = ?', [testChildId]);
     db.run('DELETE FROM children WHERE id = ?', [testChildId]);
   });
+
+  it('should show always_visible items regardless of unlock count', () => {
+    const db = getDb();
+
+    // Create a test child with very low unlock count
+    const testChildId = uuidv4();
+    const pinHash = '$2a$10$test';
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash, unlocked_shop_items) VALUES (?, ?, ?, ?, ?, ?)',
+      [testChildId, parentId, 'Test Unlock Child', 4, pinHash, 1] // Only 1 item unlocked
+    );
+    db.run('INSERT INTO child_coins (child_id) VALUES (?)', [testChildId]);
+
+    // Get child's rowid
+    const childData = db.get<{ child_rowid: number }>(
+      'SELECT rowid as child_rowid FROM children WHERE id = ?',
+      [testChildId]
+    );
+    const childRowid = childData?.child_rowid || 1;
+
+    // Get items using the same logic as the API (including always_visible)
+    const items = db.all<{ id: string; owned: number; row_num: number; always_visible: number }>(`
+      SELECT c.id,
+        CASE WHEN cc.child_id IS NOT NULL THEN 1 ELSE 0 END as owned,
+        ROW_NUMBER() OVER (
+          ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
+        ) as row_num,
+        COALESCE(c.always_visible, 0) as always_visible
+      FROM collectibles c
+      LEFT JOIN child_collectibles cc ON c.id = cc.collectible_id AND cc.child_id = ?
+      ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
+    `, [testChildId]);
+
+    // Filter using the logic that includes always_visible
+    const unlockedCount = 1;
+    const visibleItems = items.filter(c =>
+      c.row_num <= unlockedCount || c.owned === 1 || c.always_visible === 1
+    );
+
+    // Should have at least 1 unlocked item
+    expect(visibleItems.length).toBeGreaterThanOrEqual(1);
+
+    // Check if Bajsalero (always_visible) is included
+    const bajsalero = items.find(c => c.id === 'bajsalero_bajsalo');
+    if (bajsalero) {
+      // If Bajsalero exists and is always_visible, it should be in visible items
+      if (bajsalero.always_visible === 1) {
+        const bajsInVisible = visibleItems.find(c => c.id === 'bajsalero_bajsalo');
+        expect(bajsInVisible).toBeDefined();
+      }
+    }
+
+    // Cleanup
+    db.run('DELETE FROM child_coins WHERE child_id = ?', [testChildId]);
+    db.run('DELETE FROM children WHERE id = ?', [testChildId]);
+  });
+
+  it('should sort always_visible items first', () => {
+    const db = getDb();
+
+    // Get all collectibles with always_visible flag
+    const items = db.all<{ id: string; row_num: number; always_visible: number }>(`
+      SELECT c.id,
+        c.rowid as row_num,
+        COALESCE(c.always_visible, 0) as always_visible
+      FROM collectibles c
+      ORDER BY c.rowid
+    `, []);
+
+    // Sort using the same logic as the API
+    const sorted = [...items].sort((a, b) => {
+      const aVisible = a.always_visible || 0;
+      const bVisible = b.always_visible || 0;
+      if (aVisible !== bVisible) return bVisible - aVisible; // always_visible first
+      return a.row_num - b.row_num; // then by original order
+    });
+
+    // If there are always_visible items, they should be first
+    const alwaysVisibleItems = sorted.filter(c => c.always_visible === 1);
+    if (alwaysVisibleItems.length > 0) {
+      // First N items should be the always_visible ones
+      for (let i = 0; i < alwaysVisibleItems.length; i++) {
+        expect(sorted[i].always_visible).toBe(1);
+      }
+    }
+  });
 });

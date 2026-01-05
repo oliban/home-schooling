@@ -9,9 +9,9 @@ const router = Router();
 // Cache TTL in seconds
 const COLLECTIBLES_CACHE_TTL = 300; // 5 minutes
 
-// Default pagination values
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
+// Default pagination values (high enough to show all unlocked items)
+const DEFAULT_LIMIT = 150;
+const MAX_LIMIT = 150;
 
 // Cache key generator for collectibles list by child (includes pagination)
 function getCollectiblesCacheKey(childId: string, limit: number, offset: number): string {
@@ -91,9 +91,19 @@ router.get('/', authenticateChild, async (req, res) => {
     // This ensures buying an item doesn't cause new items to appear
     // Items are visible if:
     // 1. They were unlocked (row_num <= unlockedCount), OR
-    // 2. They are owned (bought before they were naturally unlocked, or still owned)
+    // 2. They are owned (bought before they were naturally unlocked, or still owned), OR
+    // 3. They are marked as always_visible in the database
+
     const filteredCollectibles = collectibles.filter(c => {
-      return c.row_num <= unlockedCount || c.owned === 1;
+      return c.row_num <= unlockedCount || c.owned === 1 || (c as any).always_visible === 1;
+    });
+
+    // Sort: always_visible items first, then by original order
+    filteredCollectibles.sort((a, b) => {
+      const aVisible = (a as any).always_visible || 0;
+      const bVisible = (b as any).always_visible || 0;
+      if (aVisible !== bVisible) return bVisible - aVisible; // always_visible first
+      return a.row_num - b.row_num; // then by original order
     });
 
     // Apply pagination to filtered results

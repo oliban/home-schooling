@@ -1,10 +1,7 @@
--- Migration: Add Bajsalero Bajsalo mythic brainrot
--- Also adds always_visible column to bypass unlock system for specific items
+-- Migration: Add Bajsalero Bajsalo brainrot and set as always visible
+-- Note: always_visible column was added by migration 014
 
--- Add always_visible column if it doesn't exist
-ALTER TABLE collectibles ADD COLUMN always_visible INTEGER DEFAULT 0;
-
--- Insert Bajsalero Bajsalo if not exists
+-- Insert Bajsalero Bajsalo
 INSERT OR IGNORE INTO collectibles (id, name, ascii_art, price, rarity, always_visible)
 VALUES (
     'bajsalero_bajsalo',
