@@ -29,6 +29,7 @@ interface TextElement {
 interface SketchPadProps {
   height?: string;
   className?: string;
+  onContentChange?: (hasContent: boolean) => void;
 }
 
 export interface SketchPadHandle {
@@ -37,6 +38,7 @@ export interface SketchPadHandle {
   saveSnapshot: () => void;
   getAllSketches: () => string[];
   resetForNewQuestion: () => void;
+  hasContent: () => boolean;
 }
 
 const COLORS = [
@@ -51,7 +53,7 @@ const DRAWING_TOOLS: { id: Tool; icon: string; labelKey: string }[] = [
 ];
 
 const TEXT_TOOLS: { id: Tool; icon: string; labelKey: string }[] = [
-  { id: 'text', icon: '🔤', labelKey: 'sketchPad.text' },
+  { id: 'text', icon: 'Aa', labelKey: 'sketchPad.text' },
   { id: 'arrow', icon: '↖️', labelKey: 'sketchPad.arrow' },
 ];
 
@@ -60,7 +62,7 @@ const STROKE_WIDTH = 2;
 const FONT_SIZES = [12, 16, 20, 24, 32];
 
 export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
-  ({ height = '300px', className = '' }, ref) => {
+  ({ height = '300px', className = '', onContentChange }, ref) => {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -108,6 +110,35 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
 
     // Text font size (index into FONT_SIZES)
     const [fontSizeIndex, setFontSizeIndex] = useState(1); // Default to 16px
+
+    // Track content state for onContentChange callback
+    const lastContentStateRef = useRef<boolean>(false);
+
+    // Check if canvas has content (strokes or text)
+    const checkHasContent = (): boolean => {
+      const bufferCtx = bufferCtxRef.current;
+      const bufferCanvas = bufferCanvasRef.current;
+
+      // Check text elements first (quick check)
+      if (textElements.length > 0) return true;
+
+      // Check buffer canvas for any non-transparent pixels
+      if (!bufferCtx || !bufferCanvas) return false;
+      const imageData = bufferCtx.getImageData(0, 0, bufferCanvas.width, bufferCanvas.height);
+      const hasStrokes = !imageData.data.every((val, idx) => idx % 4 !== 3 || val === 0);
+
+      return hasStrokes;
+    };
+
+    // Notify parent when content state changes
+    const notifyContentChange = () => {
+      if (!onContentChange) return;
+      const hasContent = checkHasContent();
+      if (hasContent !== lastContentStateRef.current) {
+        lastContentStateRef.current = hasContent;
+        onContentChange(hasContent);
+      }
+    };
 
     // Parse height value
     const heightNum = parseInt(height.replace('px', ''), 10) || 300;
@@ -363,6 +394,11 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
         // Update content bounds for pan constraints
         updateContentBounds(newText.bounds.minX, newText.bounds.minY);
         updateContentBounds(newText.bounds.maxX, newText.bounds.maxY);
+        // Notify parent of content change
+        if (onContentChange) {
+          lastContentStateRef.current = true;
+          onContentChange(true);
+        }
       }
       setIsTextInputVisible(false);
       setTextInputValue('');
@@ -480,6 +516,8 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
       setDraggedTextId(null);
       setLastPoint(null);
       setLastPanPoint(null);
+      // Notify parent of potential content change (after drawing/erasing)
+      notifyContentChange();
     };
 
     const handlePointerLeave = () => {
@@ -541,6 +579,12 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
 
         // Render to display
         renderFrame();
+
+        // Notify parent of content change
+        if (onContentChange) {
+          lastContentStateRef.current = false;
+          onContentChange(false);
+        }
       },
 
       getImage: () => {
@@ -609,6 +653,16 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
 
         // Render to display
         renderFrame();
+
+        // Notify parent of content change
+        if (onContentChange) {
+          lastContentStateRef.current = false;
+          onContentChange(false);
+        }
+      },
+
+      hasContent: () => {
+        return checkHasContent();
       },
     }));
 
@@ -734,7 +788,7 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
               </button>
             ))}
             {/* Font size controls - stacked vertically */}
-            <div className="flex items-center gap-1 ml-1 border-l border-gray-200 pl-1">
+            <div className="flex items-center ml-1 border-l border-gray-200 pl-1">
               <div className="flex flex-col">
                 <button
                   onClick={() => {
@@ -759,7 +813,6 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
                   −
                 </button>
               </div>
-              <span className="text-[10px] text-gray-500 w-4 text-center">{FONT_SIZES[fontSizeIndex]}</span>
             </div>
           </div>
 

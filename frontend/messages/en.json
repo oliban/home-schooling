@@ -161,6 +161,8 @@
     "hintLabel": "Hint:",
     "explanationLabel": "Explanation:",
     "tryAgain": "Try Again",
+    "sketchRequired": "This question requires you to draw your solution on the sketchpad",
+    "sketchFirst": "Draw your solution first",
     "story": {
       "show": "Show story",
       "hide": "Hide story",
@@ -246,6 +248,7 @@
       "autoAssignDescription": "Immediately assign all packages to selected child",
       "autoAssignSingle": "Immediately assign to selected child",
       "selectChild": "Select child...",
+      "gradeMismatchWarning": "Package is for grade {grade}, but you have no children in that grade. You can import the package without assignment.",
       "allowHints": "Allow Hints",
       "allowHintsDescription": "Child can buy hints after wrong answers",
       "dropZone": "Drop problem package JSON here",

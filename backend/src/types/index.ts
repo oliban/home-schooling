@@ -129,6 +129,7 @@ export interface PackageProblem {
   explanation: string | null;
   hint: string | null;
   difficulty: 'easy' | 'medium' | 'hard';
+  requires_sketch: number;  // SQLite INTEGER: 0 = false, 1 = true
 }
 
 export interface AssignmentAnswer {
@@ -164,6 +165,7 @@ export interface ImportPackageRequest {
     hint?: string;
     difficulty?: 'easy' | 'medium' | 'hard';
     lgr22_codes?: string[];
+    requires_sketch?: boolean;
   }>;
   isGlobal?: boolean;
 }

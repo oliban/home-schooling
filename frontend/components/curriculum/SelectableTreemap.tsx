@@ -418,31 +418,71 @@ export default function SelectableTreemap({ childId, childGradeLevel, selectedOb
   }
 
   const treemapData = getTreemapData();
-  const displayData = treemapData.flatMap(category => category.children);
+
+  // Split into Math and Reading
+  const mathData = treemapData
+    .filter(category => category.name !== 'Lasforstaelse')
+    .flatMap(category => category.children);
+  const readingData = treemapData
+    .filter(category => category.name === 'Lasforstaelse')
+    .flatMap(category => category.children);
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <h4 className="text-sm font-semibold text-gray-700 mb-3">
         Click objectives to select them
       </h4>
-      <div className="relative h-64 bg-white rounded-lg overflow-hidden border-2 border-gray-200">
-        {isMounted && (
-          <ResponsiveContainer width="100%" height="100%" minHeight={256}>
-            <Treemap
-              data={displayData}
-              dataKey="size"
-              aspectRatio={4 / 3}
-              stroke="#fff"
-              fill="#8884d8"
-              content={(props: any) => (
-                <CustomContent {...props} onClick={handleObjectiveClick} />
-              )}
-            >
-              <Tooltip content={<CustomTooltip />} />
-            </Treemap>
-          </ResponsiveContainer>
-        )}
-      </div>
+
+      {/* Math objectives */}
+      {mathData.length > 0 && (
+        <div className="mb-4">
+          <h5 className="text-xs font-semibold text-blue-800 mb-2">📐 Matematik</h5>
+          <div className="relative h-48 bg-white rounded-lg overflow-hidden border-2 border-gray-200">
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minHeight={192}>
+                <Treemap
+                  data={mathData}
+                  dataKey="size"
+                  aspectRatio={4 / 3}
+                  stroke="#fff"
+                  fill="#8884d8"
+                  content={(props: any) => (
+                    <CustomContent {...props} onClick={handleObjectiveClick} />
+                  )}
+                >
+                  <Tooltip content={<CustomTooltip />} />
+                </Treemap>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reading objectives */}
+      {readingData.length > 0 && (
+        <div>
+          <h5 className="text-xs font-semibold text-purple-800 mb-2">📖 Läsförståelse</h5>
+          <div className="relative h-32 bg-white rounded-lg overflow-hidden border-2 border-gray-200">
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minHeight={128}>
+                <Treemap
+                  data={readingData}
+                  dataKey="size"
+                  aspectRatio={4 / 3}
+                  stroke="#fff"
+                  fill="#8884d8"
+                  content={(props: any) => (
+                    <CustomContent {...props} onClick={handleObjectiveClick} />
+                  )}
+                >
+                  <Tooltip content={<CustomTooltip />} />
+                </Treemap>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      )}
+
       <p className="text-xs text-gray-500 mt-2">
         {selectedObjectives.size} objective{selectedObjectives.size !== 1 ? 's' : ''} selected
       </p>

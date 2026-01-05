@@ -161,6 +161,8 @@
     "hintLabel": "Tips:",
     "explanationLabel": "Förklaring:",
     "tryAgain": "Försök igen",
+    "sketchRequired": "Denna fråga kräver att du ritar din lösning på ritblocket",
+    "sketchFirst": "Rita din lösning först",
     "story": {
       "show": "Visa berättelsen",
       "hide": "Dölj berättelsen",
@@ -246,6 +248,7 @@
       "autoAssignDescription": "Tilldela omedelbart alla paket till valt barn",
       "autoAssignSingle": "Tilldela omedelbart till valt barn",
       "selectChild": "Välj barn...",
+      "gradeMismatchWarning": "Paketet är för årskurs {grade}, men du har inga barn i den årskursen. Du kan importera paketet utan tilldelning.",
       "allowHints": "Tillåt tips",
       "allowHintsDescription": "Barnet kan köpa tips efter felaktiga svar",
       "dropZone": "Släpp problempaket-JSON här",

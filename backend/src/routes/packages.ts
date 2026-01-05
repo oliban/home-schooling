@@ -218,8 +218,8 @@ router.post('/import', authenticateParent, async (req, res) => {
           const problemId = uuidv4();
 
           db.run(
-            `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty, requires_sketch)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               problemId,
               packageId,
@@ -230,7 +230,8 @@ router.post('/import', authenticateParent, async (req, res) => {
               p.options ? JSON.stringify(p.options) : null,
               p.explanation || null,
               p.hint || null,
-              p.difficulty || 'medium'
+              p.difficulty || 'medium',
+              p.requires_sketch ? 1 : 0
             ]
           );
 
@@ -539,6 +540,17 @@ router.post('/:id/assign', authenticateParent, async (req, res) => {
     if (!pkg) {
       return res.status(404).json({ error: 'Package not found' });
     }
+
+    // Validate package grade matches child's grade
+    console.log('[PACKAGE ASSIGN] Grade check - Package:', pkg.grade_level, 'Child:', child.grade_level);
+    if (pkg.grade_level !== child.grade_level) {
+      console.log('[PACKAGE ASSIGN] Grade mismatch! Returning 400 error');
+      return res.status(400).json({
+        error: 'Grade level mismatch',
+        details: `Package was imported but could not be assigned. Package is for årskurs ${pkg.grade_level}, but this child is in årskurs ${child.grade_level}.`
+      });
+    }
+    console.log('[PACKAGE ASSIGN] Grade match OK, proceeding with assignment');
 
     const assignmentId = uuidv4();
 

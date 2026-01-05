@@ -53,7 +53,8 @@ Use this format when generating a package of problems:
       "explanation": "25% av 200 = 50. 200 - 50 = 150 kr",
       "difficulty": "medium",
       "hint": "Räkna först ut hur mycket rabatten är",
-      "lgr22_codes": ["MA-TAL-07", "MA-PRO-04"]
+      "lgr22_codes": ["MA-TAL-07", "MA-PRO-04"],
+      "requires_sketch": false
     }
   ]
 }
@@ -125,7 +126,8 @@ For backward compatibility with direct assignment creation:
       "difficulty": "medium",
       "category_id": "taluppfattning",
       "hint": "Räkna först ut hur mycket rabatten är",
-      "lgr22_codes": ["MA-TAL-07", "MA-PRO-04"]
+      "lgr22_codes": ["MA-TAL-07", "MA-PRO-04"],
+      "requires_sketch": false
     }
   ]
 }
@@ -351,6 +353,73 @@ For `answer_type: "multiple_choice"`:
   "correct_answer": "8"
 }
 ```
+
+## Visual/Illustrative Questions (requires_sketch)
+
+Some questions require students to demonstrate their understanding visually using the sketchpad. Set `requires_sketch: true` for these questions.
+
+### When to Use `requires_sketch: true`
+
+**The flag is set per problem, NOT per LGR-22 code.** The question text determines if visual demonstration is needed.
+
+**Trigger phrases that indicate visual requirement:**
+- "Rita..." (Draw...)
+- "Visa med en bild..." (Show with a picture...)
+- "Illustrera..." (Illustrate...)
+- "Skissa..." (Sketch...)
+- "Markera..." (Mark...)
+- "Fortsätt mönstret..." (Continue the pattern... - when visual)
+
+### Examples
+
+**requires_sketch: true**
+```json
+{
+  "question_text": "Rita en rektangel med arean 12 cm². Visa hur du räknar ut arean.",
+  "correct_answer": "12",
+  "answer_type": "number",
+  "requires_sketch": true,
+  "lgr22_codes": ["MA-GEO-07"]
+}
+```
+
+```json
+{
+  "question_text": "Illustrera hur du delar pizzan i 4 lika stora delar och färglägg 3/4.",
+  "correct_answer": "3",
+  "answer_type": "number",
+  "requires_sketch": true,
+  "lgr22_codes": ["MA-TAL-03"]
+}
+```
+
+**requires_sketch: false** (same topic, no visual needed)
+```json
+{
+  "question_text": "Vad är arean av en rektangel med sidorna 4 cm och 3 cm?",
+  "correct_answer": "12",
+  "answer_type": "number",
+  "requires_sketch": false,
+  "lgr22_codes": ["MA-GEO-07"]
+}
+```
+
+### Topics Often Suitable for Visual Questions
+
+These LGR-22 codes often (but not always) benefit from visual problems:
+
+**Geometry (MA-GEO-*)** - Most likely candidates
+- Symmetry (MA-GEO-04, MA-GEO-11)
+- Shape construction (MA-GEO-02, MA-GEO-06, MA-GEO-10)
+- Patterns (MA-GEO-04)
+
+**Problem Solving**
+- MA-PRO-01, MA-PRO-02 when the question explicitly asks for diagrams
+
+**Statistics**
+- MA-SAN-04 when creating (not reading) charts
+
+**Important:** Default is `requires_sketch: false`. Only set to `true` when the question explicitly asks for drawing/illustration.
 
 ## Important Notes
 1. Always write in Swedish
@@ -596,3 +665,49 @@ When assigning `lgr22_codes`:
    - Percentage discount problem → `["MA-TAL-07", "MA-PRO-04"]`
    - Area calculation → `["MA-GEO-07"]`
    - Equation solving → `["MA-ALG-04"]` or `["MA-ALG-08"]` depending on grade
+
+## CRITICAL: Code Validation Before Saving
+
+**Before finalizing any problem, you MUST verify the code matches the content.**
+
+### Common Mistakes to Avoid
+
+| Problem Type | WRONG Code | CORRECT Code |
+|--------------|------------|--------------|
+| Division (840 ÷ 6 = 140) | MA-SAN-04 (kombinatorik) | MA-PRO-06 (de fyra räknesätten) |
+| Multiplication (5 × 8 = 40) | MA-ALG-05 (mönster) | MA-PRO-06 (de fyra räknesätten) |
+| Percentage (25% av 200) | MA-ALG-05 (mönster) | MA-TAL-07 (procentform) |
+| Fractions (3/4 av 100) | MA-SAN-04 (kombinatorik) | MA-TAL-06 (bråkform) |
+| Area (längd × bredd) | MA-GEO-08 (skala) | MA-GEO-07 (area/omkrets) |
+| Simple equation (x + 5 = 12) | MA-ALG-05 (mönster) | MA-ALG-04 (ekvationslösning) |
+| Combinations (3 shirts × 4 pants) | MA-TAL-04 (naturliga tal) | MA-SAN-04 (kombinatorik) |
+
+### Code Category Quick Reference
+
+**Use these guidelines to pick the RIGHT code:**
+
+- **MA-TAL** (Taluppfattning) = Understanding numbers, NOT calculations
+  - MA-TAL-06: Fractions/decimals as CONCEPTS
+  - MA-TAL-07: Percentages as CONCEPTS
+
+- **MA-ALG** (Algebra) = Variables, equations, patterns
+  - MA-ALG-04: Solving equations (x + 5 = 12)
+  - MA-ALG-05: NUMBER PATTERNS in sequences (2, 4, 6, 8, ...)
+
+- **MA-GEO** (Geometri) = Shapes, area, angles
+  - MA-GEO-07: Area and perimeter calculations
+  - MA-GEO-08: SCALE (maps, models) - NOT area!
+
+- **MA-SAN** (Sannolikhet) = Probability, statistics, combinatorics
+  - MA-SAN-04: COMBINATORICS = "How many combinations?" NOT division!
+
+- **MA-PRO** (Problemlösning) = Problem-solving strategies
+  - MA-PRO-06: Problems using +, -, ×, ÷ (most word problems!)
+
+### Self-Check Before Saving
+
+For EACH problem, ask yourself:
+1. What mathematical SKILL does this problem test?
+2. Does my chosen code's DESCRIPTION match that skill?
+3. If the problem involves arithmetic (÷, ×, +, -), did I consider MA-PRO-06?
+4. If the problem involves "how many combinations?", THEN use MA-SAN-04

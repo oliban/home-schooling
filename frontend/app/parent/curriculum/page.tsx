@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { children, packages } from '@/lib/api';
@@ -82,6 +82,13 @@ export default function CurriculumDashboard() {
   const [assignChildId, setAssignChildId] = useState<string>(''); // Child to assign imported package to
   const [hintsAllowed, setHintsAllowed] = useState(true);
   const [importProgress, setImportProgress] = useState(0);
+
+  // Check if any child matches the imported package grade
+  const hasMatchingChild = useMemo(() => {
+    const gradeLevel = importedData?.package.grade_level || importedBatch?.batch.grade_level;
+    if (!gradeLevel) return true; // No package loaded yet
+    return childrenList.some(c => c.grade_level === gradeLevel);
+  }, [importedData, importedBatch, childrenList]);
 
   useEffect(() => {
     const token = localStorage.getItem('parentToken');
@@ -208,6 +215,14 @@ export default function CurriculumDashboard() {
       setAssignChildId('');
     }
   }, [autoAssign, importedData, importedBatch]);
+
+  // Reset auto-assign when no matching child exists
+  useEffect(() => {
+    if (!hasMatchingChild && autoAssign) {
+      setAutoAssign(false);
+      setAssignChildId('');
+    }
+  }, [hasMatchingChild, autoAssign]);
 
   const handleFileLoad = (data: unknown) => {
     setImportError(null);
@@ -594,11 +609,12 @@ export default function CurriculumDashboard() {
                     )}
 
                     {/* Auto-assign Checkbox */}
-                    <label className="flex items-start gap-3 cursor-pointer">
+                    <label className={`flex items-start gap-3 ${!hasMatchingChild ? 'opacity-50' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
                         checked={autoAssign}
                         onChange={(e) => setAutoAssign(e.target.checked)}
+                        disabled={!hasMatchingChild}
                         className="mt-1 w-5 h-5"
                       />
                       <div className="flex-1">
@@ -608,6 +624,15 @@ export default function CurriculumDashboard() {
                         </p>
                       </div>
                     </label>
+
+                    {/* Grade mismatch warning */}
+                    {!hasMatchingChild && (importedData || importedBatch) && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                        {t('parent.dashboard.gradeMismatchWarning', {
+                          grade: (importedData?.package.grade_level || importedBatch?.batch.grade_level) ?? 0
+                        })}
+                      </div>
+                    )}
 
                     {/* Child Selection Dropdown (only show if auto-assign is checked) */}
                     {autoAssign && (
@@ -620,6 +645,9 @@ export default function CurriculumDashboard() {
                           onChange={(e) => setAssignChildId(e.target.value)}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                         >
+                          <option value="" disabled>
+                            {t('parent.dashboard.selectChild')}
+                          </option>
                           {childrenList.map((child) => {
                             // Check if this child matches the package grade
                             const packageGrade = importedData?.package.grade_level || importedBatch?.batch.grade_level;

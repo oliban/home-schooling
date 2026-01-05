@@ -523,8 +523,12 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
 
   const treemapData = getTreemapData();
 
+  // Split categories into Math and Reading
+  const mathTreemapData = treemapData.filter(item => item.name !== 'Lasforstaelse');
+  const readingTreemapData = treemapData.filter(item => item.name === 'Lasforstaelse');
+
   // Always show categories as base layer
-  const categoryData = treemapData.map(item => ({
+  const mathCategoryData = mathTreemapData.map(item => ({
     name: item.name,
     size: item.totalObjectives * 100,
     coverage: item.coverage,
@@ -535,12 +539,40 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
     isCategory: true,
   }));
 
+  const readingCategoryData = readingTreemapData.map(item => ({
+    name: item.name,
+    size: item.totalObjectives * 100,
+    coverage: item.coverage,
+    totalObjectives: item.totalObjectives,
+    coveredObjectives: item.coveredObjectives,
+    totalCorrect: item.totalCorrect,
+    totalQuestions: item.totalQuestions,
+    isCategory: true,
+  }));
+
+  // Calculate subject-specific stats
+  const mathCategories = coverageData.categories.filter(c => c.categoryName !== 'Lasforstaelse');
+  const readingCategories = coverageData.categories.filter(c => c.categoryName === 'Lasforstaelse');
+
+  const mathStats = {
+    totalCorrect: mathCategories.reduce((sum, c) => sum + c.totalCorrect, 0),
+    totalQuestions: mathCategories.reduce((sum, c) => sum + c.totalQuestions, 0),
+    coveragePercentage: mathCategories.length > 0
+      ? Math.round(mathCategories.reduce((sum, c) => sum + c.totalCorrect, 0) / Math.max(mathCategories.reduce((sum, c) => sum + c.totalQuestions, 0), 1) * 100)
+      : 0,
+  };
+
+  const readingStats = {
+    totalCorrect: readingCategories.reduce((sum, c) => sum + c.totalCorrect, 0),
+    totalQuestions: readingCategories.reduce((sum, c) => sum + c.totalQuestions, 0),
+    coveragePercentage: readingCategories.length > 0
+      ? Math.round(readingCategories.reduce((sum, c) => sum + c.totalCorrect, 0) / Math.max(readingCategories.reduce((sum, c) => sum + c.totalQuestions, 0), 1) * 100)
+      : 0,
+  };
+
   // Base grid: always show categories, OR all objectives when "All Objectives" clicked
   // When category is clicked, show overlay instead of changing base grid
   const showCategoriesBase = viewMode === 'categories' || selectedCategories.size > 0;
-  const displayData = showCategoriesBase
-    ? categoryData
-    : treemapData.flatMap(category => category.children);
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -623,89 +655,207 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         </div>
       </div>
 
-      {/* Treemap with objectives overlay */}
-      <div className="relative h-80">
-        {/* Categories grid - ALWAYS rendered, never changes */}
-        {showCategoriesBase && isMounted && (
-          <div className="absolute inset-0">
-            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
-              <Treemap
-                data={categoryData}
-                dataKey="size"
-                aspectRatio={4 / 3}
-                stroke="#fff"
-                fill="#8884d8"
-                content={(props: any) => (
-                  <CustomContent {...props} onClick={handleCategoryClick} />
-                )}
-              >
-                <Tooltip content={<CustomTooltip />} />
-              </Treemap>
-            </ResponsiveContainer>
+      {/* Math Treemap */}
+      {mathCategoryData.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+              📐 Matematik
+            </h4>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium" style={{ color: getCoverageColor(mathStats.coveragePercentage) }}>
+                {mathStats.coveragePercentage}%
+              </span>
+              <span className="text-xs text-gray-500">
+                ({mathStats.totalCorrect}/{mathStats.totalQuestions})
+              </span>
+            </div>
           </div>
-        )}
-
-        {/* All objectives grid - shown when "All Objectives" clicked */}
-        {!showCategoriesBase && isMounted && (
-          <div className="absolute inset-0">
-            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
-              <Treemap
-                data={treemapData.flatMap(category => category.children)}
-                dataKey="size"
-                aspectRatio={4 / 3}
-                stroke="#fff"
-                fill="#8884d8"
-                content={(props: any) => <CustomContent {...props} />}
-              >
-                <Tooltip content={<CustomTooltip />} />
-              </Treemap>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Objectives overlays - shown for each selected category */}
-        {Array.from(selectedCategories.entries()).map(([categoryName, position]) => {
-          const categoryData = treemapData.find(c => c.name === categoryName);
-          const objectives = categoryData?.children || [];
-          const isFlipping = flippingCategories.has(categoryName);
-
-          return (
-            <div
-              key={categoryName}
-              className="absolute bg-white rounded-lg shadow-xl border-2 border-green-600 overflow-hidden"
-              style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                width: `${position.width}px`,
-                height: `${position.height}px`,
-                transform: isFlipping ? 'rotateY(90deg)' : 'rotateY(0deg)',
-                transformStyle: 'preserve-3d',
-                transition: 'transform 0.6s ease-in-out',
-              }}
-            >
-              {isMounted && (
-                <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+          <div className="relative h-64">
+            {showCategoriesBase && isMounted && (
+              <div className="absolute inset-0">
+                <ResponsiveContainer width="100%" height="100%" minHeight={256}>
                   <Treemap
-                    data={objectives}
+                    data={mathCategoryData}
                     dataKey="size"
-                    aspectRatio={position.width / position.height}
+                    aspectRatio={4 / 3}
                     stroke="#fff"
                     fill="#8884d8"
                     content={(props: any) => (
-                      <CustomContent
-                        {...props}
-                        onClick={() => handleObjectiveClick(categoryName)}
-                      />
+                      <CustomContent {...props} onClick={handleCategoryClick} />
                     )}
                   >
                     <Tooltip content={<CustomTooltip />} />
                   </Treemap>
                 </ResponsiveContainer>
-              )}
+              </div>
+            )}
+
+            {!showCategoriesBase && isMounted && (
+              <div className="absolute inset-0">
+                <ResponsiveContainer width="100%" height="100%" minHeight={256}>
+                  <Treemap
+                    data={mathTreemapData.flatMap(category => category.children)}
+                    dataKey="size"
+                    aspectRatio={4 / 3}
+                    stroke="#fff"
+                    fill="#8884d8"
+                    content={(props: any) => <CustomContent {...props} />}
+                  >
+                    <Tooltip content={<CustomTooltip />} />
+                  </Treemap>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Objectives overlays for math categories */}
+            {Array.from(selectedCategories.entries())
+              .filter(([categoryName]) => categoryName !== 'Lasforstaelse')
+              .map(([categoryName, position]) => {
+                const catData = treemapData.find(c => c.name === categoryName);
+                const objectives = catData?.children || [];
+                const isFlipping = flippingCategories.has(categoryName);
+
+                return (
+                  <div
+                    key={categoryName}
+                    className="absolute bg-white rounded-lg shadow-xl border-2 border-green-600 overflow-hidden"
+                    style={{
+                      left: `${position.x}px`,
+                      top: `${position.y}px`,
+                      width: `${position.width}px`,
+                      height: `${position.height}px`,
+                      transform: isFlipping ? 'rotateY(90deg)' : 'rotateY(0deg)',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.6s ease-in-out',
+                    }}
+                  >
+                    {isMounted && (
+                      <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+                        <Treemap
+                          data={objectives}
+                          dataKey="size"
+                          aspectRatio={position.width / position.height}
+                          stroke="#fff"
+                          fill="#8884d8"
+                          content={(props: any) => (
+                            <CustomContent
+                              {...props}
+                              onClick={() => handleObjectiveClick(categoryName)}
+                            />
+                          )}
+                        >
+                          <Tooltip content={<CustomTooltip />} />
+                        </Treemap>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* Reading Treemap */}
+      {readingCategoryData.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-purple-800 flex items-center gap-2">
+              📖 Läsförståelse
+            </h4>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium" style={{ color: getCoverageColor(readingStats.coveragePercentage) }}>
+                {readingStats.coveragePercentage}%
+              </span>
+              <span className="text-xs text-gray-500">
+                ({readingStats.totalCorrect}/{readingStats.totalQuestions})
+              </span>
             </div>
-          );
-        })}
-      </div>
+          </div>
+          <div className="relative h-48">
+            {showCategoriesBase && isMounted && (
+              <div className="absolute inset-0">
+                <ResponsiveContainer width="100%" height="100%" minHeight={192}>
+                  <Treemap
+                    data={readingCategoryData}
+                    dataKey="size"
+                    aspectRatio={4 / 3}
+                    stroke="#fff"
+                    fill="#8884d8"
+                    content={(props: any) => (
+                      <CustomContent {...props} onClick={handleCategoryClick} />
+                    )}
+                  >
+                    <Tooltip content={<CustomTooltip />} />
+                  </Treemap>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {!showCategoriesBase && isMounted && (
+              <div className="absolute inset-0">
+                <ResponsiveContainer width="100%" height="100%" minHeight={192}>
+                  <Treemap
+                    data={readingTreemapData.flatMap(category => category.children)}
+                    dataKey="size"
+                    aspectRatio={4 / 3}
+                    stroke="#fff"
+                    fill="#8884d8"
+                    content={(props: any) => <CustomContent {...props} />}
+                  >
+                    <Tooltip content={<CustomTooltip />} />
+                  </Treemap>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Objectives overlays for reading categories */}
+            {Array.from(selectedCategories.entries())
+              .filter(([categoryName]) => categoryName === 'Lasforstaelse')
+              .map(([categoryName, position]) => {
+                const catData = treemapData.find(c => c.name === categoryName);
+                const objectives = catData?.children || [];
+                const isFlipping = flippingCategories.has(categoryName);
+
+                return (
+                  <div
+                    key={categoryName}
+                    className="absolute bg-white rounded-lg shadow-xl border-2 border-green-600 overflow-hidden"
+                    style={{
+                      left: `${position.x}px`,
+                      top: `${position.y}px`,
+                      width: `${position.width}px`,
+                      height: `${position.height}px`,
+                      transform: isFlipping ? 'rotateY(90deg)' : 'rotateY(0deg)',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.6s ease-in-out',
+                    }}
+                  >
+                    {isMounted && (
+                      <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+                        <Treemap
+                          data={objectives}
+                          dataKey="size"
+                          aspectRatio={position.width / position.height}
+                          stroke="#fff"
+                          fill="#8884d8"
+                          content={(props: any) => (
+                            <CustomContent
+                              {...props}
+                              onClick={() => handleObjectiveClick(categoryName)}
+                            />
+                          )}
+                        >
+                          <Tooltip content={<CustomTooltip />} />
+                        </Treemap>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="mt-4 space-y-2">
@@ -774,33 +924,74 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       {/* Category breakdown table */}
       <div className="mt-6">
         <h4 className="font-semibold text-gray-800 mb-3">{t('curriculum.coverage.categoryBreakdown')}</h4>
-        <div className="space-y-2">
-          {coverageData.categories.map((category) => (
-            <div
-              key={category.categoryId}
-              className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
-            >
-              <div className="flex items-center gap-3">
+
+        {/* Math categories */}
+        {mathCategories.length > 0 && (
+          <div className="mb-4">
+            <h5 className="text-sm font-medium text-blue-800 mb-2">📐 Matematik</h5>
+            <div className="space-y-2">
+              {mathCategories.map((category) => (
                 <div
-                  className="w-3 h-3 rounded"
-                  style={{ backgroundColor: getCoverageColor(category.coveragePercentage) }}
-                />
-                <span className="font-medium text-gray-800">{category.categoryName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="font-semibold"
-                  style={{ color: getCoverageColor(category.coveragePercentage) }}
+                  key={category.categoryId}
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
                 >
-                  {category.coveragePercentage}%
-                </span>
-                <span className="text-sm text-gray-500">
-                  ({category.totalCorrect}/{category.totalQuestions})
-                </span>
-              </div>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-3 h-3 rounded"
+                      style={{ backgroundColor: getCoverageColor(category.coveragePercentage) }}
+                    />
+                    <span className="font-medium text-gray-800">{category.categoryName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="font-semibold"
+                      style={{ color: getCoverageColor(category.coveragePercentage) }}
+                    >
+                      {category.coveragePercentage}%
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({category.totalCorrect}/{category.totalQuestions})
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Reading categories */}
+        {readingCategories.length > 0 && (
+          <div>
+            <h5 className="text-sm font-medium text-purple-800 mb-2">📖 Läsförståelse</h5>
+            <div className="space-y-2">
+              {readingCategories.map((category) => (
+                <div
+                  key={category.categoryId}
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-3 h-3 rounded"
+                      style={{ backgroundColor: getCoverageColor(category.coveragePercentage) }}
+                    />
+                    <span className="font-medium text-gray-800">{category.categoryName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="font-semibold"
+                      style={{ color: getCoverageColor(category.coveragePercentage) }}
+                    >
+                      {category.coveragePercentage}%
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({category.totalCorrect}/{category.totalQuestions})
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -28,6 +28,7 @@ interface Question {
   answered_at?: string | null;
   attempts_count?: number;
   hint_purchased?: number;
+  requires_sketch?: number;  // 0 = false, 1 = true (SQLite integer)
 }
 
 interface AssignmentData {
@@ -77,6 +78,7 @@ export default function AssignmentPage() {
   const [purchasedHint, setPurchasedHint] = useState<string | null>(null);
   const [buyingHint, setBuyingHint] = useState(false);
   const [storyCollapsed, setStoryCollapsed] = useState(false);
+  const [hasSketchContent, setHasSketchContent] = useState(false);
   const sketchPadRef = useRef<SketchPadHandle>(null);
 
   useEffect(() => {
@@ -517,14 +519,25 @@ export default function AssignmentPage() {
           )}
 
           {/* Action buttons */}
-          <div className="mt-8 flex gap-4">
+          <div className="mt-8 flex flex-col gap-2">
+            {/* Sketch requirement message */}
+            {!feedback?.show && question.requires_sketch === 1 && !hasSketchContent && (
+              <p className="text-center text-amber-600 font-medium">
+                {t('assignment.sketchRequired')}
+              </p>
+            )}
+            <div className="flex gap-4">
             {!feedback?.show ? (
               <button
                 onClick={handleSubmit}
-                disabled={!answer.trim() || submitting}
+                disabled={!answer.trim() || submitting || (question.requires_sketch === 1 && !hasSketchContent)}
                 className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {submitting ? t('assignment.submitting') : `${t('assignment.submitButton')} →`}
+                {submitting
+                  ? t('assignment.submitting')
+                  : question.requires_sketch === 1 && !hasSketchContent
+                    ? t('assignment.sketchFirst')
+                    : `${t('assignment.submitButton')} →`}
               </button>
             ) : feedback.canRetry ? (
               <button
@@ -541,6 +554,7 @@ export default function AssignmentPage() {
                 {currentIndex < assignment.questions.length - 1 ? `${t('assignment.nextButton')} →` : `${t('assignment.doneButton')} 🎉`}
               </button>
             )}
+            </div>
           </div>
         </div>
 
@@ -551,6 +565,7 @@ export default function AssignmentPage() {
               ref={sketchPadRef}
               height="400px"
               className="sticky top-4"
+              onContentChange={setHasSketchContent}
             />
           </div>
         )}

@@ -459,7 +459,6 @@ export default function CustomPromptBuilder({
                     const percentage = objective.totalCount > 0
                       ? Math.round((objective.correctCount / objective.totalCount) * 100)
                       : 0;
-                    const needsMorePractice = objective.totalCount > 0 && objective.totalCount < 15;
                     return (
                       <div key={objective.id} className="flex items-center justify-between text-xs gap-2">
                         <span className="font-medium text-gray-700">{objective.code}</span>
@@ -474,7 +473,7 @@ export default function CustomPromptBuilder({
                               ? `${percentage}%`
                               : 'Not attempted'}
                           </span>
-                          {needsMorePractice && (
+                          {objective.totalCount > 0 && (
                             <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium">
                               {objective.totalCount}×
                             </span>
@@ -504,7 +503,6 @@ export default function CustomPromptBuilder({
                     const percentage = objective.totalCount > 0
                       ? Math.round((objective.correctCount / objective.totalCount) * 100)
                       : 0;
-                    const needsMorePractice = objective.totalCount > 0 && objective.totalCount < 15;
                     return (
                       <div key={objective.id} className="flex items-center justify-between text-xs gap-2">
                         <span className="font-medium text-gray-700">{objective.code}</span>
@@ -519,7 +517,7 @@ export default function CustomPromptBuilder({
                               ? `${percentage}%`
                               : 'Not attempted'}
                           </span>
-                          {needsMorePractice && (
+                          {objective.totalCount > 0 && (
                             <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium">
                               {objective.totalCount}×
                             </span>
