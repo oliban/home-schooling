@@ -27,6 +27,42 @@ export async function invalidateCurriculumCache(childId: string): Promise<void> 
   }
 }
 
+// Calculate priority score for an objective based on practice data
+// Higher score = higher priority for practice
+// Exported so adventures.ts can use the same logic
+export function scoreObjective(correctCount: number, totalCount: number): number {
+  const percentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
+
+  // Priority 1: Never practiced = highest urgency
+  if (totalCount === 0) {
+    return 1000;
+  }
+  // Priority 2: Very few attempts (< 5) = always high priority
+  // Sample size too small to trust accuracy
+  if (totalCount < 5) {
+    return 800 + (5 - totalCount) * 40; // 800-960
+  }
+  // Priority 3: Low practice count (5-14 attempts)
+  if (totalCount < 15) {
+    let score = 400 + (15 - totalCount) * 20; // 400-600
+    // Reduce priority for high-performing students (> 85% accuracy)
+    if (percentage > 85) {
+      score -= 100 + (percentage - 85);
+    }
+    return score;
+  }
+  // Priority 4: Many attempts but struggling (< 70% accuracy)
+  if (percentage < 70) {
+    return (70 - percentage) * 3; // 0-210
+  }
+  // Priority 5: Room for improvement (70-85%)
+  if (percentage < 85) {
+    return 50;
+  }
+  // Priority 6: Well-mastered (>= 85% with 15+ attempts)
+  return 0;
+}
+
 // Types for curriculum data
 interface CurriculumObjective {
   id: number;
@@ -56,6 +92,7 @@ interface ObjectiveCoverage {
   correctCount: number;
   totalCount: number;
   completedAt: string | null;
+  score: number;
 }
 
 // GET /curriculum/coverage/:childId - Calculate curriculum coverage for a child
@@ -203,7 +240,8 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
         isCovered,
         correctCount,
         totalCount,
-        completedAt
+        completedAt,
+        score: scoreObjective(correctCount, totalCount)
       });
     }
 

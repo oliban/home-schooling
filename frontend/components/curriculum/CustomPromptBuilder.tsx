@@ -23,6 +23,7 @@ interface ObjectiveCoverage {
   correctCount: number;
   totalCount: number;
   completedAt: string | null;
+  score: number; // Priority score calculated by backend
 }
 
 interface CategoryCoverage {
@@ -160,17 +161,17 @@ export default function CustomPromptBuilder({
     setSuggestedThemes(getRandomThemes(childGradeLevel, 8));
   }, [childGradeLevel]);
 
-  // Calculate suggested objectives based on poor coverage
+  // Get suggested objectives based on priority scores from backend
+  // Backend calculates scores in curriculum.ts using scoreObjective()
   const suggestedObjectives = useMemo(() => {
     if (!coverageData) {
       return { math: [], reading: [] };
     }
 
-
     interface ScoredObjective {
       objective: ObjectiveCoverage;
       category: CategoryCoverage;
-      score: number; // Higher score = higher priority for practice
+      score: number;
     }
 
     const mathObjectives: ScoredObjective[] = [];
@@ -183,7 +184,6 @@ export default function CustomPromptBuilder({
       }
 
       category.objectives.forEach(obj => {
-        // Determine subject from objective code (MA-* = math, SV-* = reading)
         const isMath = obj.code.startsWith('MA-');
         const isReading = obj.code.startsWith('SV-');
 
@@ -192,42 +192,11 @@ export default function CustomPromptBuilder({
           return;
         }
 
-        // Calculate priority score based on BOTH percentage and total count
-        // Higher score = more urgent to practice
-        let score = 0;
-
-        const percentage = obj.totalCount > 0
-          ? (obj.correctCount / obj.totalCount) * 100
-          : 0;
-        const totalCount = obj.totalCount;
-
-        // Priority 1: Never practiced (0 attempts) = highest urgency
-        if (totalCount === 0) {
-          score = 1000; // Highest priority
-        }
-        // Priority 2: Low practice count (< 15 attempts) = need more practice regardless of percentage
-        else if (totalCount < 15) {
-          // Score based on how few attempts (fewer = higher score)
-          score = 500 + (15 - totalCount) * 20;
-          // But reduce score if percentage is very high (> 90%)
-          if (percentage > 90) {
-            score -= 200;
-          }
-        }
-        // Priority 3: Many attempts but low percentage = poor mastery
-        else if (percentage < 70) {
-          // Score based on how low the percentage is
-          score = (70 - percentage) * 3;
-        }
-        // Priority 4: Many attempts AND good percentage = don't suggest
-        else {
-          score = 0; // Very low priority
-        }
-
+        // Use score from backend API (calculated by scoreObjective in curriculum.ts)
         const scoredObj: ScoredObjective = {
           objective: obj,
           category,
-          score,
+          score: obj.score,
         };
 
         if (isMath) {
@@ -239,24 +208,14 @@ export default function CustomPromptBuilder({
     });
 
     // Sort by score (highest first = highest priority)
-    const sortByPriority = (a: ScoredObjective, b: ScoredObjective) => {
-      return b.score - a.score; // Higher score first
-    };
-
-    mathObjectives.sort(sortByPriority);
-    readingObjectives.sort(sortByPriority);
-
+    mathObjectives.sort((a, b) => b.score - a.score);
+    readingObjectives.sort((a, b) => b.score - a.score);
 
     // Take top 4 of each subject
-    const result = {
+    return {
       math: mathObjectives.slice(0, 4),
       reading: readingObjectives.slice(0, 4),
     };
-
-    if (result.math.length > 0) {
-    }
-
-    return result;
   }, [coverageData]);
 
   // Auto-apply suggestions on initial load (prefer subject with worse overall coverage)

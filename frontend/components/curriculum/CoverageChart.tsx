@@ -17,6 +17,7 @@ interface ObjectiveCoverage {
   correctCount: number;
   totalCount: number;
   completedAt: string | null;
+  score: number;
 }
 
 interface CategoryCoverage {

@@ -9,7 +9,10 @@ interface ObjectiveCoverage {
   code: string;
   description: string;
   isCovered: boolean;
+  correctCount: number;
+  totalCount: number;
   completedAt: string | null;
+  score: number;
 }
 
 interface CategoryCoverage {

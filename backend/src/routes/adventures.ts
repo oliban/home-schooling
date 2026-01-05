@@ -4,9 +4,101 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getDb } from '../data/database.js';
 import { authenticateChild } from '../middleware/auth.js';
 import { invalidateAssignmentsCache } from './assignments.js';
+import { validateCurriculumCodesBatch } from '../utils/curriculumValidator.js';
+import { scoreObjective } from './curriculum.js';
 import type { Child } from '../types/index.js';
 
 const router = Router();
+
+// Expanded curriculum code descriptions with practical examples
+// These help Claude understand what each code actually means
+const EXPANDED_DESCRIPTIONS: Record<string, string> = {
+  // Taluppfattning (Number Sense) - Understanding numbers as CONCEPTS
+  'MA-TAL-01': 'Naturliga tal (1, 2, 3...) - förstå vad tal betyder, räkna, jämföra storlek',
+  'MA-TAL-02': 'Positionssystemet - förstå ental, tiotal, hundratal (t.ex. 345 = 3 hundratal + 4 tiotal + 5 ental)',
+  'MA-TAL-03': 'Del av helhet - förstå vad "hälften", "en tredjedel" betyder visuellt',
+  'MA-TAL-04': 'Tal i bråkform - förstå bråk som begrepp (1/2, 3/4), INTE beräkningar med bråk',
+  'MA-TAL-05': 'Positionssystemet för decimaltal - förstå tiondelar, hundradelar (0.5 = 5 tiondelar)',
+  'MA-TAL-06': 'Bråk och decimaltal - omvandla mellan bråk och decimal (1/4 = 0.25), förstå sambandet',
+  'MA-TAL-07': 'Procentform - förstå vad procent betyder (25% = 25 av 100), INTE procentberäkningar i textuppgifter',
+  'MA-TAL-08': 'Negativa tal - förstå minustal, tallinjen, jämföra (-5 < -2)',
+  'MA-TAL-09': 'Reella tal - rationella och irrationella tal, tallinjen',
+  'MA-TAL-10': 'Talsystemets utveckling - historik och samband mellan taltyper',
+  'MA-TAL-11': 'Beräkningsmetoder - algoritmer för +, -, ×, ÷ med reella tal',
+  'MA-TAL-12': 'Rimlighetsbedömning - uppskatta och kontrollera om svar verkar rimligt',
+
+  // Algebra - Variables, equations, patterns
+  'MA-ALG-01': 'Likhetstecknet - förstå att = betyder "lika mycket på båda sidor" (5 + 3 = 4 + 4)',
+  'MA-ALG-02': 'Enkla mönster - fortsätt mönstret (röd, blå, röd, blå, ?)',
+  'MA-ALG-03': 'Obekanta tal - använda x eller ? för okänt tal (? + 5 = 12)',
+  'MA-ALG-04': 'Ekvationslösning - hitta x i enkla ekvationer (x + 5 = 12, 3x = 15)',
+  'MA-ALG-05': 'Mönster i talföljder - hitta regeln i sekvenser (2, 4, 6, 8, ? eller 1, 4, 9, 16, ?)',
+  'MA-ALG-06': 'Variabelbegreppet - förstå att x kan representera olika värden',
+  'MA-ALG-07': 'Algebraiska uttryck - förenkla och räkna med uttryck (2x + 3x = 5x)',
+  'MA-ALG-08': 'Avancerad ekvationslösning - ekvationer med parenteser, flera steg',
+  'MA-ALG-09': 'Ekvationssystem - lösa två ekvationer med två obekanta',
+  'MA-ALG-10': 'Potenser - förstå och räkna med exponenter (2³ = 8)',
+
+  // Geometri - Shapes, measurement
+  'MA-GEO-01': 'Grundläggande former - känna igen cirkel, kvadrat, triangel, rektangel',
+  'MA-GEO-02': 'Rita geometriska figurer - konstruera enkla former med linjal',
+  'MA-GEO-03': 'Lägesord - över, under, bredvid, mellan, framför, bakom',
+  'MA-GEO-04': 'Symmetri - spegelsymmetri i bilder och mönster',
+  'MA-GEO-05': 'Formers egenskaper - antal sidor, hörn, vinklar i olika former',
+  'MA-GEO-06': 'Konstruktion - rita med passare och linjal',
+  'MA-GEO-07': 'Area och omkrets - BERÄKNA area (längd × bredd) och omkrets (summa av sidor)',
+  'MA-GEO-08': 'Skala - förstå kartskala, förstora/förminska (1:100 betyder 1 cm = 100 cm)',
+  'MA-GEO-09': 'Geometriska egenskaper - vinklar, parallella linjer, regelbundna polygoner',
+  'MA-GEO-10': 'Avbildning - spegling, rotation, förflyttning av figurer',
+  'MA-GEO-11': 'Likformighet - figurer med samma form men olika storlek',
+  'MA-GEO-12': 'Volym och area - beräkna volym av lådor, cylindrar; area av sammansatta figurer',
+  'MA-GEO-13': 'Pythagoras sats - a² + b² = c² för rätvinkliga trianglar',
+
+  // Sannolikhet och Statistik
+  'MA-SAN-01': 'Slumphändelser - förstå slump i tärningskast, kortdragning, myntkast',
+  'MA-SAN-02': 'Tabeller och diagram - läsa av enkla stapeldiagram och tabeller',
+  'MA-SAN-03': 'Sannolikhet - chansen att något händer (troligt, osannolikt, omöjligt)',
+  'MA-SAN-04': 'Kombinatorik - räkna ANTAL KOMBINATIONER (3 tröjor × 4 byxor = 12 kombinationer)',
+  'MA-SAN-05': 'Beskriva data - skapa och tolka diagram och tabeller',
+  'MA-SAN-06': 'Lägesmått - medelvärde, median, typvärde',
+  'MA-SAN-07': 'Beräkna sannolikhet - P(händelse) = gynnsamma / möjliga utfall',
+  'MA-SAN-08': 'Avancerad kombinatorik - permutationer, kombinationer',
+  'MA-SAN-09': 'Avancerade diagram - linjediagram, cirkeldiagram, histogram',
+  'MA-SAN-10': 'Spridningsmått - variationsbredd, standardavvikelse',
+  'MA-SAN-11': 'Risk och chans - bedöma sannolikheter i verkliga situationer',
+
+  // Samband och Förändring
+  'MA-SAM-01': 'Proportionalitet - dubbelt så mycket kostar dubbelt så mycket',
+  'MA-SAM-02': 'Grafer för proportionalitet - räta linjer genom origo',
+  'MA-SAM-03': 'Koordinatsystem - placera punkter med (x, y)-koordinater',
+  'MA-SAM-04': 'Funktioner - y = 2x + 3, input ger output',
+  'MA-SAM-05': 'Funktioners användning - modellera verkliga samband',
+  'MA-SAM-06': 'Linjära funktioner - räta linjens ekvation y = kx + m',
+  'MA-SAM-07': 'Procentförändring - beräkna ökning/minskning i procent',
+
+  // Problemlösning - ANVÄND DESSA FÖR TEXTUPPGIFTER MED BERÄKNINGAR
+  'MA-PRO-01': 'Vardagsproblem åk 1-3 - enkla problem från vardagen',
+  'MA-PRO-02': 'Formulera frågor åk 1-3 - skapa egna matematiska frågor',
+  'MA-PRO-03': 'Problem med + och - (åk 1-3) - textuppgifter som löses med addition/subtraktion',
+  'MA-PRO-04': 'Vardagsproblem åk 4-6 - problem från vardagen, alla räknesätt',
+  'MA-PRO-05': 'Formulera frågor åk 4-6 - skapa matematiska frågeställningar',
+  'MA-PRO-06': 'Problem med +, -, ×, ÷ (åk 4-6) - TEXTUPPGIFTER som löses med de fyra räknesätten',
+  'MA-PRO-07': 'Vardags/yrkesproblem åk 7-9 - komplexa verkliga problem',
+  'MA-PRO-08': 'Matematisk modellering - formulera problem med matematiska modeller',
+  'MA-PRO-09': 'Avancerad problemlösning - resonemang och argumentation',
+
+  // Svenska/Läsförståelse
+  'SV-LITERAL': 'Direkt förståelse - hitta fakta som står explicit i texten',
+  'SV-INFERENCE': 'Slutledning - dra slutsatser från ledtrådar i texten',
+  'SV-MAIN-IDEA': 'Huvudbudskap - förstå textens tema eller huvudpoäng',
+  'SV-CHARACTER': 'Karaktärsförståelse - förstå personers känslor, motiv, egenskaper',
+  'SV-VOCABULARY': 'Ordförståelse - förstå ords betydelse från sammanhanget',
+};
+
+// Helper to get expanded description for a code
+function getExpandedDescription(code: string, fallbackDescription: string): string {
+  return EXPANDED_DESCRIPTIONS[code] || fallbackDescription;
+}
 
 // Configuration
 const MAX_ACTIVE_ADVENTURES = 3;
@@ -189,40 +281,19 @@ interface CategoryCoverage {
   objectives: ObjectiveCoverage[];
 }
 
-// Score objectives based on priority (same algorithm as CustomPromptBuilder.tsx)
-function scoreObjective(obj: ObjectiveCoverage): number {
-  const percentage = obj.totalCount > 0 ? (obj.correctCount / obj.totalCount) * 100 : 0;
-
-  // Priority 1: Never practiced (score: 1000)
-  if (obj.totalCount === 0) {
-    return 1000;
-  }
-
-  // Priority 2: Low practice count (score: 500-700)
-  if (obj.totalCount < 15) {
-    let score = 500 + (15 - obj.totalCount) * 20;
-    if (percentage > 90) {
-      score -= 200; // Already doing well, lower priority
-    }
-    return score;
-  }
-
-  // Priority 3: Poor mastery (score: up to 210)
-  if (percentage < 70) {
-    return (70 - percentage) * 3;
-  }
-
-  // Priority 4: Already mastered (score: 0)
-  return 0;
+// Get recommended objectives for a child based on their curriculum progress
+// Returns both codes and descriptions for use in prompts
+interface ObjectiveWithDescription {
+  code: string;
+  description: string;
 }
 
-// Get recommended objectives for a child based on their curriculum progress
 function getRecommendedObjectives(
   childId: string,
   gradeLevel: number,
   contentType: 'math' | 'reading',
   count: number
-): string[] {
+): ObjectiveWithDescription[] {
   const db = getDb();
 
   // Get curriculum objectives for the child's grade level
@@ -269,22 +340,17 @@ function getRecommendedObjectives(
     [childId, `%"${gradeLevel}"%`]
   );
 
-  // Score and sort objectives
+  // Score and sort objectives using shared scoring function from curriculum.ts
   const scoredObjectives = objectives.map(obj => ({
     code: obj.code,
-    score: scoreObjective({
-      id: obj.id,
-      code: obj.code,
-      description: obj.description,
-      correctCount: obj.correct_count,
-      totalCount: obj.total_count
-    })
+    description: obj.description,
+    score: scoreObjective(obj.correct_count, obj.total_count)
   }));
 
   scoredObjectives.sort((a, b) => b.score - a.score);
 
-  // Return top N objective codes
-  return scoredObjectives.slice(0, count).map(o => o.code);
+  // Return top N objectives with both code and description
+  return scoredObjectives.slice(0, count).map(o => ({ code: o.code, description: o.description }));
 }
 
 // Generated content types
@@ -313,9 +379,16 @@ async function generateMathContent(
   gradeLevel: number,
   theme: string,
   questionCount: number,
-  objectiveCodes: string[]
+  objectives: ObjectiveWithDescription[]
 ): Promise<GeneratedPackage> {
   const client = getAnthropicClient();
+
+  // Format objectives with EXPANDED descriptions for the prompt
+  // Use detailed descriptions that make it clear what each code is for
+  const objectivesList = objectives
+    .map(o => `- ${o.code}: ${getExpandedDescription(o.code, o.description)}`)
+    .join('\n');
+  const objectiveCodes = objectives.map(o => o.code);
 
   const systemPrompt = `Du är en svensk matematiklärare som skapar uppgifter för grundskolan baserat på LGR 22.
 All text MÅSTE vara på svenska. Skapa ${questionCount} matteuppgifter med temat "${theme}".
@@ -328,7 +401,16 @@ Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALL matematik till v
 - Årskurs 5-6: Bråk, decimaltal, procent, area och omkrets.
 Om LGR22-målen nedan verkar för avancerade för årskurs ${gradeLevel}, anpassa dem till enklare nivå eller hoppa över dem.
 
-LGR22-mål att träna (anpassa till årskurs ${gradeLevel}!): ${objectiveCodes.join(', ')}
+LGR22-MÅL ATT TRÄNA (med beskrivningar):
+${objectivesList}
+
+VIKTIGT FÖR KODVAL: När du väljer lgr22_codes för varje uppgift, MATCHA uppgiftens innehåll med beskrivningen:
+- Division/multiplikation/räknesätt → använd MA-PRO-06 (problemlösning med de fyra räknesätten)
+- Procent → använd MA-TAL-07 (tal i procentform)
+- Bråk/decimaltal → använd MA-TAL-06 (tal i bråkform och decimalform)
+- Area/omkrets → använd MA-GEO-07 (metoder för att bestämma omkrets och area)
+- Ekvationer → använd MA-ALG-04 (metoder för enkel ekvationslösning)
+- Kombinatorik (hur många kombinationer) → använd MA-SAN-04 (enkel kombinatorik)
 
 Svara med JSON i exakt detta format:
 {
@@ -344,7 +426,7 @@ Svara med JSON i exakt detta format:
       "explanation": "[Steg-för-steg lösning på svenska]",
       "hint": "[Hjälpsam ledtråd på svenska]",
       "difficulty": "easy|medium|hard",
-      "lgr22_codes": ["[EN av koderna: ${objectiveCodes.join(', ')}]"]
+      "lgr22_codes": ["[VÄLJ rätt kod baserat på uppgiftens innehåll från: ${objectiveCodes.join(', ')}]"]
     }
   ]
 }
@@ -380,7 +462,19 @@ Svara med JSON i exakt detta format:
   }
 
   try {
-    return JSON.parse(sanitizeJsonString(jsonText.trim()));
+    const generated: GeneratedPackage = JSON.parse(sanitizeJsonString(jsonText.trim()));
+
+    // Validate curriculum codes using Sonnet
+    // This catches common Haiku mistakes like using MA-SAN-04 for division problems
+    console.log(`[Adventures] Validating ${generated.problems.length} problem(s) curriculum codes...`);
+    generated.problems = await validateCurriculumCodesBatch(
+      client,
+      generated.problems,
+      gradeLevel,
+      'math'
+    );
+
+    return generated;
   } catch (parseError) {
     console.error('Failed to parse math JSON. Raw response:', content.text.substring(0, 500));
     throw parseError;
@@ -392,9 +486,16 @@ async function generateReadingContent(
   gradeLevel: number,
   theme: string,
   questionCount: number,
-  objectiveCodes: string[]
+  objectives: ObjectiveWithDescription[]
 ): Promise<GeneratedPackage> {
   const client = getAnthropicClient();
+
+  // Format objectives with EXPANDED descriptions for the prompt
+  // Use detailed descriptions that make it clear what each code is for
+  const objectivesList = objectives
+    .map(o => `- ${o.code}: ${getExpandedDescription(o.code, o.description)}`)
+    .join('\n');
+  const objectiveCodes = objectives.map(o => o.code);
 
   const systemPrompt = `Du är en svensk lärare som skapar läsförståelseuppgifter för grundskolan.
 Skapa en kort berättelse (150-250 ord) med temat "${theme}" och ${questionCount} flervalsfrågor.
@@ -406,13 +507,15 @@ Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALLT innehåll till 
 - Årskurs 4: Något längre meningar. Kan ha några svårare ord med kontext. Berättelse 150-200 ord.
 - Årskurs 5-6: Mer avancerat språk och längre berättelser tillåtna. Berättelse 200-250 ord.
 
-LGR22-mål att träna: ${objectiveCodes.join(', ')}
-Förklaring av målen:
-- SV-LITERAL: Direkt förståelse (fakta från texten)
-- SV-INFERENCE: Dra slutsatser
-- SV-MAIN-IDEA: Huvudbudskap/tema
-- SV-CHARACTER: Karaktärsförståelse
-- SV-VOCABULARY: Ordförståelse i kontext
+LGR22-MÅL ATT TRÄNA (med beskrivningar):
+${objectivesList}
+
+VIKTIGT FÖR KODVAL: Matcha varje frågas typ med rätt kod:
+- Fakta direkt från texten → SV-LITERAL
+- Dra slutsatser/tolka → SV-INFERENCE
+- Huvudbudskap/tema → SV-MAIN-IDEA
+- Karaktärers känslor/motiv → SV-CHARACTER
+- Ordförståelse → SV-VOCABULARY
 
 Svara med JSON i exakt detta format:
 {
@@ -430,7 +533,7 @@ Svara med JSON i exakt detta format:
       "explanation": "[Förklaring varför A är rätt]",
       "hint": "[Ledtråd]",
       "difficulty": "easy|medium|hard",
-      "lgr22_codes": ["[EN av koderna: ${objectiveCodes.join(', ')}]"]
+      "lgr22_codes": ["[VÄLJ rätt kod baserat på frågetypen från: ${objectiveCodes.join(', ')}]"]
     }
   ]
 }
@@ -587,7 +690,7 @@ router.post('/generate', authenticateChild, async (req, res) => {
     const size = SIZES.find(s => s.id === sizeId)!;
 
     // Get recommended LGR22 objectives based on child's progress
-    const objectiveCodes = getRecommendedObjectives(
+    let objectives = getRecommendedObjectives(
       childId,
       child.grade_level,
       contentType,
@@ -595,11 +698,17 @@ router.post('/generate', authenticateChild, async (req, res) => {
     );
 
     // Fallback objectives if none found
-    if (objectiveCodes.length === 0) {
+    if (objectives.length === 0) {
       if (contentType === 'math') {
-        objectiveCodes.push('MA-TAL-01', 'MA-TAL-02');
+        objectives = [
+          { code: 'MA-TAL-01', description: 'Naturliga tal och deras egenskaper' },
+          { code: 'MA-TAL-02', description: 'Positionssystemet för naturliga tal' }
+        ];
       } else {
-        objectiveCodes.push('SV-LITERAL', 'SV-INFERENCE');
+        objectives = [
+          { code: 'SV-LITERAL', description: 'Direkt förståelse av texten' },
+          { code: 'SV-INFERENCE', description: 'Slutledning och tolkning' }
+        ];
       }
     }
 
@@ -607,8 +716,8 @@ router.post('/generate', authenticateChild, async (req, res) => {
     let generated: GeneratedPackage;
     try {
       generated = contentType === 'math'
-        ? await generateMathContent(child.grade_level, themeName, size.questionCount, objectiveCodes)
-        : await generateReadingContent(child.grade_level, themeName, size.questionCount, objectiveCodes);
+        ? await generateMathContent(child.grade_level, themeName, size.questionCount, objectives)
+        : await generateReadingContent(child.grade_level, themeName, size.questionCount, objectives);
     } catch (genError) {
       console.error('Claude API generation error:', genError);
       if (genError instanceof Anthropic.APIError) {
@@ -755,7 +864,7 @@ router.post('/generate', authenticateChild, async (req, res) => {
       assignmentId,
       title: generated.package.name,
       questionCount: generated.problems.length,
-      objectiveCodes
+      objectiveCodes: objectives.map(o => o.code)
     });
   } catch (error) {
     console.error('Generate adventure error:', error);
