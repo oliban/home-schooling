@@ -406,6 +406,11 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
 
     // Mouse/touch event handlers
     const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+      // Prevent scroll on touch devices when interacting with canvas
+      if ('touches' in e) {
+        e.preventDefault();
+      }
+
       const point = getEventPoint(e);
       if (!point) return;
 
@@ -443,6 +448,11 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
     };
 
     const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+      // Prevent scroll on touch devices when drawing/panning
+      if ('touches' in e && (isDrawing || isPanning || draggedTextId)) {
+        e.preventDefault();
+      }
+
       const point = getEventPoint(e);
       if (!point) return;
 
@@ -849,7 +859,7 @@ export const SketchPad = forwardRef<SketchPadHandle, SketchPadProps>(
         <div
           ref={containerRef}
           className="border-2 border-gray-200 rounded-b-xl overflow-hidden bg-white relative"
-          style={{ height, touchAction: 'none' }}
+          style={{ height }}
         >
           <canvas
             ref={canvasRef}
