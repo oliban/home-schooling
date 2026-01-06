@@ -123,7 +123,7 @@ function validateMultipleChoiceQuestion(correctAnswer: string, options: string[]
     return { valid: false, error: 'Question has no options configured' };
   }
 
-  const normalizedAnswer = correctAnswer.trim().toUpperCase();
+  const normalizedAnswer = correctAnswer.trim().charAt(0).toUpperCase();
   const optionLetters = options.map(opt => opt.charAt(0).toUpperCase());
 
   if (!optionLetters.includes(normalizedAnswer)) {
@@ -566,8 +566,8 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
             throw new Error(validation.error);
           }
 
-          const normalizedCorrect = problem.correct_answer.trim().toUpperCase();
-          const normalizedAnswer = (answer as string).trim().toUpperCase();
+          const normalizedCorrect = problem.correct_answer.trim().charAt(0).toUpperCase();
+          const normalizedAnswer = (answer as string).trim().charAt(0).toUpperCase();
           isCorrect = normalizedAnswer === normalizedCorrect;
         } else if (problem.answer_type === 'number') {
           isCorrect = validateNumberAnswer(problem.correct_answer, answer as string);
@@ -660,8 +660,8 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           throw new Error(validation.error);
         }
 
-        const normalizedCorrect = question.correct_answer.trim().toUpperCase();
-        const normalizedAnswer = (answer as string).trim().toUpperCase();
+        const normalizedCorrect = question.correct_answer.trim().charAt(0).toUpperCase();
+        const normalizedAnswer = (answer as string).trim().charAt(0).toUpperCase();
         isCorrect = normalizedCorrect === normalizedAnswer;
 
         // Single-attempt update for reading
@@ -726,8 +726,8 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           if (!validation.valid) {
             throw new Error(validation.error);
           }
-          const normalizedCorrect = problem.correct_answer.trim().toUpperCase();
-          const normalizedAnswer = (answer as string).trim().toUpperCase();
+          const normalizedCorrect = problem.correct_answer.trim().charAt(0).toUpperCase();
+          const normalizedAnswer = (answer as string).trim().charAt(0).toUpperCase();
           isCorrect = normalizedCorrect === normalizedAnswer;
         } else if (problem.answer_type === 'number') {
           isCorrect = validateNumberAnswer(problem.correct_answer, answer as string);

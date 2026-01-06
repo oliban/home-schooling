@@ -133,7 +133,7 @@ router.post('/import', authenticateParent, async (req, res) => {
             validationErrors.push(`${pkgNum} (${pkg.name}), Problem ${num}: multiple_choice requires options array`);
           } else {
             // Validate that correct_answer matches one of the options
-            const correctAnswer = p.correct_answer.trim().toUpperCase();
+            const correctAnswer = p.correct_answer.trim().charAt(0).toUpperCase();
             const optionLetters = p.options.map((opt: string) => opt.charAt(0).toUpperCase());
 
             if (!optionLetters.includes(correctAnswer)) {

@@ -393,10 +393,15 @@ describe('Answer Validation - Enhanced', () => {
     });
 
     describe('no match outside tolerance', () => {
-      it('should accept numbers within rounding tolerance of 1', () => {
-        // With rounding tolerance, small differences like 5 vs 5.01 are accepted
-        // This is lenient for elementary math where rounding errors can occur
-        expect(numbersEqual(5, 5.01)).toBe(true);
+      it('should NOT accept 5.01 when correct answer is integer 5', () => {
+        // Rounding tolerance only applies when correct answer has decimals
+        // Integer answers require exact match
+        expect(numbersEqual(5, 5.01)).toBe(false);
+      });
+
+      it('should accept 5.01 when correct answer is decimal 5.0001', () => {
+        // When correct answer has decimals, rounding tolerance applies
+        expect(numbersEqual(5.0001, 5.01)).toBe(true);
       });
 
       it('should not match significantly different numbers', () => {
@@ -637,6 +642,28 @@ describe('Answer Validation - Enhanced', () => {
       });
     });
 
+    describe('integer exact match (no rounding tolerance)', () => {
+      it('should NOT accept 7 when correct answer is 8', () => {
+        expect(validateNumberAnswer('8', '7')).toBe(false);
+      });
+
+      it('should NOT accept 9 when correct answer is 8', () => {
+        expect(validateNumberAnswer('8', '9')).toBe(false);
+      });
+
+      it('should accept exact match for integers', () => {
+        expect(validateNumberAnswer('8', '8')).toBe(true);
+      });
+
+      it('should NOT accept 47 when correct answer is 48', () => {
+        expect(validateNumberAnswer('48', '47')).toBe(false);
+      });
+
+      it('should NOT accept 100 when correct answer is 99', () => {
+        expect(validateNumberAnswer('99', '100')).toBe(false);
+      });
+    });
+
     describe('rounding tolerance', () => {
       it('should accept rounded answer for average: 228.57 rounded to 228', () => {
         expect(validateNumberAnswer('228.57', '228')).toBe(true);
@@ -686,12 +713,10 @@ describe('Answer Validation - Enhanced', () => {
         expect(validateNumberAnswer('228,57', '228')).toBe(true);
       });
 
-      it('should work bidirectionally: accept 228 when answer is 228.57', () => {
-        expect(validateNumberAnswer('228', '228.57')).toBe(true);
-      });
-
-      it('should work bidirectionally: accept 229 when answer is 228.57', () => {
-        expect(validateNumberAnswer('228', '228.57')).toBe(true);
+      it('should NOT accept 228.57 when correct answer is integer 228', () => {
+        // If the correct answer is an integer, rounding tolerance does not apply
+        // Child must answer exactly 228, not 228.57
+        expect(validateNumberAnswer('228', '228.57')).toBe(false);
       });
     });
   });

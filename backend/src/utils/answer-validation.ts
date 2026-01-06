@@ -15,7 +15,17 @@ const TOLERANCE = 0.001;
 
 // Rounding tolerance - accepts answers that differ by at most 1
 // This allows children to round answers: 228.57 can be answered as 228 or 229
+// NOTE: Only applied when correct answer has decimal places (see numbersEqual)
 const ROUNDING_TOLERANCE = 1;
+
+/**
+ * Check if a number has meaningful decimal places
+ * @param num - Number to check
+ * @returns True if the number is not a whole integer
+ */
+function hasDecimalPlaces(num: number): boolean {
+  return num !== Math.round(num);
+}
 
 // Supported units by category
 const UNITS = {
@@ -230,13 +240,13 @@ export function numbersEqual(a: number, b: number, tolerance: number = TOLERANCE
     return true;
   }
 
-  // Second check: rounding tolerance
-  // Accept any difference > tolerance and ≤ 1 as valid rounding
-  // This allows children to round answers in various ways:
-  // - 228.57 → 228 or 229 (integer rounding)
-  // - 3.333... → 3.33 (decimal rounding)
-  // - 12.5 → 12 or 13 (rounding)
-  if (diff <= ROUNDING_TOLERANCE) {
+  // Second check: rounding tolerance ONLY for answers with decimal places
+  // This allows children to round decimal answers:
+  // - 228.57 → 228 or 229 (integer rounding) ✓
+  // - 12.5 → 12 or 13 (rounding) ✓
+  // But NOT for exact integer answers:
+  // - 8 → 7 (off-by-one error) ✗
+  if (hasDecimalPlaces(a) && diff <= ROUNDING_TOLERANCE) {
     return true;
   }
 
