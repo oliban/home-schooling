@@ -11,6 +11,7 @@ describe('Per-Child Shop Ordering', () => {
   let parentId: string;
   let child1Id: string;
   let child2Id: string;
+  let knownCollectibleIds: string[] = [];
   const testEmail = `test-shop-${Date.now()}@example.com`;
 
   beforeAll(async () => {
@@ -19,6 +20,10 @@ describe('Per-Child Shop Ordering', () => {
     child2Id = uuidv4();
 
     const db = getDb();
+
+    // Capture known collectible IDs at test start to avoid interference from parallel tests
+    const collectibles = db.all<{ id: string }>('SELECT id FROM collectibles ORDER BY id');
+    knownCollectibleIds = collectibles.map(c => c.id);
 
     // Create parent
     const passwordHash = await bcrypt.hash('test1234', 10);
@@ -54,6 +59,7 @@ describe('Per-Child Shop Ordering', () => {
   /**
    * Helper to get shop items for a child using the seeded ordering
    * This simulates what the GET /collectibles endpoint should return
+   * Filters to only knownCollectibleIds to avoid interference from parallel tests
    */
   function getShopItemsForChild(childId: string, limit: number = 10): string[] {
     const db = getDb();
@@ -67,14 +73,16 @@ describe('Per-Child Shop Ordering', () => {
 
     // Use seeded pseudo-random ordering matching the collectibles route
     // Formula mixes child rowid with collectible rowid using multiplication for true shuffling
+    // Filter to only known collectibles to avoid test interference
+    const placeholders = knownCollectibleIds.map(() => '?').join(',');
     const collectibles = db.all<{ id: string }>(`
       SELECT c.id
       FROM collectibles c
       LEFT JOIN child_collectibles cc ON c.id = cc.collectible_id AND cc.child_id = ?
-      WHERE cc.child_id IS NULL
+      WHERE cc.child_id IS NULL AND c.id IN (${placeholders})
       ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
       LIMIT ?
-    `, [childId, limit]);
+    `, [childId, ...knownCollectibleIds, limit]);
 
     return collectibles.map(c => c.id);
   }

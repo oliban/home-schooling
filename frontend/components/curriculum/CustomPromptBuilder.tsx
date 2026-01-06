@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ObjectiveData, PromptMode, GeneratedPrompt } from '@/types/curriculum';
 import SelectableTreemap from './SelectableTreemap';
 import { getRandomThemes } from '@/lib/themes-expanded';
+import { adventures } from '@/lib/api';
 
 interface CustomPromptBuilderProps {
   childId: string;
@@ -123,6 +124,11 @@ export default function CustomPromptBuilder({
   const [coverageData, setCoverageData] = useState<CoverageData | null>(null);
   const [loadingCoverage, setLoadingCoverage] = useState(true);
   const hasAutoApplied = useRef(false);
+
+  // State for agent-based generation
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationSuccess, setGenerationSuccess] = useState<{ assignmentId: string; title: string } | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   // Fetch coverage data
   const fetchCoverage = useCallback(async () => {
@@ -417,6 +423,54 @@ export default function CustomPromptBuilder({
       setTimeout(() => setCopiedFeedback(false), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
+    }
+  };
+
+  // Handle generate assignment with Claude agent
+  const handleGenerate = async () => {
+    if (!generatedPrompt || isGenerating) return;
+
+    const token = localStorage.getItem('parentToken');
+    if (!token) {
+      setGenerationError('Not authenticated');
+      return;
+    }
+
+    // Get objective details for the API call
+    const objectives = Array.from(objectiveDetails.values())
+      .filter(obj => generatedPrompt.objectiveCodes.includes(obj.code))
+      .map(obj => ({
+        code: obj.code,
+        description: obj.description,
+      }));
+
+    if (objectives.length === 0) {
+      setGenerationError('No objectives selected');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationError(null);
+    setGenerationSuccess(null);
+
+    try {
+      const result = await adventures.generateForParent(token, {
+        childId,
+        contentType: generatedPrompt.subject,
+        theme: theme || 'vardagliga situationer', // Default theme if none provided
+        questionCount: generatedPrompt.questionCount,
+        objectives,
+      });
+
+      setGenerationSuccess({
+        assignmentId: result.assignmentId,
+        title: result.title,
+      });
+    } catch (error) {
+      console.error('Failed to generate assignment:', error);
+      setGenerationError(error instanceof Error ? error.message : 'Failed to generate assignment');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -734,6 +788,63 @@ export default function CustomPromptBuilder({
               <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded">
                 {generatedPrompt.objectiveCodes.length} objective{generatedPrompt.objectiveCodes.length !== 1 ? 's' : ''}
               </span>
+            </div>
+
+            {/* Generate Assignment Button */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              {generationSuccess ? (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <span className="text-lg">✅</span>
+                    <div>
+                      <p className="font-medium">Assignment Created!</p>
+                      <p className="text-sm text-green-700">&quot;{generationSuccess.title}&quot; has been assigned to {childName}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <a
+                      href={`/parent/assignments/${generationSuccess.assignmentId}`}
+                      className="px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    >
+                      View Assignment
+                    </a>
+                    <button
+                      onClick={() => setGenerationSuccess(null)}
+                      className="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                    >
+                      Create Another
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {generationError && (
+                    <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                      {generationError}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !generatedPrompt}
+                    className="w-full px-4 py-3 font-medium bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                        Generating with AI...
+                      </>
+                    ) : (
+                      <>
+                        <span>🤖</span>
+                        Generate Assignment
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Uses AI to create {generatedPrompt.questionCount} questions based on selected objectives
+                  </p>
+                </>
+              )}
             </div>
           </>
         ) : (

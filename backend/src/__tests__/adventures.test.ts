@@ -329,4 +329,150 @@ describe('Adventures Feature', () => {
       db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
     });
   });
+
+  describe('Parent Generation (generate-for-parent)', () => {
+    it('should create assignment without quota limits when parent generates', () => {
+      const db = getDb();
+      const packages: string[] = [];
+      const assignments: string[] = [];
+      const adventures: string[] = [];
+
+      // Create 3 active child adventures (quota full)
+      for (let i = 0; i < 3; i++) {
+        const packageId = uuidv4();
+        const assignmentId = uuidv4();
+        const adventureId = uuidv4();
+
+        packages.push(packageId);
+        assignments.push(assignmentId);
+        adventures.push(adventureId);
+
+        db.run(
+          `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, is_child_generated, generated_for_child_id)
+           VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
+          [packageId, parentId, `Child Adventure ${i}`, 3, 'taluppfattning', 3, childId]
+        );
+
+        db.run(
+          `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+           VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?)`,
+          [assignmentId, parentId, childId, `Child Adventure ${i}`, 3, packageId]
+        );
+
+        db.run(
+          `INSERT INTO adventure_generations (id, child_id, assignment_id, package_id, theme, content_type, question_count, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'active')`,
+          [adventureId, childId, assignmentId, packageId, 'dragons', 'math', 3]
+        );
+      }
+
+      // Verify child quota is full
+      const childActive = db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM adventure_generations ag
+         JOIN assignments a ON ag.assignment_id = a.id
+         WHERE ag.child_id = ? AND ag.status = 'active' AND a.status != 'completed'`,
+        [childId]
+      );
+      expect(childActive?.count).toBe(3);
+
+      // Simulate parent creating an assignment (via generate-for-parent endpoint)
+      // This should succeed even though child quota is full
+      const parentPackageId = uuidv4();
+      const parentAssignmentId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+        [parentPackageId, parentId, 'Parent Generated Adventure', 3, 'algebra', 5, childId]
+      );
+
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, assigned_by_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?, ?)`,
+        [parentAssignmentId, parentId, childId, 'Parent Generated Adventure', 3, parentPackageId, parentId]
+      );
+
+      // Verify assignment was created
+      const assignment = db.get<{ id: string; assigned_by_id: string }>(
+        'SELECT id, assigned_by_id FROM assignments WHERE id = ?',
+        [parentAssignmentId]
+      );
+      expect(assignment?.id).toBe(parentAssignmentId);
+      expect(assignment?.assigned_by_id).toBe(parentId);
+
+      // Verify package is NOT marked as child-generated
+      const pkg = db.get<{ is_child_generated: number }>(
+        'SELECT is_child_generated FROM math_packages WHERE id = ?',
+        [parentPackageId]
+      );
+      expect(pkg?.is_child_generated).toBe(0);
+
+      // Clean up
+      db.run('DELETE FROM assignments WHERE id = ?', [parentAssignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [parentPackageId]);
+      adventures.forEach(id => db.run('DELETE FROM adventure_generations WHERE id = ?', [id]));
+      assignments.forEach(id => db.run('DELETE FROM assignments WHERE id = ?', [id]));
+      packages.forEach(id => db.run('DELETE FROM math_packages WHERE id = ?', [id]));
+    });
+
+    it('should set assigned_by_id to parent ID when parent generates', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+      const assignmentId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+        [packageId, parentId, 'Parent Assignment', 3, null, 8, childId]
+      );
+
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, assigned_by_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'pending', ?, ?)`,
+        [assignmentId, parentId, childId, 'Parent Assignment', 3, packageId, parentId]
+      );
+
+      const assignment = db.get<{ assigned_by_id: string | null }>(
+        'SELECT assigned_by_id FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+
+      // Parent-generated should have assigned_by_id set (unlike child adventures where it's NULL)
+      expect(assignment?.assigned_by_id).toBe(parentId);
+
+      // Clean up
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+
+    it('should not create adventure_generations record for parent-generated assignments', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+      const assignmentId = uuidv4();
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+        [packageId, parentId, 'No Adventure Record', 3, null, 6, childId]
+      );
+
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, assigned_by_id)
+         VALUES (?, ?, ?, 'reading', ?, ?, 'pending', ?, ?)`,
+        [assignmentId, parentId, childId, 'No Adventure Record', 3, packageId, parentId]
+      );
+
+      // Parent-generated assignments should NOT have an adventure_generations record
+      const adventure = db.get<{ id: string }>(
+        'SELECT id FROM adventure_generations WHERE assignment_id = ?',
+        [assignmentId]
+      );
+
+      expect(adventure).toBeUndefined();
+
+      // Clean up
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+  });
 });

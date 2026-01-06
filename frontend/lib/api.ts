@@ -383,6 +383,28 @@ export const packages = {
     fetchApi<{ success: boolean }>(`/packages/${id}`, { method: 'DELETE', token }),
 };
 
+// Adventures
+export const adventures = {
+  generateForParent: (
+    token: string,
+    data: {
+      childId: string;
+      contentType: 'math' | 'reading';
+      theme: string;
+      questionCount: number;
+      objectives: Array<{ code: string; description: string }>;
+    }
+  ) =>
+    fetchApi<{
+      success: boolean;
+      assignmentId: string;
+      packageId: string;
+      title: string;
+      questionCount: number;
+      objectiveCodes: string[];
+    }>('/adventures/generate-for-parent', { method: 'POST', body: data, token }),
+};
+
 // Admin (development only)
 export const admin = {
   getBackupStatus: (token: string) =>

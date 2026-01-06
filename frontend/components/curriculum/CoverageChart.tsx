@@ -895,27 +895,27 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         <div className="flex flex-wrap justify-center gap-3 text-xs">
           <span className="text-gray-500 font-medium">{t('curriculum.coverage.depth')}</span>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '2px solid #ef4444' }} />
+            <div className="w-5 h-5 rounded" style={{ border: '2px solid #ef4444' }} />
             <span className="text-gray-600">&lt;5</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '3px solid #f97316' }} />
+            <div className="w-5 h-5 rounded" style={{ border: '3px solid #f97316' }} />
             <span className="text-gray-600">5-10</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '4px solid #eab308' }} />
+            <div className="w-5 h-5 rounded" style={{ border: '4px solid #eab308' }} />
             <span className="text-gray-600">10-15</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '5px solid #84cc16' }} />
+            <div className="w-5 h-5 rounded" style={{ border: '5px solid #84cc16' }} />
             <span className="text-gray-600">15-25</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '6px solid #22c55e' }} />
+            <div className="w-5 h-5 rounded" style={{ border: '6px solid #22c55e' }} />
             <span className="text-gray-600">25-50</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded bg-gray-300" style={{ border: '7px solid #15803d' }} />
+            <div className="w-5 h-5 rounded" style={{ border: '7px solid #15803d' }} />
             <span className="text-gray-600">50+</span>
           </div>
         </div>

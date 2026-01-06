@@ -75,30 +75,32 @@ interface SelectableTreemapProps {
   onToggleObjective: (objectiveId: number, objective: ObjectiveData) => void;
 }
 
-// Color functions
+// Color functions based on percentage correct
+// For objectives: ≤50% = red, then gradually to green at 100%
 const getPercentageColor = (correctCount: number, totalCount: number): string => {
-  if (totalCount === 0) return '#ef4444';
+  if (totalCount === 0) return '#ef4444';  // red-500 - not attempted
+
   const percentage = (correctCount / totalCount) * 100;
-  if (percentage === 0) return '#ef4444';
-  if (percentage < 20) return '#fca5a5';
-  if (percentage < 30) return '#fcd34d';
-  if (percentage < 40) return '#fde047';
-  if (percentage < 50) return '#bef264';
-  if (percentage < 60) return '#86efac';
-  if (percentage < 70) return '#4ade80';
-  if (percentage < 80) return '#22c55e';
-  if (percentage < 90) return '#16a34a';
-  return '#15803d';
+
+  if (percentage <= 50) return '#ef4444';   // red-500 - poor (≤50%)
+  if (percentage < 60) return '#f97316';    // orange-500 (50-60%)
+  if (percentage < 70) return '#fb923c';    // orange-400 (60-70%)
+  if (percentage < 80) return '#eab308';    // yellow-500 (70-80%)
+  if (percentage < 90) return '#84cc16';    // lime-500 (80-90%)
+  if (percentage < 95) return '#22c55e';    // green-500 (90-95%)
+  return '#15803d';                          // green-700 - perfect (95-100%)
 };
 
+// For categories: use gradient based on coverage percentage
+// Scale: ≤50% = red, then gradually to green at 100%
 const getCoverageColor = (coverage: number): string => {
-  if (coverage === 0) return '#ef4444';
-  if (coverage < 20) return '#fca5a5';
-  if (coverage < 40) return '#fde047';
-  if (coverage < 60) return '#bef264';
-  if (coverage < 80) return '#4ade80';
-  if (coverage < 100) return '#22c55e';
-  return '#15803d';
+  if (coverage <= 50) return '#ef4444';    // red-500 - poor (≤50%)
+  if (coverage < 60) return '#f97316';     // orange-500 (50-60%)
+  if (coverage < 70) return '#fb923c';     // orange-400 (60-70%)
+  if (coverage < 80) return '#eab308';     // yellow-500 (70-80%)
+  if (coverage < 90) return '#84cc16';     // lime-500 (80-90%)
+  if (coverage < 95) return '#22c55e';     // green-500 (90-95%)
+  return '#15803d';                         // green-700 - perfect (95-100%)
 };
 
 // Custom content renderer with selection support
@@ -137,6 +139,7 @@ const CustomContent = (props: CustomContentProps) => {
   const selectionStrokeWidth = isSelected ? 4 : undefined;
 
   // Border for depth (only when not selected)
+  // Depth scale: red (shallow) → dark green (well-tested at 50+)
   let strokeWidth: number;
   let strokeColor: string;
 
@@ -147,8 +150,25 @@ const CustomContent = (props: CustomContentProps) => {
     strokeColor = selectionStroke!;
     strokeWidth = selectionStrokeWidth!;
   } else {
-    strokeColor = total >= 5 ? '#78350f' : total >= 3 ? '#c2410c' : '#eab308';
-    strokeWidth = total >= 5 ? 6 : total >= 3 ? 4 : total >= 1 ? 2 : 1;
+    if (total >= 50) {
+      strokeColor = '#15803d'; // dark green - well tested
+      strokeWidth = 7;
+    } else if (total >= 25) {
+      strokeColor = '#22c55e'; // green
+      strokeWidth = 6;
+    } else if (total >= 15) {
+      strokeColor = '#84cc16'; // lime - green starts here
+      strokeWidth = 5;
+    } else if (total >= 10) {
+      strokeColor = '#eab308'; // yellow
+      strokeWidth = 4;
+    } else if (total >= 5) {
+      strokeColor = '#f97316'; // orange
+      strokeWidth = 3;
+    } else {
+      strokeColor = '#ef4444'; // red - shallow
+      strokeWidth = 2;
+    }
   }
 
   const displayName = isCategory ? name : (code || name);
@@ -164,18 +184,47 @@ const CustomContent = (props: CustomContentProps) => {
 
   return (
     <g>
+      {/* Main fill rect */}
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
         fill={fillColor}
-        stroke={strokeColor}
-        strokeWidth={strokeWidth}
+        stroke="#ffffff"
+        strokeWidth={1}
         rx={depth === 1 ? 4 : 2}
         style={{ cursor: isClickable ? 'pointer' : 'default' }}
         onClick={() => isClickable && onClick && onClick(objectiveId)}
       />
+      {/* Inner border for depth (only for objectives with attempts) */}
+      {!isCategory && !isSelected && total > 0 && width > 30 && height > 30 && (
+        <rect
+          x={x + innerOffset / 2}
+          y={y + innerOffset / 2}
+          width={width - innerOffset}
+          height={height - innerOffset}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          rx={depth === 1 ? 3 : 1}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+      {/* Selection border (when selected) */}
+      {isSelected && width > 30 && height > 30 && (
+        <rect
+          x={x + 2}
+          y={y + 2}
+          width={width - 4}
+          height={height - 4}
+          fill="none"
+          stroke={selectionStroke}
+          strokeWidth={selectionStrokeWidth}
+          rx={depth === 1 ? 3 : 1}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
 
       {/* Checkmark icon for selected objectives */}
       {isSelected && width > 30 && height > 30 && (
@@ -482,6 +531,70 @@ export default function SelectableTreemap({ childId, childGradeLevel, selectedOb
           </div>
         </div>
       )}
+
+      {/* Legend */}
+      <div className="mt-4 space-y-2">
+        {/* Percentage legend */}
+        <div className="flex flex-wrap justify-center gap-2 text-xs">
+          <span className="text-gray-500 font-medium">Accuracy:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }} />
+            <span className="text-gray-600">≤50%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f97316' }} />
+            <span className="text-gray-600">60%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb923c' }} />
+            <span className="text-gray-600">70%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }} />
+            <span className="text-gray-600">80%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#84cc16' }} />
+            <span className="text-gray-600">90%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }} />
+            <span className="text-gray-600">95%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#15803d' }} />
+            <span className="text-gray-600">100%</span>
+          </div>
+        </div>
+        {/* Depth legend */}
+        <div className="flex flex-wrap justify-center gap-2 text-xs">
+          <span className="text-gray-500 font-medium">Depth:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ border: '2px solid #ef4444' }} />
+            <span className="text-gray-600">&lt;5</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ border: '3px solid #f97316' }} />
+            <span className="text-gray-600">5-10</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ border: '4px solid #eab308' }} />
+            <span className="text-gray-600">10-15</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ border: '5px solid #84cc16' }} />
+            <span className="text-gray-600">15-25</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ border: '6px solid #22c55e' }} />
+            <span className="text-gray-600">25-50</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ border: '7px solid #15803d' }} />
+            <span className="text-gray-600">50+</span>
+          </div>
+        </div>
+      </div>
 
       <p className="text-xs text-gray-500 mt-2">
         {selectedObjectives.size} objective{selectedObjectives.size !== 1 ? 's' : ''} selected

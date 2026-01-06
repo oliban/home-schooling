@@ -1,12 +1,17 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import Anthropic from '@anthropic-ai/sdk';
+import fs from 'fs';
+import path from 'path';
 import { getDb } from '../data/database.js';
-import { authenticateChild } from '../middleware/auth.js';
+import { authenticateChild, authenticateParent } from '../middleware/auth.js';
 import { invalidateAssignmentsCache } from './assignments.js';
 import { validateCurriculumCodesBatch } from '../utils/curriculumValidator.js';
 import { scoreObjective } from './curriculum.js';
 import type { Child } from '../types/index.js';
+
+// Path to generated files directory (project root /data/generated)
+const GENERATED_DIR = path.join(process.cwd(), '..', 'data', 'generated');
 
 const router = Router();
 
@@ -436,7 +441,7 @@ Svara med JSON i exakt detta format:
 - Gör uppgifterna roliga och engagerande med temat "${theme}"`;
 
   const response = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 4000,
     messages: [{ role: 'user', content: systemPrompt }]
   });
@@ -544,7 +549,7 @@ Svara med JSON i exakt detta format:
 - Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra (men ALLTID inom årskurs ${gradeLevel} nivå!)`;
 
   const response = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 4000,
     messages: [{ role: 'user', content: systemPrompt }]
   });
@@ -870,6 +875,224 @@ router.post('/generate', authenticateChild, async (req, res) => {
     console.error('Generate adventure error:', error);
     res.status(500).json({
       error: 'Failed to generate adventure',
+      errorCode: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+// POST /api/adventures/generate-for-parent - Generate adventure for parent (no quota)
+// Accepts parent-selected objectives instead of auto-selecting
+router.post('/generate-for-parent', authenticateParent, async (req, res) => {
+  try {
+    const db = getDb();
+    const parentId = req.user!.id;
+    const { childId, contentType, theme, questionCount, objectives } = req.body as {
+      childId: string;
+      contentType: 'math' | 'reading';
+      theme: string;
+      questionCount: number;
+      objectives: Array<{ code: string; description: string }>;
+    };
+
+    // Validate input
+    if (!childId) {
+      return res.status(400).json({ error: 'childId is required' });
+    }
+    if (!contentType || !['math', 'reading'].includes(contentType)) {
+      return res.status(400).json({ error: 'Invalid contentType' });
+    }
+    if (!questionCount || questionCount < 1 || questionCount > 20) {
+      return res.status(400).json({ error: 'questionCount must be between 1 and 20' });
+    }
+    if (!objectives || !Array.isArray(objectives) || objectives.length === 0) {
+      return res.status(400).json({ error: 'objectives array is required' });
+    }
+    if (!theme || typeof theme !== 'string') {
+      return res.status(400).json({ error: 'theme is required' });
+    }
+
+    // Validate child belongs to parent
+    const child = db.get<{ id: string; grade_level: number; name: string; parent_id: string }>(
+      'SELECT id, grade_level, name, parent_id FROM children WHERE id = ?',
+      [childId]
+    );
+
+    if (!child) {
+      return res.status(404).json({ error: 'Child not found' });
+    }
+    if (child.parent_id !== parentId) {
+      return res.status(403).json({ error: 'Not authorized to create assignments for this child' });
+    }
+
+    // Convert objectives to the format expected by generate functions
+    const objectivesWithDescriptions: ObjectiveWithDescription[] = objectives.map(o => ({
+      code: o.code,
+      description: getExpandedDescription(o.code, o.description)
+    }));
+
+    // Generate content via Claude API (no quota check for parents)
+    let generated: GeneratedPackage;
+    try {
+      generated = contentType === 'math'
+        ? await generateMathContent(child.grade_level, theme, questionCount, objectivesWithDescriptions)
+        : await generateReadingContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
+    } catch (genError) {
+      console.error('Claude API generation error:', genError);
+      if (genError instanceof Anthropic.APIError) {
+        if (genError.status === 429) {
+          return res.status(429).json({
+            error: 'Service busy. Please try again in a moment.',
+            errorCode: 'RATE_LIMITED'
+          });
+        }
+      }
+      return res.status(503).json({
+        error: 'Content generation temporarily unavailable. Please try again.',
+        errorCode: 'GENERATION_FAILED'
+      });
+    }
+
+    // Validate generated content
+    if (!generated.package || !generated.problems || !Array.isArray(generated.problems)) {
+      console.error('Invalid generated content structure:', generated);
+      return res.status(503).json({
+        error: 'Generated content was invalid. Please try again.',
+        errorCode: 'GENERATION_FAILED'
+      });
+    }
+
+    // Save generated JSON for troubleshooting
+    try {
+      if (!fs.existsSync(GENERATED_DIR)) {
+        fs.mkdirSync(GENERATED_DIR, { recursive: true });
+      }
+      // Naming: {sanitized-name}-{type}.json (e.g., "dinosaurie-aventyr-math.json")
+      const sanitizedName = generated.package.name
+        .toLowerCase()
+        .replace(/[åä]/g, 'a')
+        .replace(/[ö]/g, 'o')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 40);
+      const filename = `${sanitizedName}-${contentType}.json`;
+      const filepath = path.join(GENERATED_DIR, filename);
+
+      fs.writeFileSync(filepath, JSON.stringify(generated, null, 2));
+      console.log(`[Adventures] Saved generated content to ${filepath}`);
+    } catch (saveError) {
+      // Don't fail the request if we can't save the debug file
+      console.error('[Adventures] Failed to save debug JSON:', saveError);
+    }
+
+    // Create package, problems, and assignment in a transaction
+    const packageId = uuidv4();
+    const assignmentId = uuidv4();
+
+    db.transaction(() => {
+      // Create the package
+      const difficultySummary = generated.problems.reduce((acc, p) => {
+        const d = p.difficulty || 'medium';
+        acc[d] = (acc[d] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, difficulty_summary, description, story_text, is_global, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?)`,
+        [
+          packageId,
+          parentId,
+          generated.package.name,
+          child.grade_level,
+          null,
+          contentType,
+          generated.problems.length,
+          JSON.stringify(difficultySummary),
+          generated.package.description || null,
+          generated.package.story_text || null,
+          childId
+        ]
+      );
+
+      // Create problems and curriculum mappings
+      for (let i = 0; i < generated.problems.length; i++) {
+        const p = generated.problems[i];
+        const problemId = uuidv4();
+
+        db.run(
+          `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            problemId,
+            packageId,
+            i + 1,
+            p.question_text,
+            p.correct_answer,
+            p.answer_type || 'number',
+            p.options ? JSON.stringify(p.options) : null,
+            p.explanation || null,
+            p.hint || null,
+            p.difficulty || 'medium'
+          ]
+        );
+
+        // Create curriculum mappings
+        if (p.lgr22_codes && Array.isArray(p.lgr22_codes)) {
+          for (const code of p.lgr22_codes) {
+            const objective = db.get<{ id: number }>(
+              'SELECT id FROM curriculum_objectives WHERE code = ?',
+              [code]
+            );
+            if (objective) {
+              db.run(
+                `INSERT OR IGNORE INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+                 VALUES (?, ?, ?)`,
+                ['package_problem', problemId, objective.id]
+              );
+            }
+          }
+        }
+      }
+
+      // Create the assignment (parent-created)
+      const minOrder = db.get<{ min_order: number | null }>(
+        `SELECT MIN(display_order) as min_order FROM assignments WHERE child_id = ? AND assignment_type = ?`,
+        [childId, contentType]
+      );
+      const newDisplayOrder = (minOrder?.min_order ?? 0) - 1;
+
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id, hints_allowed, assigned_by_id, display_order)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, 1, ?, ?)`,
+        [
+          assignmentId,
+          parentId,
+          childId,
+          contentType,
+          generated.package.name,
+          child.grade_level,
+          packageId,
+          parentId, // Parent assigned it
+          newDisplayOrder
+        ]
+      );
+    });
+
+    // Invalidate caches
+    await invalidateAssignmentsCache(parentId, childId);
+
+    res.json({
+      success: true,
+      assignmentId,
+      packageId,
+      title: generated.package.name,
+      questionCount: generated.problems.length,
+      objectiveCodes: objectives.map(o => o.code)
+    });
+  } catch (error) {
+    console.error('Generate adventure for parent error:', error);
+    res.status(500).json({
+      error: 'Failed to generate assignment',
       errorCode: 'INTERNAL_ERROR'
     });
   }
