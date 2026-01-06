@@ -269,22 +269,11 @@ describe('SketchPad', () => {
   });
 
   describe('Mobile touch handling', () => {
-    it('should call preventDefault on touch events to prevent page scrolling', () => {
+    it('should have touch-action: none to prevent page scrolling', () => {
       const { container } = render(<SketchPad />);
-      const canvas = container.querySelector('canvas') as HTMLCanvasElement;
-      expect(canvas).toBeTruthy();
-
-      // Create a touch event with preventDefault spy
-      const touchEvent = new TouchEvent('touchstart', {
-        bubbles: true,
-        cancelable: true,
-        touches: [{ clientX: 100, clientY: 100, identifier: 0 } as Touch],
-      });
-      const preventDefaultSpy = vi.spyOn(touchEvent, 'preventDefault');
-
-      canvas.dispatchEvent(touchEvent);
-
-      expect(preventDefaultSpy).toHaveBeenCalled();
+      const canvasContainer = container.querySelector('.border-2.border-gray-200.rounded-b-xl') as HTMLElement;
+      expect(canvasContainer).toBeTruthy();
+      expect(canvasContainer.style.touchAction).toBe('none');
     });
   });
 
