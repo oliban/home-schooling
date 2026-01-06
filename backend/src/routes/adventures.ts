@@ -8,9 +8,10 @@ import { authenticateChild, authenticateParent } from '../middleware/auth.js';
 import { invalidateAssignmentsCache } from './assignments.js';
 import { validateCurriculumCodesBatch } from '../utils/curriculumValidator.js';
 import { scoreObjective } from './curriculum.js';
+import { isDevelopment } from '../config/cors.js';
 import type { Child } from '../types/index.js';
 
-// Path to generated files directory (project root /data/generated)
+// Path to generated files directory (project root /data/generated) - only used in dev
 const GENERATED_DIR = path.join(process.cwd(), '..', 'data', 'generated');
 
 const router = Router();
@@ -903,27 +904,29 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
       });
     }
 
-    // Save generated JSON for troubleshooting
-    try {
-      if (!fs.existsSync(GENERATED_DIR)) {
-        fs.mkdirSync(GENERATED_DIR, { recursive: true });
-      }
-      // Naming: {sanitized-name}-{type}.json (e.g., "dinosaurie-aventyr-math.json")
-      const sanitizedName = generated.package.name
-        .toLowerCase()
-        .replace(/[åä]/g, 'a')
-        .replace(/[ö]/g, 'o')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .substring(0, 40);
-      const filename = `${sanitizedName}-${contentType}.json`;
-      const filepath = path.join(GENERATED_DIR, filename);
+    // Save generated JSON for troubleshooting (dev only)
+    if (isDevelopment()) {
+      try {
+        if (!fs.existsSync(GENERATED_DIR)) {
+          fs.mkdirSync(GENERATED_DIR, { recursive: true });
+        }
+        // Naming: {sanitized-name}-{type}.json (e.g., "dinosaurie-aventyr-math.json")
+        const sanitizedName = generated.package.name
+          .toLowerCase()
+          .replace(/[åä]/g, 'a')
+          .replace(/[ö]/g, 'o')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .substring(0, 40);
+        const filename = `${sanitizedName}-${contentType}.json`;
+        const filepath = path.join(GENERATED_DIR, filename);
 
-      fs.writeFileSync(filepath, JSON.stringify(generated, null, 2));
-      console.log(`[Adventures] Saved generated content to ${filepath}`);
-    } catch (saveError) {
-      // Don't fail the request if we can't save the debug file
-      console.error('[Adventures] Failed to save debug JSON:', saveError);
+        fs.writeFileSync(filepath, JSON.stringify(generated, null, 2));
+        console.log(`[Adventures] Saved generated content to ${filepath}`);
+      } catch (saveError) {
+        // Don't fail the request if we can't save the debug file
+        console.error('[Adventures] Failed to save debug JSON:', saveError);
+      }
     }
 
     // Create package, problems, and assignment in a transaction

@@ -195,7 +195,8 @@
       "rare": "Rare",
       "epic": "Epic",
       "legendary": "Legendary",
-      "mythic": "Mythic"
+      "mythic": "Mythic",
+      "secret": "Secret"
     },
     "errors": {
       "purchaseFailed": "Could not complete purchase"

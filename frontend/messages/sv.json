@@ -195,7 +195,8 @@
       "rare": "Sällsynt",
       "epic": "Episk",
       "legendary": "Legendarisk",
-      "mythic": "Mytisk"
+      "mythic": "Mytisk",
+      "secret": "Hemlig"
     },
     "errors": {
       "purchaseFailed": "Köpet kunde inte slutföras"

@@ -2,8 +2,9 @@
  * Adventures feature tests - quota, themes, and generation endpoints
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { getDb } from '../data/database.js';
+import { isDevelopment } from '../config/cors.js';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -473,6 +474,40 @@ describe('Adventures Feature', () => {
       // Clean up
       db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
       db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+  });
+
+  describe('Development-only File Saving', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+
+    afterEach(() => {
+      // Restore original NODE_ENV
+      if (originalNodeEnv !== undefined) {
+        process.env.NODE_ENV = originalNodeEnv;
+      } else {
+        delete process.env.NODE_ENV;
+      }
+    });
+
+    it('should skip file saving in production mode', () => {
+      process.env.NODE_ENV = 'production';
+
+      // isDevelopment() returns false in production
+      expect(isDevelopment()).toBe(false);
+    });
+
+    it('should allow file saving in development mode', () => {
+      process.env.NODE_ENV = 'development';
+
+      // isDevelopment() returns true in development
+      expect(isDevelopment()).toBe(true);
+    });
+
+    it('should allow file saving when NODE_ENV is not set', () => {
+      delete process.env.NODE_ENV;
+
+      // isDevelopment() returns true when NODE_ENV is not set
+      expect(isDevelopment()).toBe(true);
     });
   });
 });

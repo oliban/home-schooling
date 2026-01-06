@@ -13,7 +13,7 @@ interface Collectible {
   name: string;
   ascii_art: string;
   price: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   owned: boolean;
 }
 
@@ -34,6 +34,7 @@ const rarityColors = {
   epic: 'border-purple-400 bg-purple-50',
   legendary: 'border-yellow-400 bg-yellow-50',
   mythic: 'border-pink-400 bg-gradient-to-br from-pink-50 to-purple-50',
+  secret: 'border-amber-400 bg-amber-50',
 };
 
 const rarityBadgeColors = {
@@ -42,6 +43,7 @@ const rarityBadgeColors = {
   epic: 'bg-purple-200 text-purple-700',
   legendary: 'bg-yellow-200 text-yellow-700',
   mythic: 'bg-gradient-to-r from-pink-300 via-purple-300 to-pink-300 text-white mythic-sparkle',
+  secret: 'bg-amber-200 text-amber-700',
 };
 
 export default function CollectionPage() {

@@ -93,7 +93,7 @@ export interface Collectible {
   name: string;
   ascii_art: string;
   price: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
 }
 
 export interface ChildCollectible {

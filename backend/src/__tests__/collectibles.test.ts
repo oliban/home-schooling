@@ -255,11 +255,11 @@ describe('Per-Child Shop Ordering', () => {
     expect(visibleItems.length).toBeGreaterThanOrEqual(1);
 
     // Check if Bajsalero (always_visible) is included
-    const bajsalero = items.find(c => c.id === 'bajsalero_bajsalo');
+    const bajsalero = items.find(c => c.id === 'bajsalero_bajsala');
     if (bajsalero) {
       // If Bajsalero exists and is always_visible, it should be in visible items
       if (bajsalero.always_visible === 1) {
-        const bajsInVisible = visibleItems.find(c => c.id === 'bajsalero_bajsalo');
+        const bajsInVisible = visibleItems.find(c => c.id === 'bajsalero_bajsala');
         expect(bajsInVisible).toBeDefined();
       }
     }
