@@ -477,6 +477,108 @@ describe('Adventures Feature', () => {
     });
   });
 
+  describe('Requires Sketch Propagation', () => {
+    it('should set requires_sketch=1 when mapped objective has requires_work_shown=1', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+      const problemId1 = uuidv4();
+      const problemId2 = uuidv4();
+
+      // Create a package
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
+        [packageId, parentId, 'Sketch Test Package', 4, 'geometri', 2, childId]
+      );
+
+      // Create two problems - both start with requires_sketch = 0 (default)
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, 1, 'What is 2+2?', '4')`,
+        [problemId1, packageId]
+      );
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer)
+         VALUES (?, ?, 2, 'Calculate the area of a rectangle 5x4', '20')`,
+        [problemId2, packageId]
+      );
+
+      // Get an objective with requires_work_shown = 1 (MA-GEO-02 or similar)
+      const objectiveWithWork = db.get<{ id: number; code: string }>(
+        `SELECT id, code FROM curriculum_objectives WHERE requires_work_shown = 1 LIMIT 1`
+      );
+      // Get an objective with requires_work_shown = 0
+      const objectiveWithoutWork = db.get<{ id: number; code: string }>(
+        `SELECT id, code FROM curriculum_objectives WHERE requires_work_shown = 0 LIMIT 1`
+      );
+
+      expect(objectiveWithWork).toBeDefined();
+      expect(objectiveWithoutWork).toBeDefined();
+
+      // Map problem1 to objective WITHOUT requires_work_shown
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES ('package_problem', ?, ?)`,
+        [problemId1, objectiveWithoutWork!.id]
+      );
+
+      // Map problem2 to objective WITH requires_work_shown
+      db.run(
+        `INSERT INTO exercise_curriculum_mapping (exercise_type, exercise_id, objective_id)
+         VALUES ('package_problem', ?, ?)`,
+        [problemId2, objectiveWithWork!.id]
+      );
+
+      // Now run the UPDATE that should be in adventure generation
+      // This simulates what happens in adventures.ts after curriculum mapping
+      db.run(
+        `UPDATE package_problems
+         SET requires_sketch = 1
+         WHERE id = ?
+         AND EXISTS (
+           SELECT 1 FROM exercise_curriculum_mapping ecm
+           JOIN curriculum_objectives co ON co.id = ecm.objective_id
+           WHERE ecm.exercise_id = ?
+           AND ecm.exercise_type = 'package_problem'
+           AND co.requires_work_shown = 1
+         )`,
+        [problemId1, problemId1]
+      );
+      db.run(
+        `UPDATE package_problems
+         SET requires_sketch = 1
+         WHERE id = ?
+         AND EXISTS (
+           SELECT 1 FROM exercise_curriculum_mapping ecm
+           JOIN curriculum_objectives co ON co.id = ecm.objective_id
+           WHERE ecm.exercise_id = ?
+           AND ecm.exercise_type = 'package_problem'
+           AND co.requires_work_shown = 1
+         )`,
+        [problemId2, problemId2]
+      );
+
+      // Verify: problem1 should still have requires_sketch = 0
+      const prob1 = db.get<{ requires_sketch: number }>(
+        'SELECT requires_sketch FROM package_problems WHERE id = ?',
+        [problemId1]
+      );
+      expect(prob1?.requires_sketch).toBe(0);
+
+      // Verify: problem2 should now have requires_sketch = 1
+      const prob2 = db.get<{ requires_sketch: number }>(
+        'SELECT requires_sketch FROM package_problems WHERE id = ?',
+        [problemId2]
+      );
+      expect(prob2?.requires_sketch).toBe(1);
+
+      // Clean up
+      db.run('DELETE FROM exercise_curriculum_mapping WHERE exercise_id IN (?, ?)', [problemId1, problemId2]);
+      db.run('DELETE FROM package_problems WHERE package_id = ?', [packageId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+  });
+
   describe('Development-only File Saving', () => {
     const originalNodeEnv = process.env.NODE_ENV;
 

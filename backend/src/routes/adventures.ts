@@ -760,6 +760,21 @@ router.post('/generate', authenticateChild, async (req, res) => {
             }
           }
         }
+
+        // Update requires_sketch if any mapped objective requires work shown
+        db.run(
+          `UPDATE package_problems
+           SET requires_sketch = 1
+           WHERE id = ?
+           AND EXISTS (
+             SELECT 1 FROM exercise_curriculum_mapping ecm
+             JOIN curriculum_objectives co ON co.id = ecm.objective_id
+             WHERE ecm.exercise_id = ?
+             AND ecm.exercise_type = 'package_problem'
+             AND co.requires_work_shown = 1
+           )`,
+          [problemId, problemId]
+        );
       }
 
       // Create the assignment (child-created, so assigned_by_id is NULL)
@@ -997,6 +1012,21 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
             }
           }
         }
+
+        // Update requires_sketch if any mapped objective requires work shown
+        db.run(
+          `UPDATE package_problems
+           SET requires_sketch = 1
+           WHERE id = ?
+           AND EXISTS (
+             SELECT 1 FROM exercise_curriculum_mapping ecm
+             JOIN curriculum_objectives co ON co.id = ecm.objective_id
+             WHERE ecm.exercise_id = ?
+             AND ecm.exercise_type = 'package_problem'
+             AND co.requires_work_shown = 1
+           )`,
+          [problemId, problemId]
+        );
       }
 
       // Create the assignment (parent-created)
