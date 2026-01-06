@@ -297,6 +297,20 @@ export const curriculum = {
       coveredObjectives: number;
       coveragePercentage: number;
     }>(`/curriculum/coverage/${childId}`, { token }),
+
+  getMatchingPackages: (token: string, childId: string, objectiveIds: number[]) =>
+    fetchApi<{
+      packages: Array<{
+        id: string;
+        name: string;
+        gradeLevel: number;
+        problemCount: number;
+        assignmentType: 'math' | 'reading';
+        description: string | null;
+        isGlobal: boolean;
+        matchingObjectives: string[];
+      }>;
+    }>(`/curriculum/matching-packages/${childId}?objectiveIds=${objectiveIds.join(',')}`, { token }),
 };
 
 // Packages

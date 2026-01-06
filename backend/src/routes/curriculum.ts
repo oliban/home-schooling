@@ -317,4 +317,105 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
   }
 });
 
+// GET /curriculum/matching-packages/:childId - Get packages that match specific objectives
+// Query param: objectiveIds (comma-separated list of objective IDs)
+router.get('/matching-packages/:childId', authenticateParent, async (req, res) => {
+  try {
+    const db = getDb();
+    const childId = req.params.childId;
+    const objectiveIdsParam = req.query.objectiveIds as string;
+
+    if (!objectiveIdsParam) {
+      return res.status(400).json({ error: 'objectiveIds query parameter is required' });
+    }
+
+    // Parse objective IDs
+    const objectiveIds = objectiveIdsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+
+    if (objectiveIds.length === 0) {
+      return res.json({ packages: [] });
+    }
+
+    // Verify child belongs to parent
+    const child = db.get<Child>(
+      'SELECT id, grade_level FROM children WHERE id = ? AND parent_id = ?',
+      [childId, req.user!.id]
+    );
+
+    if (!child) {
+      return res.status(404).json({ error: 'Child not found' });
+    }
+
+    // Query packages that have problems mapped to the specified objectives
+    // Filter by child's grade, visibility (own packages + global), and not already assigned to child
+    const placeholders = objectiveIds.map(() => '?').join(',');
+    const packages = db.all<{
+      id: string;
+      name: string;
+      grade_level: number;
+      problem_count: number;
+      assignment_type: string;
+      description: string | null;
+      is_global: number;
+    }>(
+      `SELECT DISTINCT mp.id, mp.name, mp.grade_level, mp.problem_count, mp.assignment_type, mp.description, mp.is_global
+       FROM math_packages mp
+       JOIN package_problems pp ON pp.package_id = mp.id
+       JOIN exercise_curriculum_mapping ecm ON ecm.exercise_type = 'package_problem' AND ecm.exercise_id = pp.id
+       WHERE mp.is_active = 1
+         AND mp.grade_level = ?
+         AND (mp.parent_id = ? OR mp.is_global = 1)
+         AND ecm.objective_id IN (${placeholders})
+         AND NOT EXISTS (
+           SELECT 1 FROM assignments a
+           WHERE a.package_id = mp.id AND a.child_id = ?
+         )
+       ORDER BY mp.name`,
+      [child.grade_level, req.user!.id, ...objectiveIds, childId]
+    );
+
+    // For each package, get the matching objective codes
+    const packageIds = packages.map(p => p.id);
+    const matchingObjectivesByPackage = new Map<string, string[]>();
+
+    if (packageIds.length > 0) {
+      const pkgPlaceholders = packageIds.map(() => '?').join(',');
+      const objMatches = db.all<{ package_id: string; code: string }>(
+        `SELECT DISTINCT pp.package_id, co.code
+         FROM package_problems pp
+         JOIN exercise_curriculum_mapping ecm ON ecm.exercise_type = 'package_problem' AND ecm.exercise_id = pp.id
+         JOIN curriculum_objectives co ON ecm.objective_id = co.id
+         WHERE pp.package_id IN (${pkgPlaceholders})
+           AND ecm.objective_id IN (${placeholders})
+         ORDER BY pp.package_id, co.code`,
+        [...packageIds, ...objectiveIds]
+      );
+
+      for (const match of objMatches) {
+        if (!matchingObjectivesByPackage.has(match.package_id)) {
+          matchingObjectivesByPackage.set(match.package_id, []);
+        }
+        matchingObjectivesByPackage.get(match.package_id)!.push(match.code);
+      }
+    }
+
+    // Build response (all returned packages are available - not yet assigned to this child)
+    const result = packages.map(pkg => ({
+      id: pkg.id,
+      name: pkg.name,
+      gradeLevel: pkg.grade_level,
+      problemCount: pkg.problem_count,
+      assignmentType: pkg.assignment_type,
+      description: pkg.description,
+      isGlobal: pkg.is_global === 1,
+      matchingObjectives: matchingObjectivesByPackage.get(pkg.id) || [],
+    }));
+
+    res.json({ packages: result });
+  } catch (error) {
+    console.error('Get matching packages error:', error);
+    res.status(500).json({ error: 'Failed to get matching packages' });
+  }
+});
+
 export default router;

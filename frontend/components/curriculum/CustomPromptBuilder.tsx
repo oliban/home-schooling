@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ObjectiveData, PromptMode, GeneratedPrompt } from '@/types/curriculum';
 import SelectableTreemap from './SelectableTreemap';
 import { getRandomThemes } from '@/lib/themes-expanded';
-import { adventures } from '@/lib/api';
+import { adventures, curriculum, packages } from '@/lib/api';
 
 interface CustomPromptBuilderProps {
   childId: string;
@@ -47,6 +47,18 @@ interface CoverageData {
   totalObjectives: number;
   coveredObjectives: number;
   coveragePercentage: number;
+}
+
+// Matching package from API (only available packages - not yet assigned to child)
+interface MatchingPackage {
+  id: string;
+  name: string;
+  gradeLevel: number;
+  problemCount: number;
+  assignmentType: 'math' | 'reading';
+  description: string | null;
+  isGlobal: boolean;
+  matchingObjectives: string[];
 }
 
 // Generate custom prompt based on configuration
@@ -133,6 +145,13 @@ export default function CustomPromptBuilder({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationSuccess, setGenerationSuccess] = useState<{ assignmentId: string; title: string } | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
+
+  // State for matching packages section
+  const [matchingPackages, setMatchingPackages] = useState<MatchingPackage[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [assigningPackageId, setAssigningPackageId] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<{ packageId: string; name: string } | null>(null);
+  const [assignError, setAssignError] = useState<string | null>(null);
 
   // Fetch coverage data
   const fetchCoverage = useCallback(async () => {
@@ -313,6 +332,61 @@ export default function CustomPromptBuilder({
       hasAutoApplied.current = true;
     }
   }, [coverageData, loadingCoverage, suggestedObjectives, selectedObjectives.size, onToggleObjective, childGradeLevel]);
+
+  // Fetch matching packages when suggested objectives change
+  useEffect(() => {
+    const fetchMatchingPackages = async () => {
+      // Collect all objective IDs from suggestions
+      const allObjectiveIds = [
+        ...suggestedObjectives.math.map(s => s.objective.id),
+        ...suggestedObjectives.reading.map(s => s.objective.id),
+      ];
+
+      if (allObjectiveIds.length === 0) {
+        setMatchingPackages([]);
+        return;
+      }
+
+      const token = localStorage.getItem('parentToken');
+      if (!token) return;
+
+      setLoadingPackages(true);
+      try {
+        const response = await curriculum.getMatchingPackages(token, childId, allObjectiveIds);
+        setMatchingPackages(response.packages);
+      } catch (err) {
+        console.error('Failed to fetch matching packages:', err);
+        setMatchingPackages([]);
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+
+    fetchMatchingPackages();
+  }, [childId, suggestedObjectives]);
+
+  // Handle assigning a package to the child
+  const handleAssignPackage = async (pkg: MatchingPackage) => {
+    const token = localStorage.getItem('parentToken');
+    if (!token || assigningPackageId) return;
+
+    setAssigningPackageId(pkg.id);
+    setAssignError(null);
+    setAssignSuccess(null);
+
+    try {
+      await packages.assign(token, pkg.id, { childId, title: pkg.name, hintsAllowed: true });
+      setAssignSuccess({ packageId: pkg.id, name: pkg.name });
+
+      // Remove the package from the list since it's now assigned
+      setMatchingPackages(prev => prev.filter(p => p.id !== pkg.id));
+    } catch (err) {
+      console.error('Failed to assign package:', err);
+      setAssignError(err instanceof Error ? err.message : 'Failed to assign package');
+    } finally {
+      setAssigningPackageId(null);
+    }
+  };
 
   // Apply suggested objectives (choose subject with worst overall coverage)
   const applySuggestedObjectives = (subject: 'math' | 'reading') => {
@@ -588,6 +662,118 @@ export default function CustomPromptBuilder({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Matching Packages Section */}
+      {!loadingCoverage && (matchingPackages.length > 0 || loadingPackages) && (
+        <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
+            📦 Ready-to-Use Packages
+          </h4>
+          <p className="text-xs text-green-800 mb-3">
+            These packages cover the focus areas above and can be assigned directly:
+          </p>
+
+          {loadingPackages ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+              <span className="ml-2 text-sm text-green-700">Loading packages...</span>
+            </div>
+          ) : matchingPackages.length === 0 ? (
+            <p className="text-sm text-green-700 italic">No matching packages found.</p>
+          ) : (
+            <>
+              {assignSuccess && (
+                <div className="mb-3 p-2 bg-green-100 border border-green-300 rounded text-sm text-green-800">
+                  ✅ &quot;{assignSuccess.name}&quot; assigned to {childName}!
+                </div>
+              )}
+              {assignError && (
+                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                  {assignError}
+                </div>
+              )}
+              <div className="grid md:grid-cols-2 gap-3">
+                {matchingPackages.slice(0, 6).map(pkg => (
+                  <div
+                    key={pkg.id}
+                    className="bg-white p-3 rounded-lg border border-green-300 flex flex-col"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-sm font-semibold text-gray-800 truncate" title={pkg.name}>
+                          {pkg.name}
+                        </h5>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            pkg.assignmentType === 'math'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {pkg.assignmentType === 'math' ? '📐 Math' : '📖 Reading'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {pkg.problemCount} problems
+                          </span>
+                          {pkg.isGlobal && (
+                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
+                              Global
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Matching objectives */}
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {pkg.matchingObjectives.slice(0, 3).map(code => (
+                        <span
+                          key={code}
+                          className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-medium"
+                        >
+                          {code}
+                        </span>
+                      ))}
+                      {pkg.matchingObjectives.length > 3 && (
+                        <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
+                          +{pkg.matchingObjectives.length - 3} more
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action button */}
+                    <div className="mt-auto">
+                      <button
+                        onClick={() => handleAssignPackage(pkg)}
+                        disabled={assigningPackageId === pkg.id}
+                        className="w-full px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+                      >
+                        {assigningPackageId === pkg.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                            Assigning...
+                          </>
+                        ) : (
+                          <>Assign to {childName}</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {matchingPackages.length > 6 && (
+                <div className="mt-3 text-center">
+                  <a
+                    href={`/parent/packages?child=${childId}`}
+                    className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                  >
+                    Browse all {matchingPackages.length} packages →
+                  </a>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
