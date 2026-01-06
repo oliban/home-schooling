@@ -354,13 +354,17 @@ For `answer_type: "multiple_choice"`:
 }
 ```
 
-## Visual/Illustrative Questions (requires_sketch)
+## Show Your Work (requires_sketch)
 
-Some questions require students to demonstrate their understanding visually using the sketchpad. Set `requires_sketch: true` for these questions.
+The `requires_sketch` field has two purposes:
+1. **Visual questions** - Student must draw/illustrate something
+2. **Showing calculation work** - Student must demonstrate their method, not just give an answer
+
+Set `requires_sketch: true` when the student should NOT be able to answer with just a number.
 
 ### When to Use `requires_sketch: true`
 
-**The flag is set per problem, NOT per LGR-22 code.** The question text determines if visual demonstration is needed.
+#### 1. Visual/Drawing Questions
 
 **Trigger phrases that indicate visual requirement:**
 - "Rita..." (Draw...)
@@ -369,6 +373,39 @@ Some questions require students to demonstrate their understanding visually usin
 - "Skissa..." (Sketch...)
 - "Markera..." (Mark...)
 - "Fortsätt mönstret..." (Continue the pattern... - when visual)
+
+#### 2. Method/Calculation Questions (LGR22-Based)
+
+The LGR22 curriculum emphasizes "redogöra för beräkningar" (accounting for calculations). These codes require students to SHOW their work:
+
+| Code | Description | Why Show Work |
+|------|-------------|---------------|
+| MA-TAL-11 | Beräkningar med reella tal | Must show calculation methods/algorithms |
+| MA-ALG-04 | Ekvationslösning (åk 4-6) | Must show solving steps |
+| MA-ALG-08 | Avancerad ekvationslösning (åk 7-9) | Multiple steps, show method |
+| MA-ALG-09 | Ekvationssystem | Must show solving process |
+| MA-GEO-02 | Konstruktion (åk 1-3) | Must draw the construction |
+| MA-GEO-06 | Konstruktion (åk 4-6) | Must show construction with tools |
+| MA-GEO-07 | Area/omkrets metoder | Must show formulas and steps |
+| MA-GEO-10 | Avbildning och konstruktion (åk 7-9) | Must show transformations |
+| MA-GEO-12 | Area/volym beräkning (åk 7-9) | Complex calculations, show work |
+| MA-GEO-13 | Pythagoras sats | Must show calculation |
+| MA-PRO-03 | Problemlösning +/- (åk 1-3) | Must show strategy |
+| MA-PRO-06 | Problemlösning 4 räknesätt (åk 4-6) | Must show reasoning |
+| MA-PRO-07 | Problemlösning (åk 7-9) | Complex problems, show approach |
+| MA-PRO-09 | Matematisk problemlösning | Argumentation and proof |
+| MA-SAN-07 | Sannolikhetsberäkning | Must show P = gynnsamma/möjliga |
+
+#### 3. Calculation Complexity Rules
+
+Even if the code doesn't require it, set `requires_sketch: true` when:
+- Division with dividend > 100 (e.g., 732 ÷ 6)
+- Multiplication where both factors > 10 (e.g., 45 × 23)
+- Multi-step word problems (more than 2 operations)
+- Fraction arithmetic (adding, subtracting fractions)
+- Percentage calculations (not just recognition)
+
+**Key principle:** If a typical student couldn't solve it in their head, they should show their work.
 
 ### Examples
 

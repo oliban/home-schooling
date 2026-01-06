@@ -13,6 +13,10 @@ interface ObjectiveCoverage {
   id: number;
   code: string;
   description: string;
+  extendedDescription: string | null;
+  requiresWorkShown: boolean;
+  exampleProblems: string[] | null;
+  keyConcepts: string[] | null;
   isCovered: boolean;
   correctCount: number;
   totalCount: number;

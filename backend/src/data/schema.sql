@@ -76,6 +76,10 @@ CREATE TABLE IF NOT EXISTS curriculum_objectives (
     code TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
     grade_levels TEXT NOT NULL,
+    extended_description TEXT,
+    requires_work_shown INTEGER DEFAULT 0,
+    example_problems TEXT,
+    key_concepts TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -165,7 +169,7 @@ CREATE TABLE IF NOT EXISTS collectibles (
     name TEXT NOT NULL,
     ascii_art TEXT NOT NULL,
     price INTEGER NOT NULL,
-    rarity TEXT CHECK (rarity IN ('common', 'rare', 'epic', 'legendary', 'mythic')),
+    rarity TEXT CHECK (rarity IN ('common', 'rare', 'epic', 'legendary', 'mythic', 'secret')),
     always_visible INTEGER DEFAULT 0
 );
 

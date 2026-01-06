@@ -15,94 +15,36 @@ const GENERATED_DIR = path.join(process.cwd(), '..', 'data', 'generated');
 
 const router = Router();
 
-// Expanded curriculum code descriptions with practical examples
-// These help Claude understand what each code actually means
-const EXPANDED_DESCRIPTIONS: Record<string, string> = {
-  // Taluppfattning (Number Sense) - Understanding numbers as CONCEPTS
-  'MA-TAL-01': 'Naturliga tal (1, 2, 3...) - förstå vad tal betyder, räkna, jämföra storlek',
-  'MA-TAL-02': 'Positionssystemet - förstå ental, tiotal, hundratal (t.ex. 345 = 3 hundratal + 4 tiotal + 5 ental)',
-  'MA-TAL-03': 'Del av helhet - förstå vad "hälften", "en tredjedel" betyder visuellt',
-  'MA-TAL-04': 'Tal i bråkform - förstå bråk som begrepp (1/2, 3/4), INTE beräkningar med bråk',
-  'MA-TAL-05': 'Positionssystemet för decimaltal - förstå tiondelar, hundradelar (0.5 = 5 tiondelar)',
-  'MA-TAL-06': 'Bråk och decimaltal - omvandla mellan bråk och decimal (1/4 = 0.25), förstå sambandet',
-  'MA-TAL-07': 'Procentform - förstå vad procent betyder (25% = 25 av 100), INTE procentberäkningar i textuppgifter',
-  'MA-TAL-08': 'Negativa tal - förstå minustal, tallinjen, jämföra (-5 < -2)',
-  'MA-TAL-09': 'Reella tal - rationella och irrationella tal, tallinjen',
-  'MA-TAL-10': 'Talsystemets utveckling - historik och samband mellan taltyper',
-  'MA-TAL-11': 'Beräkningsmetoder - algoritmer för +, -, ×, ÷ med reella tal',
-  'MA-TAL-12': 'Rimlighetsbedömning - uppskatta och kontrollera om svar verkar rimligt',
+// Cache for curriculum descriptions (populated from database on first use)
+let cachedDescriptions: Record<string, string> | null = null;
 
-  // Algebra - Variables, equations, patterns
-  'MA-ALG-01': 'Likhetstecknet - förstå att = betyder "lika mycket på båda sidor" (5 + 3 = 4 + 4)',
-  'MA-ALG-02': 'Enkla mönster - fortsätt mönstret (röd, blå, röd, blå, ?)',
-  'MA-ALG-03': 'Obekanta tal - använda x eller ? för okänt tal (? + 5 = 12)',
-  'MA-ALG-04': 'Ekvationslösning - hitta x i enkla ekvationer (x + 5 = 12, 3x = 15)',
-  'MA-ALG-05': 'Mönster i talföljder - hitta regeln i sekvenser (2, 4, 6, 8, ? eller 1, 4, 9, 16, ?)',
-  'MA-ALG-06': 'Variabelbegreppet - förstå att x kan representera olika värden',
-  'MA-ALG-07': 'Algebraiska uttryck - förenkla och räkna med uttryck (2x + 3x = 5x)',
-  'MA-ALG-08': 'Avancerad ekvationslösning - ekvationer med parenteser, flera steg',
-  'MA-ALG-09': 'Ekvationssystem - lösa två ekvationer med två obekanta',
-  'MA-ALG-10': 'Potenser - förstå och räkna med exponenter (2³ = 8)',
+/**
+ * Fetches curriculum code descriptions from the database.
+ * Uses extended_description if available, falls back to description.
+ * Results are cached for the lifetime of the process.
+ */
+function loadDescriptionsFromDatabase(): Record<string, string> {
+  if (cachedDescriptions) {
+    return cachedDescriptions;
+  }
 
-  // Geometri - Shapes, measurement
-  'MA-GEO-01': 'Grundläggande former - känna igen cirkel, kvadrat, triangel, rektangel',
-  'MA-GEO-02': 'Rita geometriska figurer - konstruera enkla former med linjal',
-  'MA-GEO-03': 'Lägesord - över, under, bredvid, mellan, framför, bakom',
-  'MA-GEO-04': 'Symmetri - spegelsymmetri i bilder och mönster',
-  'MA-GEO-05': 'Formers egenskaper - antal sidor, hörn, vinklar i olika former',
-  'MA-GEO-06': 'Konstruktion - rita med passare och linjal',
-  'MA-GEO-07': 'Area och omkrets - BERÄKNA area (längd × bredd) och omkrets (summa av sidor)',
-  'MA-GEO-08': 'Skala - förstå kartskala, förstora/förminska (1:100 betyder 1 cm = 100 cm)',
-  'MA-GEO-09': 'Geometriska egenskaper - vinklar, parallella linjer, regelbundna polygoner',
-  'MA-GEO-10': 'Avbildning - spegling, rotation, förflyttning av figurer',
-  'MA-GEO-11': 'Likformighet - figurer med samma form men olika storlek',
-  'MA-GEO-12': 'Volym och area - beräkna volym av lådor, cylindrar; area av sammansatta figurer',
-  'MA-GEO-13': 'Pythagoras sats - a² + b² = c² för rätvinkliga trianglar',
+  const db = getDb();
+  const objectives = db.all<{ code: string; extended_description: string | null; description: string }>(
+    `SELECT code, extended_description, description FROM curriculum_objectives`
+  );
 
-  // Sannolikhet och Statistik
-  'MA-SAN-01': 'Slumphändelser - förstå slump i tärningskast, kortdragning, myntkast',
-  'MA-SAN-02': 'Tabeller och diagram - läsa av enkla stapeldiagram och tabeller',
-  'MA-SAN-03': 'Sannolikhet - chansen att något händer (troligt, osannolikt, omöjligt)',
-  'MA-SAN-04': 'Kombinatorik - räkna ANTAL KOMBINATIONER (3 tröjor × 4 byxor = 12 kombinationer)',
-  'MA-SAN-05': 'Beskriva data - skapa och tolka diagram och tabeller',
-  'MA-SAN-06': 'Lägesmått - medelvärde, median, typvärde',
-  'MA-SAN-07': 'Beräkna sannolikhet - P(händelse) = gynnsamma / möjliga utfall',
-  'MA-SAN-08': 'Avancerad kombinatorik - permutationer, kombinationer',
-  'MA-SAN-09': 'Avancerade diagram - linjediagram, cirkeldiagram, histogram',
-  'MA-SAN-10': 'Spridningsmått - variationsbredd, standardavvikelse',
-  'MA-SAN-11': 'Risk och chans - bedöma sannolikheter i verkliga situationer',
+  cachedDescriptions = {};
+  for (const obj of objectives) {
+    cachedDescriptions[obj.code] = obj.extended_description || obj.description;
+  }
 
-  // Samband och Förändring
-  'MA-SAM-01': 'Proportionalitet - dubbelt så mycket kostar dubbelt så mycket',
-  'MA-SAM-02': 'Grafer för proportionalitet - räta linjer genom origo',
-  'MA-SAM-03': 'Koordinatsystem - placera punkter med (x, y)-koordinater',
-  'MA-SAM-04': 'Funktioner - y = 2x + 3, input ger output',
-  'MA-SAM-05': 'Funktioners användning - modellera verkliga samband',
-  'MA-SAM-06': 'Linjära funktioner - räta linjens ekvation y = kx + m',
-  'MA-SAM-07': 'Procentförändring - beräkna ökning/minskning i procent',
-
-  // Problemlösning - ANVÄND DESSA FÖR TEXTUPPGIFTER MED BERÄKNINGAR
-  'MA-PRO-01': 'Vardagsproblem åk 1-3 - enkla problem från vardagen',
-  'MA-PRO-02': 'Formulera frågor åk 1-3 - skapa egna matematiska frågor',
-  'MA-PRO-03': 'Problem med + och - (åk 1-3) - textuppgifter som löses med addition/subtraktion',
-  'MA-PRO-04': 'Vardagsproblem åk 4-6 - problem från vardagen, alla räknesätt',
-  'MA-PRO-05': 'Formulera frågor åk 4-6 - skapa matematiska frågeställningar',
-  'MA-PRO-06': 'Problem med +, -, ×, ÷ (åk 4-6) - TEXTUPPGIFTER som löses med de fyra räknesätten',
-  'MA-PRO-07': 'Vardags/yrkesproblem åk 7-9 - komplexa verkliga problem',
-  'MA-PRO-08': 'Matematisk modellering - formulera problem med matematiska modeller',
-  'MA-PRO-09': 'Avancerad problemlösning - resonemang och argumentation',
-
-  // Svenska/Läsförståelse
-  'SV-LITERAL': 'Direkt förståelse - hitta fakta som står explicit i texten',
-  'SV-INFERENCE': 'Slutledning - dra slutsatser från ledtrådar i texten',
-  'SV-MAIN-IDEA': 'Huvudbudskap - förstå textens tema eller huvudpoäng',
-  'SV-CHARACTER': 'Karaktärsförståelse - förstå personers känslor, motiv, egenskaper',
-  'SV-VOCABULARY': 'Ordförståelse - förstå ords betydelse från sammanhanget',
-};
+  return cachedDescriptions;
+}
 
 // Helper to get expanded description for a code
 function getExpandedDescription(code: string, fallbackDescription: string): string {
-  return EXPANDED_DESCRIPTIONS[code] || fallbackDescription;
+  const descriptions = loadDescriptionsFromDatabase();
+  return descriptions[code] || fallbackDescription;
 }
 
 // Configuration

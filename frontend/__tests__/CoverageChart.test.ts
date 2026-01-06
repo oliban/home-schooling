@@ -35,6 +35,10 @@ interface ObjectiveCoverage {
   id: number;
   code: string;
   description: string;
+  extendedDescription: string | null;
+  requiresWorkShown: boolean;
+  exampleProblems: string[] | null;
+  keyConcepts: string[] | null;
   isCovered: boolean;
   correctCount: number;
   totalCount: number;
@@ -137,8 +141,8 @@ describe('CoverageChart - Data Transformation', () => {
         coveredObjectives: 5,
         coveragePercentage: 50,
         objectives: [
-          { id: 1, code: 'MA1-1A', description: 'Hela tal', isCovered: true, completedAt: '2024-01-01' },
-          { id: 2, code: 'MA1-1B', description: 'Decimaltal', isCovered: false, completedAt: null },
+          { id: 1, code: 'MA1-1A', description: 'Hela tal', extendedDescription: null, requiresWorkShown: false, exampleProblems: null, keyConcepts: null, isCovered: true, correctCount: 5, totalCount: 5, completedAt: '2024-01-01', score: 0 },
+          { id: 2, code: 'MA1-1B', description: 'Decimaltal', extendedDescription: null, requiresWorkShown: false, exampleProblems: null, keyConcepts: null, isCovered: false, correctCount: 0, totalCount: 0, completedAt: null, score: 1000 },
         ],
       },
       {
@@ -148,7 +152,7 @@ describe('CoverageChart - Data Transformation', () => {
         coveredObjectives: 8,
         coveragePercentage: 100,
         objectives: [
-          { id: 3, code: 'MA1-2A', description: 'Uttryck', isCovered: true, completedAt: '2024-01-02' },
+          { id: 3, code: 'MA1-2A', description: 'Uttryck', extendedDescription: null, requiresWorkShown: false, exampleProblems: null, keyConcepts: null, isCovered: true, correctCount: 3, totalCount: 3, completedAt: '2024-01-02', score: 0 },
         ],
       },
     ],
@@ -268,7 +272,7 @@ describe('CoverageChart - Edge Cases', () => {
           coveredObjectives: 2,
           coveragePercentage: 40,
           objectives: [
-            { id: 1, code: 'MA1-4A', description: 'Sannolikhet i vardagen', isCovered: true, completedAt: '2024-01-01' },
+            { id: 1, code: 'MA1-4A', description: 'Sannolikhet i vardagen', extendedDescription: null, requiresWorkShown: false, exampleProblems: null, keyConcepts: null, isCovered: true, correctCount: 4, totalCount: 5, completedAt: '2024-01-01', score: 50 },
           ],
         },
       ],

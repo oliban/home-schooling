@@ -2,10 +2,14 @@
  * Curriculum Code Validator
  *
  * Validates LGR22 curriculum code assignments for generated math problems
- * using Claude Sonnet for semantic analysis.
+ * using Claude Opus for semantic analysis.
+ *
+ * Descriptions are fetched from the database (extended_description field)
+ * to ensure consistency with other LLM touchpoints.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getDb } from '../data/database.js';
 
 interface GeneratedProblem {
   question_text: string;
@@ -25,33 +29,31 @@ interface CurriculumCorrection {
   reason: string;
 }
 
-// Code descriptions for the validator prompt
-const CODE_DESCRIPTIONS: Record<string, string> = {
-  // Problem-solving codes - for word problems with calculations
-  'MA-PRO-03': 'Textuppgifter med +/- (åk 1-3) - word problems solved with addition/subtraction',
-  'MA-PRO-06': 'Textuppgifter med +,-,×,÷ (åk 4-6) - word problems solved with the four operations',
+// Cache for curriculum descriptions (populated from database)
+let cachedDescriptions: Record<string, string> | null = null;
 
-  // Number sense codes - for understanding number concepts
-  'MA-TAL-03': 'Del av helhet (åk 1-3) - fractions as visual parts (half, third) or fair sharing/division',
-  'MA-TAL-06': 'Bråk och decimal (åk 4-6) - calculations WITH fractions/decimals (3/4 of 200)',
-  'MA-TAL-07': 'Procent (åk 4-6) - understanding and calculating percentages',
+/**
+ * Fetches curriculum code descriptions from the database.
+ * Uses extended_description if available, falls back to description.
+ * Results are cached for the lifetime of the process.
+ */
+function getCodeDescriptions(): Record<string, string> {
+  if (cachedDescriptions) {
+    return cachedDescriptions;
+  }
 
-  // Geometry codes
-  'MA-GEO-01': 'Grundläggande former (åk 1-3) - recognize shapes: circle, square, triangle',
-  'MA-GEO-03': 'Lägesord (åk 1-3) - position words: over, under, beside, between',
-  'MA-GEO-07': 'Area/omkrets (åk 4-6) - CALCULATE area (length × width) and perimeter',
-  'MA-GEO-08': 'Skala (åk 4-6) - map scale, enlargement/reduction (1:100)',
+  const db = getDb();
+  const objectives = db.all<{ code: string; extended_description: string | null; description: string }>(
+    `SELECT code, extended_description, description FROM curriculum_objectives WHERE code LIKE 'MA-%'`
+  );
 
-  // Algebra codes
-  'MA-ALG-02': 'Mönster (åk 1-3) - continue patterns (red, blue, red, blue, ?)',
-  'MA-ALG-04': 'Ekvationer (åk 4-6) - solve for x (x + 5 = 12, 3x = 15)',
-  'MA-ALG-05': 'Talföljder (åk 4-6) - find rule in sequences (2, 4, 6, 8, ?)',
+  cachedDescriptions = {};
+  for (const obj of objectives) {
+    cachedDescriptions[obj.code] = obj.extended_description || obj.description;
+  }
 
-  // Statistics codes
-  'MA-SAN-01': 'Slumphändelser (åk 1-3) - understand chance in dice, coins',
-  'MA-SAN-04': 'Kombinatorik (åk 4-6) - count COMBINATIONS (3 shirts × 4 pants = 12 outfits)',
-  'MA-SAN-06': 'Lägesmått (åk 4-6) - mean, median, mode',
-};
+  return cachedDescriptions;
+}
 
 /**
  * Validates curriculum codes for a batch of generated problems using Claude Sonnet.
@@ -68,8 +70,11 @@ export async function validateCurriculumCodesBatch(
     return problems;
   }
 
+  // Get curriculum descriptions from database
+  const descriptions = getCodeDescriptions();
+
   // Build the validation prompt
-  const codesList = Object.entries(CODE_DESCRIPTIONS)
+  const codesList = Object.entries(descriptions)
     .map(([code, desc]) => `${code}: ${desc}`)
     .join('\n');
 

@@ -70,6 +70,10 @@ interface CurriculumObjective {
   code: string;
   description: string;
   grade_levels: string;
+  extended_description: string | null;
+  requires_work_shown: number;
+  example_problems: string | null;
+  key_concepts: string | null;
   created_at: string;
 }
 
@@ -88,6 +92,10 @@ interface ObjectiveCoverage {
   id: number;
   code: string;
   description: string;
+  extendedDescription: string | null;
+  requiresWorkShown: boolean;
+  exampleProblems: string[] | null;
+  keyConcepts: string[] | null;
   isCovered: boolean;
   correctCount: number;
   totalCount: number;
@@ -233,10 +241,24 @@ router.get('/coverage/:childId', authenticateParent, async (req, res) => {
       category.totalCorrect += correctCount;
       category.totalQuestions += totalCount;
 
+      // Parse JSON fields
+      let exampleProblems: string[] | null = null;
+      let keyConcepts: string[] | null = null;
+      try {
+        if (obj.example_problems) exampleProblems = JSON.parse(obj.example_problems);
+        if (obj.key_concepts) keyConcepts = JSON.parse(obj.key_concepts);
+      } catch {
+        // Keep null if JSON parsing fails
+      }
+
       category.objectives.push({
         id: obj.id,
         code: obj.code,
         description: obj.description,
+        extendedDescription: obj.extended_description,
+        requiresWorkShown: obj.requires_work_shown === 1,
+        exampleProblems,
+        keyConcepts,
         isCovered,
         correctCount,
         totalCount,
