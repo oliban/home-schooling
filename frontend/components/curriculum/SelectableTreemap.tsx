@@ -77,6 +77,7 @@ interface SelectableTreemapProps {
   childGradeLevel: number;
   selectedObjectives: Set<number>;
   onToggleObjective: (objectiveId: number, objective: ObjectiveData) => void;
+  subject?: 'math' | 'reading';
 }
 
 // Color functions based on percentage correct
@@ -350,7 +351,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   return null;
 };
 
-export default function SelectableTreemap({ childId, childGradeLevel, selectedObjectives, onToggleObjective }: SelectableTreemapProps) {
+export default function SelectableTreemap({ childId, childGradeLevel, selectedObjectives, onToggleObjective, subject }: SelectableTreemapProps) {
   const [coverageData, setCoverageData] = useState<CoverageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -480,6 +481,10 @@ export default function SelectableTreemap({ childId, childGradeLevel, selectedOb
     .filter(category => category.name === 'Lasforstaelse')
     .flatMap(category => category.children);
 
+  // Filter by subject if specified
+  const showMath = !subject || subject === 'math';
+  const showReading = !subject || subject === 'reading';
+
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <h4 className="text-sm font-semibold text-gray-700 mb-3">
@@ -487,7 +492,7 @@ export default function SelectableTreemap({ childId, childGradeLevel, selectedOb
       </h4>
 
       {/* Math objectives */}
-      {mathData.length > 0 && (
+      {showMath && mathData.length > 0 && (
         <div className="mb-4">
           <h5 className="text-xs font-semibold text-blue-800 mb-2">📐 Matematik</h5>
           <div className="relative h-48 bg-white rounded-lg overflow-hidden border-2 border-gray-200">
@@ -512,7 +517,7 @@ export default function SelectableTreemap({ childId, childGradeLevel, selectedOb
       )}
 
       {/* Reading objectives */}
-      {readingData.length > 0 && (
+      {showReading && readingData.length > 0 && (
         <div>
           <h5 className="text-xs font-semibold text-purple-800 mb-2">📖 Läsförståelse</h5>
           <div className="relative h-32 bg-white rounded-lg overflow-hidden border-2 border-gray-200">

@@ -6,11 +6,14 @@ import Link from 'next/link';
 import { children, packages } from '@/lib/api';
 import { useTranslation } from '@/lib/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { Tab, TabList, TabPanel } from '@/components/ui/Tabs';
 import CoverageChart from '@/components/curriculum/CoverageChart';
 import CustomPromptBuilder from '@/components/curriculum/CustomPromptBuilder';
 import ExportButton from '@/components/curriculum/ExportButton';
 import FileDropZone from '@/components/ui/FileDropZone';
 import { ObjectiveData } from '@/types/curriculum';
+
+type Subject = 'math' | 'reading';
 
 interface ChildData {
   id: string;
@@ -64,6 +67,7 @@ export default function CurriculumDashboard() {
   const [parent, setParent] = useState<ParentData | null>(null);
   const [childrenList, setChildrenList] = useState<ChildData[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<Subject>('math');
   const [loading, setLoading] = useState(true);
 
   // State for custom prompt builder
@@ -100,16 +104,31 @@ export default function CurriculumDashboard() {
     }
 
     setParent(JSON.parse(parentData));
+
+    // Restore subject selection from localStorage
+    const savedSubject = localStorage.getItem('curriculum-selected-subject') as Subject | null;
+    if (savedSubject === 'math' || savedSubject === 'reading') {
+      setSelectedSubject(savedSubject);
+    }
+
     loadData(token);
   }, [router]);
+
+  // Save subject selection to localStorage
+  useEffect(() => {
+    localStorage.setItem('curriculum-selected-subject', selectedSubject);
+  }, [selectedSubject]);
 
   const loadData = async (token: string) => {
     try {
       const childrenData = await children.list(token);
       setChildrenList(childrenData);
 
-      // Auto-select first child if available
-      if (childrenData.length > 0) {
+      // Restore child selection from localStorage, or auto-select first child
+      const savedChildId = localStorage.getItem('curriculum-selected-child');
+      if (savedChildId && childrenData.some(c => c.id === savedChildId)) {
+        setSelectedChildId(savedChildId);
+      } else if (childrenData.length > 0) {
         setSelectedChildId(childrenData[0].id);
       }
     } catch (err) {
@@ -118,6 +137,13 @@ export default function CurriculumDashboard() {
       setLoading(false);
     }
   };
+
+  // Save child selection to localStorage
+  useEffect(() => {
+    if (selectedChildId) {
+      localStorage.setItem('curriculum-selected-child', selectedChildId);
+    }
+  }, [selectedChildId]);
 
   const handleLogout = () => {
     localStorage.removeItem('parentToken');
@@ -445,19 +471,10 @@ export default function CurriculumDashboard() {
       </header>
 
       <div className="max-w-5xl mx-auto p-6">
-        {/* Child Selector */}
-        <section className="mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">{t('curriculum.selectChild')}</h2>
-              {selectedChild && (
-                <span className="text-sm text-gray-600">
-                  {t('curriculum.gradeLevel', { grade_level: selectedChild.grade_level })}
-                </span>
-              )}
-            </div>
-
-            {childrenList.length === 0 ? (
+        {/* No children state */}
+        {childrenList.length === 0 ? (
+          <section className="mb-8">
+            <div className="bg-white p-6 rounded-2xl shadow-sm">
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">👶</div>
                 <p className="text-gray-600 mb-4">{t('parent.dashboard.noChildren')}</p>
@@ -468,64 +485,114 @@ export default function CurriculumDashboard() {
                   {t('parent.dashboard.addFirstChild')}
                 </Link>
               </div>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {childrenList.map((child) => (
-                  <button
-                    key={child.id}
-                    onClick={() => setSelectedChildId(child.id)}
-                    className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                      selectedChildId === child.id
-                        ? 'bg-green-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>👤</span>
-                      <span>{child.name}</span>
-                      <span className="text-xs opacity-75">
-                        ({t('curriculum.gradeLevel', { grade_level: child.grade_level })})
+            </div>
+          </section>
+        ) : (
+          <>
+            {/* Child Tabs - only show if more than 1 child */}
+            {childrenList.length > 1 && (
+              <section className="mb-4">
+                <TabList>
+                  {childrenList.map((child) => (
+                    <Tab
+                      key={child.id}
+                      active={selectedChildId === child.id}
+                      onClick={() => setSelectedChildId(child.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>👤</span>
+                        <span>{child.name}</span>
+                        <span className="text-xs opacity-75">
+                          ({t('curriculum.gradeLevel', { grade_level: child.grade_level })})
+                        </span>
+                      </div>
+                    </Tab>
+                  ))}
+                </TabList>
+              </section>
+            )}
+
+            {/* Subject Tabs Container */}
+            {selectedChildId && (
+              <section className="mb-8">
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                  {/* Header with grade info */}
+                  {selectedChild && (
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold">
+                        {childrenList.length === 1 ? selectedChild.name : ''}
+                      </h2>
+                      <span className="text-sm text-gray-600">
+                        {t('curriculum.gradeLevel', { grade_level: selectedChild.grade_level })}
                       </span>
                     </div>
-                  </button>
-                ))}
-              </div>
+                  )}
+
+                  {/* Subject Tabs */}
+                  <TabList className="mb-6">
+                    <Tab
+                      active={selectedSubject === 'math'}
+                      onClick={() => setSelectedSubject('math')}
+                      variant="secondary"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>📐</span>
+                        <span>Matematik</span>
+                      </div>
+                    </Tab>
+                    <Tab
+                      active={selectedSubject === 'reading'}
+                      onClick={() => setSelectedSubject('reading')}
+                      variant="secondary"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>📖</span>
+                        <span>Läsförståelse</span>
+                      </div>
+                    </Tab>
+                  </TabList>
+
+                  {/* Subject-filtered content */}
+                  <TabPanel>
+                    {/* Coverage Chart */}
+                    <div className="mb-6">
+                      <CoverageChart
+                        childId={selectedChildId}
+                        childName={selectedChild?.name}
+                        subject={selectedSubject}
+                      />
+                    </div>
+
+                    {/* Custom Prompt Builder */}
+                    {selectedChild && (
+                      <div className="mb-6">
+                        <CustomPromptBuilder
+                          childId={selectedChildId}
+                          childName={selectedChild.name}
+                          childGradeLevel={selectedChild.grade_level}
+                          selectedObjectives={selectedObjectives}
+                          objectiveDetails={objectiveDetails}
+                          onToggleObjective={handleToggleObjective}
+                          subject={selectedSubject}
+                        />
+                      </div>
+                    )}
+
+                    {/* Export */}
+                    {selectedChild && (
+                      <div>
+                        <ExportButton
+                          childId={selectedChildId}
+                          childName={selectedChild.name}
+                          subject={selectedSubject}
+                        />
+                      </div>
+                    )}
+                  </TabPanel>
+                </div>
+              </section>
             )}
-          </div>
-        </section>
-
-        {/* Curriculum Coverage Section */}
-        {selectedChildId && (
-          <section className="mb-8">
-            <CoverageChart
-              childId={selectedChildId}
-              childName={selectedChild?.name}
-            />
-          </section>
-        )}
-
-        {/* Custom Prompt Builder Section */}
-        {selectedChildId && selectedChild && (
-          <section className="mb-8">
-            <CustomPromptBuilder
-              childId={selectedChildId}
-              childName={selectedChild.name}
-              childGradeLevel={selectedChild.grade_level}
-              selectedObjectives={selectedObjectives}
-              objectiveDetails={objectiveDetails}
-              onToggleObjective={handleToggleObjective}
-            />
-          </section>
-        )}
-
-        {/* Export Section */}
-        {selectedChildId && selectedChild && (
-          <section className="mb-8">
-            <ExportButton
-              childId={selectedChildId}
-              childName={selectedChild.name}
-            />
-          </section>
+          </>
         )}
 
         {/* Import Package Section - Admin Only */}

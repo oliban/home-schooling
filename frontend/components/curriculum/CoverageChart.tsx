@@ -79,6 +79,7 @@ interface TreemapCategoryItem {
 interface CoverageChartProps {
   childId: string;
   childName?: string;
+  subject?: 'math' | 'reading';
 }
 
 // Color functions based on percentage correct
@@ -341,7 +342,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   return null;
 };
 
-export default function CoverageChart({ childId, childName }: CoverageChartProps) {
+export default function CoverageChart({ childId, childName, subject }: CoverageChartProps) {
   const { t } = useTranslation();
   const [coverageData, setCoverageData] = useState<CoverageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -531,6 +532,10 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
   const mathTreemapData = treemapData.filter(item => item.name !== 'Lasforstaelse');
   const readingTreemapData = treemapData.filter(item => item.name === 'Lasforstaelse');
 
+  // Filter based on subject prop
+  const showMath = !subject || subject === 'math';
+  const showReading = !subject || subject === 'reading';
+
   // Always show categories as base layer
   const mathCategoryData = mathTreemapData.map(item => ({
     name: item.name,
@@ -573,6 +578,10 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       ? Math.round(readingCategories.reduce((sum, c) => sum + c.totalCorrect, 0) / Math.max(readingCategories.reduce((sum, c) => sum + c.totalQuestions, 0), 1) * 100)
       : 0,
   };
+
+  // Calculate stats for the selected subject (for overall summary)
+  const subjectStats = subject === 'reading' ? readingStats : mathStats;
+  const subjectCategories = subject === 'reading' ? readingCategories : mathCategories;
 
   // Base grid: always show categories, OR all objectives when "All Objectives" clicked
   // When category is clicked, show overlay instead of changing base grid
@@ -629,21 +638,21 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         </div>
       </div>
 
-      {/* Overall coverage summary */}
-      <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: getCoverageColorLight(coverageData.coveragePercentage) }}>
+      {/* Overall coverage summary - show subject-specific when subject is selected */}
+      <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: getCoverageColorLight(subject ? subjectStats.coveragePercentage : coverageData.coveragePercentage) }}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-700">{t('curriculum.coverage.overallCoverage')}</p>
-            <p className="text-2xl font-bold" style={{ color: getCoverageColor(coverageData.coveragePercentage) }}>
-              {coverageData.coveragePercentage}%
+            <p className="text-2xl font-bold" style={{ color: getCoverageColor(subject ? subjectStats.coveragePercentage : coverageData.coveragePercentage) }}>
+              {subject ? subjectStats.coveragePercentage : coverageData.coveragePercentage}%
             </p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">
-              {coverageData.totalCorrect} av {coverageData.totalQuestions} rätt
+              {subject ? subjectStats.totalCorrect : coverageData.totalCorrect} av {subject ? subjectStats.totalQuestions : coverageData.totalQuestions} rätt
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {t('curriculum.coverage.categoriesCount', { count: coverageData.categories.length })}
+              {t('curriculum.coverage.categoriesCount', { count: subject ? subjectCategories.length : coverageData.categories.length })}
             </p>
           </div>
         </div>
@@ -652,15 +661,15 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
-              width: `${coverageData.coveragePercentage}%`,
-              backgroundColor: getCoverageColor(coverageData.coveragePercentage),
+              width: `${subject ? subjectStats.coveragePercentage : coverageData.coveragePercentage}%`,
+              backgroundColor: getCoverageColor(subject ? subjectStats.coveragePercentage : coverageData.coveragePercentage),
             }}
           />
         </div>
       </div>
 
       {/* Math Treemap */}
-      {mathCategoryData.length > 0 && (
+      {showMath && mathCategoryData.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-blue-800 flex items-center gap-2">
@@ -761,7 +770,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
       )}
 
       {/* Reading Treemap */}
-      {readingCategoryData.length > 0 && (
+      {showReading && readingCategoryData.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-purple-800 flex items-center gap-2">
@@ -930,7 +939,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         <h4 className="font-semibold text-gray-800 mb-3">{t('curriculum.coverage.categoryBreakdown')}</h4>
 
         {/* Math categories */}
-        {mathCategories.length > 0 && (
+        {showMath && mathCategories.length > 0 && (
           <div className="mb-4">
             <h5 className="text-sm font-medium text-blue-800 mb-2">📐 Matematik</h5>
             <div className="space-y-2">
@@ -964,7 +973,7 @@ export default function CoverageChart({ childId, childName }: CoverageChartProps
         )}
 
         {/* Reading categories */}
-        {readingCategories.length > 0 && (
+        {showReading && readingCategories.length > 0 && (
           <div>
             <h5 className="text-sm font-medium text-purple-800 mb-2">📖 Läsförståelse</h5>
             <div className="space-y-2">

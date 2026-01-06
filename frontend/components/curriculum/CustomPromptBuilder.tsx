@@ -13,6 +13,7 @@ interface CustomPromptBuilderProps {
   selectedObjectives: Set<number>;
   objectiveDetails: Map<number, ObjectiveData>;
   onToggleObjective: (objectiveId: number, objective: ObjectiveData) => void;
+  subject?: 'math' | 'reading';
 }
 
 // API response types for coverage data
@@ -130,6 +131,7 @@ export default function CustomPromptBuilder({
   selectedObjectives,
   objectiveDetails,
   onToggleObjective,
+  subject,
 }: CustomPromptBuilderProps) {
   const [mode, setMode] = useState<PromptMode>('broad');
   const [theme, setTheme] = useState('');
@@ -563,19 +565,22 @@ export default function CustomPromptBuilder({
         </div>
       </div>
 
-      {/* Suggested Objectives Section */}
-      {!loadingCoverage && coverageData && (suggestedObjectives.math.length > 0 || suggestedObjectives.reading.length > 0) && (
+      {/* Suggested Objectives Section - filtered by subject */}
+      {!loadingCoverage && coverageData && (
+        ((!subject || subject === 'math') && suggestedObjectives.math.length > 0) ||
+        ((!subject || subject === 'reading') && suggestedObjectives.reading.length > 0)
+      ) && (
         <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
           <h4 className="text-sm font-semibold text-yellow-900 mb-3 flex items-center gap-2">
             💡 Suggested Focus Areas (Poor Coverage)
           </h4>
           <p className="text-xs text-yellow-800 mb-3">
-            These objectives have the lowest coverage. Select a subject to practice:
+            These objectives have the lowest coverage{subject ? '' : '. Select a subject to practice'}:
           </p>
 
-          <div className="grid md:grid-cols-2 gap-3">
-            {/* Math Suggestions */}
-            {suggestedObjectives.math.length > 0 && (
+          <div className={`grid ${!subject ? 'md:grid-cols-2' : ''} gap-3`}>
+            {/* Math Suggestions - show only if no subject filter or subject is math */}
+            {(!subject || subject === 'math') && suggestedObjectives.math.length > 0 && (
               <div className="bg-white p-3 rounded-lg border border-yellow-300">
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="text-xs font-semibold text-blue-800">📐 Math ({suggestedObjectives.math.length})</h5>
@@ -618,8 +623,8 @@ export default function CustomPromptBuilder({
               </div>
             )}
 
-            {/* Reading Suggestions */}
-            {suggestedObjectives.reading.length > 0 && (
+            {/* Reading Suggestions - show only if no subject filter or subject is reading */}
+            {(!subject || subject === 'reading') && suggestedObjectives.reading.length > 0 && (
               <div className="bg-white p-3 rounded-lg border border-yellow-300">
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="text-xs font-semibold text-purple-800">📖 Reading ({suggestedObjectives.reading.length})</h5>
@@ -665,8 +670,14 @@ export default function CustomPromptBuilder({
         </div>
       )}
 
-      {/* Matching Packages Section */}
-      {!loadingCoverage && (matchingPackages.length > 0 || loadingPackages) && (
+      {/* Matching Packages Section - filtered by subject */}
+      {(() => {
+        // Filter packages by subject if specified
+        const filteredPackages = subject
+          ? matchingPackages.filter(pkg => pkg.assignmentType === subject)
+          : matchingPackages;
+
+        return !loadingCoverage && (filteredPackages.length > 0 || loadingPackages) && (
         <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
           <h4 className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
             📦 Ready-to-Use Packages
@@ -680,7 +691,7 @@ export default function CustomPromptBuilder({
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
               <span className="ml-2 text-sm text-green-700">Loading packages...</span>
             </div>
-          ) : matchingPackages.length === 0 ? (
+          ) : filteredPackages.length === 0 ? (
             <p className="text-sm text-green-700 italic">No matching packages found.</p>
           ) : (
             <>
@@ -695,7 +706,7 @@ export default function CustomPromptBuilder({
                 </div>
               )}
               <div className="grid md:grid-cols-2 gap-3">
-                {matchingPackages.slice(0, 6).map(pkg => (
+                {filteredPackages.slice(0, 6).map(pkg => (
                   <div
                     key={pkg.id}
                     className="bg-white p-3 rounded-lg border border-green-300 flex flex-col"
@@ -762,20 +773,21 @@ export default function CustomPromptBuilder({
                   </div>
                 ))}
               </div>
-              {matchingPackages.length > 6 && (
+              {filteredPackages.length > 6 && (
                 <div className="mt-3 text-center">
                   <a
                     href={`/parent/packages?child=${childId}`}
                     className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
                   >
-                    Browse all {matchingPackages.length} packages →
+                    Browse all {filteredPackages.length} packages →
                   </a>
                 </div>
               )}
             </>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* Selected Objectives Display */}
       {selectedObjectives.size > 0 && (
@@ -828,6 +840,7 @@ export default function CustomPromptBuilder({
         childGradeLevel={childGradeLevel}
         selectedObjectives={selectedObjectives}
         onToggleObjective={onToggleObjective}
+        subject={subject}
       />
 
       {/* Coverage Type Toggle + Question Count */}

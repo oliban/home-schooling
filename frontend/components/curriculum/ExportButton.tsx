@@ -40,6 +40,7 @@ interface CoverageData {
 interface ExportButtonProps {
   childId: string;
   childName: string;
+  subject?: 'math' | 'reading';
 }
 
 // Escape CSV field values to handle commas, quotes, and newlines
@@ -126,7 +127,7 @@ const downloadCSV = (csvContent: string, filename: string): void => {
   URL.revokeObjectURL(url);
 };
 
-export default function ExportButton({ childId, childName }: ExportButtonProps) {
+export default function ExportButton({ childId, childName, subject }: ExportButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,13 +159,28 @@ export default function ExportButton({ childId, childName }: ExportButtonProps) 
 
       const data: CoverageData = await response.json();
 
-      // Generate CSV content
-      const csvContent = generateCSV(data, childName);
+      // Filter categories by subject if specified
+      let filteredData = data;
+      if (subject) {
+        const filteredCategories = data.categories.filter(category => {
+          // Reading is 'Lasforstaelse', everything else is math
+          const isMath = category.categoryName !== 'Lasforstaelse';
+          return subject === 'math' ? isMath : !isMath;
+        });
+        filteredData = {
+          ...data,
+          categories: filteredCategories,
+        };
+      }
 
-      // Generate filename with date and child name (sanitize for filesystem)
+      // Generate CSV content
+      const csvContent = generateCSV(filteredData, childName);
+
+      // Generate filename with date, child name, and subject (sanitize for filesystem)
       const sanitizedChildName = childName.replace(/[^a-zA-Z0-9åäöÅÄÖ]/g, '_');
       const dateStr = new Date().toISOString().split('T')[0];
-      const filename = `curriculum_progress_${sanitizedChildName}_${dateStr}.csv`;
+      const subjectSuffix = subject ? `_${subject}` : '';
+      const filename = `curriculum_progress_${sanitizedChildName}${subjectSuffix}_${dateStr}.csv`;
 
       // Download the file
       downloadCSV(csvContent, filename);
@@ -173,15 +189,19 @@ export default function ExportButton({ childId, childName }: ExportButtonProps) 
     } finally {
       setLoading(false);
     }
-  }, [childId, childName]);
+  }, [childId, childName, subject]);
+
+  const subjectLabel = subject === 'math' ? 'Matematik' : subject === 'reading' ? 'Läsförståelse' : '';
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold">Export Progress Report</h2>
+          <h2 className="text-lg font-bold">
+            Export {subjectLabel ? `${subjectLabel} ` : ''}Progress Report
+          </h2>
           <p className="text-sm text-gray-600">
-            Download curriculum coverage as CSV for compliance documentation
+            Download {subjectLabel ? `${subjectLabel.toLowerCase()} ` : ''}curriculum coverage as CSV
           </p>
           {error && (
             <p className="text-sm text-red-600 mt-2">{error}</p>
