@@ -398,7 +398,7 @@ describe('Math Package System', () => {
       const invalidMCProblems = [
         {
           question_text: 'Hur stor del av pizzan är en bit?',
-          correct_answer: 'en fjärdedel', // Wrong! Should be just 'C'
+          correct_answer: 'en fjärdedel', // Wrong! Starts with 'e', not A/B/C/D
           answer_type: 'multiple_choice',
           options: ['A: en halv', 'B: en tredjedel', 'C: en fjärdedel', 'D: en femtedel']
         },
@@ -407,18 +407,12 @@ describe('Math Package System', () => {
           correct_answer: 'E', // Wrong! Option E doesn't exist
           answer_type: 'multiple_choice',
           options: ['A: 3', 'B: 4', 'C: 5', 'D: 6']
-        },
-        {
-          question_text: 'Pick one',
-          correct_answer: 'C: correct answer', // Wrong! Should be just 'C'
-          answer_type: 'multiple_choice',
-          options: ['A: wrong', 'B: wrong', 'C: correct answer', 'D: wrong']
         }
       ];
 
       // Helper function to validate (mirrors the backend logic)
       const validateMultipleChoiceAnswer = (correctAnswer: string, options: string[]) => {
-        const normalizedAnswer = correctAnswer.trim().toUpperCase();
+        const normalizedAnswer = correctAnswer.trim().charAt(0).toUpperCase();
         const optionLetters = options.map(opt => opt.charAt(0).toUpperCase());
         return optionLetters.includes(normalizedAnswer);
       };
@@ -442,12 +436,24 @@ describe('Math Package System', () => {
           correct_answer: 'b', // Correct! Case insensitive
           answer_type: 'multiple_choice',
           options: ['A: 3', 'B: 4', 'C: 5', 'D: 6']
+        },
+        {
+          question_text: 'Pick one',
+          correct_answer: 'C: correct answer', // Valid! Extracts first char 'C'
+          answer_type: 'multiple_choice',
+          options: ['A: wrong', 'B: wrong', 'C: correct answer', 'D: wrong']
+        },
+        {
+          question_text: 'Vilket diagram passar denna data bäst?',
+          correct_answer: 'A: Stapeldiagram', // Valid! Extracts first char 'A'
+          answer_type: 'multiple_choice',
+          options: ['A: Stapeldiagram', 'B: Cirkeldiagram']
         }
       ];
 
       // Helper function to validate (mirrors the backend logic)
       const validateMultipleChoiceAnswer = (correctAnswer: string, options: string[]) => {
-        const normalizedAnswer = correctAnswer.trim().toUpperCase();
+        const normalizedAnswer = correctAnswer.trim().charAt(0).toUpperCase();
         const optionLetters = options.map(opt => opt.charAt(0).toUpperCase());
         return optionLetters.includes(normalizedAnswer);
       };
