@@ -37,18 +37,29 @@ describe('normalizeMultipleChoiceProblem', () => {
 
     const answer = problem.correct_answer.trim();
 
-    // Already a valid single letter
+    // Helper to check if a letter exists in options
+    const letterExistsInOptions = (letter: string): boolean => {
+      if (!options || options.length === 0) return true;
+      return options.some(opt => opt.charAt(0).toUpperCase() === letter);
+    };
+
+    // Already a valid single letter - verify it exists in options
     if (/^[A-Da-d]$/.test(answer)) {
-      return { correct_answer: answer.toUpperCase(), options: options && options.length > 0 ? options : (problem.options || null) };
+      const letter = answer.toUpperCase();
+      if (letterExistsInOptions(letter)) {
+        return { correct_answer: letter, options: options && options.length > 0 ? options : (problem.options || null) };
+      }
+      // Letter doesn't exist in options, fall through to text matching
     }
 
     // Extract first character if it's a letter (handles "A: text" format)
     const firstChar = answer.charAt(0).toUpperCase();
-    if (/^[A-D]$/.test(firstChar)) {
+    if (/^[A-D]$/.test(firstChar) && letterExistsInOptions(firstChar)) {
       return { correct_answer: firstChar, options: options && options.length > 0 ? options : (problem.options || null) };
     }
 
-    // No valid letter prefix - try to match answer text against options
+    // First char is A-D but doesn't exist in options, or answer doesn't start with A-D
+    // Try to match answer text against options
     if (options && Array.isArray(options) && options.length > 0) {
       const normalizedAnswer = answer.toLowerCase();
 
@@ -106,15 +117,16 @@ describe('normalizeMultipleChoiceProblem', () => {
       expect(result.correct_answer).toBe('A');
     });
 
-    it('should use first char as fallback when it looks like a valid letter', () => {
-      // "cirka" starts with C which is valid, so it returns C as fallback
+    it('should match text when first char is valid letter but not in options', () => {
+      // "cirka" starts with C, but options only have A and B
+      // Should match against option text instead of using 'C'
       const result = normalizeMultipleChoiceProblem({
         answer_type: 'multiple_choice',
         correct_answer: 'cirka 30',
         options: ['A: Cirka 30', 'B: Cirka 40']
       });
-      // First char 'C' is valid letter, used as fallback
-      expect(result.correct_answer).toBe('C');
+      // Should match 'A: Cirka 30' since 'cirka 30' matches the text
+      expect(result.correct_answer).toBe('A');
     });
 
     it('should not modify non-multiple_choice questions', () => {

@@ -97,18 +97,29 @@ function normalizeMultipleChoiceProblem(problem: {
 
   const answer = problem.correct_answer.trim();
 
-  // Already a valid single letter
+  // Helper to check if a letter exists in options
+  const letterExistsInOptions = (letter: string): boolean => {
+    if (!options || options.length === 0) return true; // No options to check against
+    return options.some(opt => opt.charAt(0).toUpperCase() === letter);
+  };
+
+  // Already a valid single letter - verify it exists in options
   if (/^[A-Da-d]$/.test(answer)) {
-    return { correct_answer: answer.toUpperCase(), options: options || null };
+    const letter = answer.toUpperCase();
+    if (letterExistsInOptions(letter)) {
+      return { correct_answer: letter, options: options || null };
+    }
+    // Letter doesn't exist in options, fall through to text matching
   }
 
   // Extract first character if it's a letter (handles "A: text" format)
   const firstChar = answer.charAt(0).toUpperCase();
-  if (/^[A-D]$/.test(firstChar)) {
+  if (/^[A-D]$/.test(firstChar) && letterExistsInOptions(firstChar)) {
     return { correct_answer: firstChar, options: options || null };
   }
 
-  // No valid letter prefix - try to match answer text against options
+  // First char is A-D but doesn't exist in options, or answer doesn't start with A-D
+  // Try to match answer text against options
   if (options && Array.isArray(options) && options.length > 0) {
     const normalizedAnswer = answer.toLowerCase();
 
