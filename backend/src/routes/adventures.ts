@@ -48,6 +48,92 @@ function getExpandedDescription(code: string, fallbackDescription: string): stri
   return descriptions[code] || fallbackDescription;
 }
 
+/**
+ * Extracts options from question text when they're embedded inline.
+ * Handles patterns like "A) Option1, B) Option2" or "A: Option1 B: Option2"
+ */
+function extractOptionsFromQuestionText(questionText: string): string[] | null {
+  // Look for patterns like "A) text, B) text" or "A: text B: text"
+  const optionPattern = /([A-D])[:\)]\s*([^,A-D]+?)(?=,?\s*[A-D][:\)]|$)/gi;
+  const matches = [...questionText.matchAll(optionPattern)];
+
+  if (matches.length >= 2) {
+    const options = matches.map(m => `${m[1].toUpperCase()}: ${m[2].trim()}`);
+    console.log(`[Adventures] Extracted options from question text: ${options.join(', ')}`);
+    return options;
+  }
+
+  return null;
+}
+
+/**
+ * Normalizes multiple_choice problems to ensure correct_answer is just a letter (A, B, C, or D).
+ * If the correct_answer contains full text, attempts to match it against options to find the correct letter.
+ * Also handles extracting options from question text if options array is empty.
+ */
+function normalizeMultipleChoiceProblem(problem: {
+  answer_type?: string;
+  correct_answer: string;
+  options?: string[];
+  question_text?: string;
+}): { correct_answer: string; options: string[] | null } {
+  // Only normalize multiple_choice questions
+  if (problem.answer_type !== 'multiple_choice') {
+    return { correct_answer: problem.correct_answer, options: problem.options || null };
+  }
+
+  let options = problem.options;
+
+  // If options are empty, try to extract from question text
+  if ((!options || options.length === 0) && problem.question_text) {
+    const extractedOptions = extractOptionsFromQuestionText(problem.question_text);
+    if (extractedOptions) {
+      options = extractedOptions;
+      console.warn(`[Adventures] Multiple_choice had empty options, extracted from question text`);
+    } else {
+      console.error(`[Adventures] Multiple_choice question has no options and none could be extracted: "${problem.question_text?.substring(0, 100)}..."`);
+    }
+  }
+
+  const answer = problem.correct_answer.trim();
+
+  // Already a valid single letter
+  if (/^[A-Da-d]$/.test(answer)) {
+    return { correct_answer: answer.toUpperCase(), options: options || null };
+  }
+
+  // Extract first character if it's a letter (handles "A: text" format)
+  const firstChar = answer.charAt(0).toUpperCase();
+  if (/^[A-D]$/.test(firstChar)) {
+    return { correct_answer: firstChar, options: options || null };
+  }
+
+  // No valid letter prefix - try to match answer text against options
+  if (options && Array.isArray(options) && options.length > 0) {
+    const normalizedAnswer = answer.toLowerCase();
+
+    for (const option of options) {
+      const match = option.match(/^([A-Da-d])[:\)]?\s*(.+)$/i);
+      if (!match) continue;
+
+      const [, letter, text] = match;
+      const normalizedText = text.toLowerCase().trim();
+
+      // Check if the option text contains or matches the correct answer
+      if (normalizedText === normalizedAnswer || normalizedText.includes(normalizedAnswer) || normalizedAnswer.includes(normalizedText)) {
+        console.log(`[Adventures] Normalized multiple_choice answer: "${answer}" → "${letter.toUpperCase()}"`);
+        return { correct_answer: letter.toUpperCase(), options };
+      }
+    }
+
+    // No match found - log warning and return first char as fallback
+    console.warn(`[Adventures] Could not normalize multiple_choice answer: "${answer}". Options: ${options.join(', ')}`);
+  }
+
+  // Fallback: return first char uppercase (might be wrong but at least consistent)
+  return { correct_answer: firstChar || 'A', options: options || null };
+}
+
 // Configuration
 const MAX_ACTIVE_ADVENTURES = 3;
 const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
@@ -381,6 +467,7 @@ Svara med JSON i exakt detta format:
 
 - Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra (men ALLTID inom årskurs ${gradeLevel} nivå!)
 - För Ja/Nej-frågor, använd answer_type: "multiple_choice" med options: ["A: Ja", "B: Nej"]
+- KRITISKT FÖR MULTIPLE_CHOICE: correct_answer MÅSTE vara ENDAST bokstaven (A, B, C eller D), ALDRIG hela svarstexten! Exempel: correct_answer: "A" (INTE "A: Ja" eller "Ja")
 - Gör uppgifterna roliga och engagerande med temat "${theme}"`;
 
   const response = await client.messages.create({
@@ -727,6 +814,9 @@ router.post('/generate', authenticateChild, async (req, res) => {
         const p = generated.problems[i];
         const problemId = uuidv4();
 
+        // Normalize multiple_choice: fix correct_answer format and extract options if missing
+        const normalized = normalizeMultipleChoiceProblem(p);
+
         db.run(
           `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -735,9 +825,9 @@ router.post('/generate', authenticateChild, async (req, res) => {
             packageId,
             i + 1,
             p.question_text,
-            p.correct_answer,
+            normalized.correct_answer,
             p.answer_type || 'number',
-            p.options ? JSON.stringify(p.options) : null,
+            normalized.options ? JSON.stringify(normalized.options) : (p.options ? JSON.stringify(p.options) : null),
             p.explanation || null,
             p.hint || null,
             p.difficulty || 'medium'
@@ -979,6 +1069,9 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
         const p = generated.problems[i];
         const problemId = uuidv4();
 
+        // Normalize multiple_choice: fix correct_answer format and extract options if missing
+        const normalized = normalizeMultipleChoiceProblem(p);
+
         db.run(
           `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, explanation, hint, difficulty)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -987,9 +1080,9 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
             packageId,
             i + 1,
             p.question_text,
-            p.correct_answer,
+            normalized.correct_answer,
             p.answer_type || 'number',
-            p.options ? JSON.stringify(p.options) : null,
+            normalized.options ? JSON.stringify(normalized.options) : (p.options ? JSON.stringify(p.options) : null),
             p.explanation || null,
             p.hint || null,
             p.difficulty || 'medium'
