@@ -6,6 +6,7 @@ export interface CollectibleSeed {
   ascii_art: string;
   price: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  pronunciation?: string; // Optional: text to speak instead of name (for correct pronunciation)
 }
 
 export const collectibles: CollectibleSeed[] = [
@@ -1479,10 +1480,10 @@ export const collectibles: CollectibleSeed[] = [
   },
 
   // ==========================================
-  // MYTHIC (1 character) - Ultimate rarity
+  // SECRET (1 character) - Ultimate rarity
   // ==========================================
   {
-    name: "Bajsalero Bajsalo",
+    name: "Bajsalero Bajsala",
     ascii_art: `    @@@@@@
    @  ~~  @
   @  @@@@  @
@@ -1493,7 +1494,8 @@ export const collectibles: CollectibleSeed[] = [
       \\/
     ~~~~~~`,
     price: 2000,
-    rarity: 'mythic'
+    rarity: 'mythic', // Note: Migration 022 changes this to 'secret' in DB
+    pronunciation: 'Bajaléro Bajsalà' // Phonetic spelling for Italian TTS
   }
 ];
 
@@ -1518,8 +1520,8 @@ export function seedCollectibles(db: {
     // Generate ID from name: lowercase, replace spaces with underscores
     const id = collectible.name.toLowerCase().replace(/ /g, '_').replace(/'/g, '');
     db.run(
-      'INSERT INTO collectibles (id, name, ascii_art, price, rarity) VALUES (?, ?, ?, ?, ?)',
-      [id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity]
+      'INSERT INTO collectibles (id, name, ascii_art, price, rarity, pronunciation) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity, collectible.pronunciation || null]
     );
   }
 

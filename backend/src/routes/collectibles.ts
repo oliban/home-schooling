@@ -116,7 +116,8 @@ router.get('/', authenticateChild, async (req, res) => {
         ascii_art: c.ascii_art,
         price: c.price,
         rarity: c.rarity,
-        owned: c.owned === 1
+        owned: c.owned === 1,
+        pronunciation: (c as any).pronunciation || null
       })),
       unlockedCount,
       totalCount: collectibles.length,

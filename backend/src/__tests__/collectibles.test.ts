@@ -298,4 +298,29 @@ describe('Per-Child Shop Ordering', () => {
       }
     }
   });
+
+  it('should include pronunciation field for collectibles that have one', () => {
+    const db = getDb();
+
+    // Get Bajsalero which has a pronunciation set
+    const bajsalero = db.get<{ id: string; name: string; pronunciation: string | null }>(
+      'SELECT id, name, pronunciation FROM collectibles WHERE id = ?',
+      ['bajsalero_bajsala']
+    );
+
+    if (bajsalero) {
+      // Bajsalero should have a pronunciation field
+      expect(bajsalero.pronunciation).toBe('Bajaléro Bajsalà');
+    }
+
+    // Get a regular collectible without pronunciation
+    const regularCollectible = db.get<{ id: string; name: string; pronunciation: string | null }>(
+      'SELECT id, name, pronunciation FROM collectibles WHERE pronunciation IS NULL LIMIT 1'
+    );
+
+    if (regularCollectible) {
+      // Regular collectibles should have null pronunciation
+      expect(regularCollectible.pronunciation).toBeNull();
+    }
+  });
 });

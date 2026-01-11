@@ -94,6 +94,7 @@ export interface Collectible {
   ascii_art: string;
   price: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
+  pronunciation?: string | null; // Optional: text to speak instead of name
 }
 
 export interface ChildCollectible {

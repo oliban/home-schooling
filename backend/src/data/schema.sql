@@ -170,7 +170,8 @@ CREATE TABLE IF NOT EXISTS collectibles (
     ascii_art TEXT NOT NULL,
     price INTEGER NOT NULL,
     rarity TEXT CHECK (rarity IN ('common', 'rare', 'epic', 'legendary', 'mythic', 'secret')),
-    always_visible INTEGER DEFAULT 0
+    always_visible INTEGER DEFAULT 0,
+    pronunciation TEXT -- Optional: text to speak instead of name for correct pronunciation
 );
 
 -- Child collectibles (purchased)

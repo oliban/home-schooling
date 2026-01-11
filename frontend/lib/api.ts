@@ -248,8 +248,9 @@ export const collectibles = {
         name: string;
         ascii_art: string;
         price: number;
-        rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+        rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
         owned: boolean;
+        pronunciation?: string | null;
       }[];
       unlockedCount: number;
       totalCount: number;

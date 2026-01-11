@@ -15,6 +15,7 @@ interface Collectible {
   price: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   owned: boolean;
+  pronunciation?: string | null; // Optional: text to speak instead of name
 }
 
 // Text-to-speech function for Italian pronunciation
@@ -251,7 +252,7 @@ export default function CollectionPage() {
 
                 {/* ASCII Art - Click to hear Italian pronunciation */}
                 <button
-                  onClick={() => speakItalian(item.name)}
+                  onClick={() => speakItalian(item.pronunciation || item.name)}
                   className="w-full bg-white rounded-lg p-3 mb-3 overflow-hidden hover:bg-gray-100 transition-colors cursor-pointer group"
                   title={t('collection.clickToHear')}
                 >
@@ -265,7 +266,7 @@ export default function CollectionPage() {
 
                 {/* Name - Also clickable */}
                 <button
-                  onClick={() => speakItalian(item.name)}
+                  onClick={() => speakItalian(item.pronunciation || item.name)}
                   className="w-full font-bold text-center mb-2 hover:text-purple-600 transition-colors cursor-pointer"
                 >
                   {item.name}
