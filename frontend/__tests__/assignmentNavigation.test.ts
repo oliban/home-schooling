@@ -14,9 +14,31 @@ interface Question {
   child_answer: string | null;
   is_correct: number | null;
   attempts_count?: number;
+  answer_type?: string;
+  options?: string | null;
 }
 
 const MAX_ATTEMPTS = 3;
+
+/**
+ * Check if a question is valid and can be answered
+ * Multiple choice questions require valid options array with at least 2 items
+ * Other answer types (number, text) are always answerable
+ */
+function isQuestionAnswerable(question: Question): boolean {
+  if (question.answer_type === 'multiple_choice') {
+    // Multiple choice requires valid options array with at least 2 items
+    if (!question.options) return false;
+    try {
+      const options = JSON.parse(question.options);
+      return Array.isArray(options) && options.length >= 2;
+    } catch {
+      return false;
+    }
+  }
+  // Other answer types (number, text) are always answerable
+  return true;
+}
 
 /**
  * Find the first incomplete question index for MATH assignments
@@ -243,6 +265,148 @@ describe('Assignment Navigation Logic', () => {
 
       // For math: Q2 has retries (wrong, 1 attempt), so incomplete
       expect(findIncompleteQuestionIndexWithType(questions, false)).toBe(1);
+    });
+  });
+
+  describe('isQuestionAnswerable - Corrupted Question Handling', () => {
+    it('should return true for number answer type questions', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'number',
+        options: null,
+      };
+      expect(isQuestionAnswerable(question)).toBe(true);
+    });
+
+    it('should return true for text answer type questions', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'text',
+        options: null,
+      };
+      expect(isQuestionAnswerable(question)).toBe(true);
+    });
+
+    it('should return true for multiple_choice with valid options', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: JSON.stringify(['A: Yes', 'B: No']),
+      };
+      expect(isQuestionAnswerable(question)).toBe(true);
+    });
+
+    it('should return true for multiple_choice with 4 options', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: JSON.stringify(['A: Option A', 'B: Option B', 'C: Option C', 'D: Option D']),
+      };
+      expect(isQuestionAnswerable(question)).toBe(true);
+    });
+
+    it('should return false for multiple_choice with null options', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: null,
+      };
+      expect(isQuestionAnswerable(question)).toBe(false);
+    });
+
+    it('should return false for multiple_choice with empty array', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: JSON.stringify([]),
+      };
+      expect(isQuestionAnswerable(question)).toBe(false);
+    });
+
+    it('should return false for multiple_choice with only one option', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: JSON.stringify(['A: Only option']),
+      };
+      expect(isQuestionAnswerable(question)).toBe(false);
+    });
+
+    it('should return false for multiple_choice with invalid JSON', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: 'not valid json',
+      };
+      expect(isQuestionAnswerable(question)).toBe(false);
+    });
+
+    it('should return false for multiple_choice with "null" string', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+        answer_type: 'multiple_choice',
+        options: 'null',
+      };
+      expect(isQuestionAnswerable(question)).toBe(false);
+    });
+
+    it('should return true for questions without answer_type (defaults to answerable)', () => {
+      const question: Question = {
+        id: '1',
+        child_answer: null,
+        is_correct: null,
+      };
+      expect(isQuestionAnswerable(question)).toBe(true);
+    });
+
+    it('should skip corrupted questions when finding incomplete', () => {
+      const questions: Question[] = [
+        { id: '1', child_answer: '10', is_correct: 1, attempts_count: 1, answer_type: 'number' },
+        { id: '2', child_answer: null, is_correct: null, answer_type: 'multiple_choice', options: null }, // corrupted
+        { id: '3', child_answer: null, is_correct: null, answer_type: 'number' }, // valid incomplete
+      ];
+
+      // Find first incomplete AND answerable
+      const incompleteIndex = questions.findIndex(q =>
+        isQuestionAnswerable(q) && q.child_answer === null
+      );
+
+      // Should skip Q2 (corrupted) and find Q3
+      expect(incompleteIndex).toBe(2);
+    });
+
+    it('should mark assignment complete if only corrupted questions remain', () => {
+      const questions: Question[] = [
+        { id: '1', child_answer: '10', is_correct: 1, attempts_count: 1, answer_type: 'number' },
+        { id: '2', child_answer: null, is_correct: null, answer_type: 'multiple_choice', options: null }, // corrupted
+        { id: '3', child_answer: null, is_correct: null, answer_type: 'multiple_choice', options: '[]' }, // also corrupted
+      ];
+
+      // Find first incomplete AND answerable
+      const incompleteIndex = questions.findIndex(q =>
+        isQuestionAnswerable(q) && q.child_answer === null
+      );
+
+      // No valid incomplete questions, should complete
+      expect(incompleteIndex).toBe(-1);
     });
   });
 });

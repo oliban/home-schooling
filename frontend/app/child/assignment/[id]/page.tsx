@@ -46,6 +46,22 @@ interface AssignmentData {
   story_text?: string | null;
 }
 
+// Check if a question is valid and can be answered
+function isQuestionAnswerable(question: Question): boolean {
+  if (question.answer_type === 'multiple_choice') {
+    // Multiple choice requires valid options array with at least 2 items
+    if (!question.options) return false;
+    try {
+      const options = JSON.parse(question.options);
+      return Array.isArray(options) && options.length >= 2;
+    } catch {
+      return false;
+    }
+  }
+  // Other answer types (number, text) are always answerable
+  return true;
+}
+
 export default function AssignmentPage() {
   const router = useRouter();
   const params = useParams();
@@ -95,15 +111,19 @@ export default function AssignmentPage() {
       const data = await assignments.get(token, assignmentId);
       setAssignment(data);
 
-      // Find first incomplete question:
+      // Find first incomplete AND answerable question:
+      // - Must be answerable (valid question structure)
       // - Unanswered (child_answer === null), OR
       // - For MATH only: Wrong answer but can still retry (is_correct !== 1 AND attempts < 3)
       // Reading assignments are single-attempt, so wrong answers are NOT incomplete
+      // Corrupted questions (e.g., multiple_choice without options) are skipped automatically
       const MAX_ATTEMPTS = 3;
       const isReading = data.assignment_type === 'reading';
       const incompleteIndex = data.questions.findIndex(q =>
-        q.child_answer === null ||
-        (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+        isQuestionAnswerable(q) && (
+          q.child_answer === null ||
+          (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+        )
       );
       if (incompleteIndex >= 0) {
         setCurrentIndex(incompleteIndex);
@@ -231,12 +251,13 @@ export default function AssignmentPage() {
     // Reset sketch pad for new question (clears saved sketches array)
     sketchPadRef.current?.resetForNewQuestion();
 
-    // Find next incomplete question (unanswered OR wrong with retries left for MATH only)
+    // Find next incomplete AND answerable question (unanswered OR wrong with retries left for MATH only)
     // Reading assignments are single-attempt, so wrong answers are NOT incomplete
+    // Corrupted questions (e.g., multiple_choice without options) are skipped automatically
     const MAX_ATTEMPTS = 3;
     const isReading = assignment.assignment_type === 'reading';
     const nextIncompleteIndex = assignment.questions.findIndex((q, i) =>
-      i > currentIndex && (
+      i > currentIndex && isQuestionAnswerable(q) && (
         q.child_answer === null ||
         (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
       )
@@ -267,9 +288,10 @@ export default function AssignmentPage() {
   }
 
   if (completed) {
-    // Calculate score
-    const correct = assignment.questions.filter(q => q.is_correct === 1).length;
-    const total = assignment.questions.length;
+    // Calculate score (only count answerable questions)
+    const answerableQuestions = assignment.questions.filter(isQuestionAnswerable);
+    const correct = answerableQuestions.filter(q => q.is_correct === 1).length;
+    const total = answerableQuestions.length;
 
     return (
       <main className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-8">
@@ -288,7 +310,7 @@ export default function AssignmentPage() {
           </div>
 
           <div className="space-y-2 mb-8">
-            {assignment.questions.map((q, i) => (
+            {answerableQuestions.map((q, i) => (
               <div key={q.id} className="flex items-center justify-between text-sm">
                 <span>{t('assignment.completed.questionLabel', { number: i + 1 })}</span>
                 <span>{q.is_correct === 1 ? '✅' : '❌'}</span>
