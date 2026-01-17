@@ -13,20 +13,6 @@
 // This allows 1/3 (0.333333...) to match 0.333, 0.3333, etc.
 const TOLERANCE = 0.001;
 
-// Rounding tolerance - accepts answers that differ by at most 1
-// This allows children to round answers: 228.57 can be answered as 228 or 229
-// NOTE: Only applied when correct answer has decimal places (see numbersEqual)
-const ROUNDING_TOLERANCE = 1;
-
-/**
- * Check if a number has meaningful decimal places
- * @param num - Number to check
- * @returns True if the number is not a whole integer
- */
-function hasDecimalPlaces(num: number): boolean {
-  return num !== Math.round(num);
-}
-
 // Supported units by category
 const UNITS = {
   length: ['m', 'meter', 'meters', 'cm', 'centimeter', 'centimeters', 'km', 'kilometer', 'kilometers', 'mm', 'millimeter', 'millimeters'],
@@ -225,32 +211,15 @@ export function parseToNumber(str: string): number | null {
 }
 
 /**
- * Compare two numbers with floating-point tolerance and rounding tolerance
+ * Compare two numbers with floating-point tolerance
  * @param a - First number
  * @param b - Second number
  * @param tolerance - Tolerance for comparison (default: 0.001)
- * @returns True if numbers are equal within tolerance or rounding tolerance
+ * @returns True if numbers are equal within tolerance
  */
 export function numbersEqual(a: number, b: number, tolerance: number = TOLERANCE): boolean {
   const diff = Math.abs(a - b);
-
-  // First check: exact match within tight tolerance
-  // This handles floating-point precision and very close values
-  if (diff < tolerance) {
-    return true;
-  }
-
-  // Second check: rounding tolerance ONLY for answers with decimal places
-  // This allows children to round decimal answers:
-  // - 228.57 → 228 or 229 (integer rounding) ✓
-  // - 12.5 → 12 or 13 (rounding) ✓
-  // But NOT for exact integer answers:
-  // - 8 → 7 (off-by-one error) ✗
-  if (hasDecimalPlaces(a) && diff <= ROUNDING_TOLERANCE) {
-    return true;
-  }
-
-  return false;
+  return diff < tolerance;
 }
 
 /**

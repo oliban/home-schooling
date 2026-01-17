@@ -399,9 +399,9 @@ describe('Answer Validation - Enhanced', () => {
         expect(numbersEqual(5, 5.01)).toBe(false);
       });
 
-      it('should accept 5.01 when correct answer is decimal 5.0001', () => {
-        // When correct answer has decimals, rounding tolerance applies
-        expect(numbersEqual(5.0001, 5.01)).toBe(true);
+      it('should NOT accept 5.01 when correct answer is 5.0001', () => {
+        // Only floating-point tolerance (0.001) applies, not rounding tolerance
+        expect(numbersEqual(5.0001, 5.01)).toBe(false);
       });
 
       it('should not match significantly different numbers', () => {
@@ -661,62 +661,6 @@ describe('Answer Validation - Enhanced', () => {
 
       it('should NOT accept 100 when correct answer is 99', () => {
         expect(validateNumberAnswer('99', '100')).toBe(false);
-      });
-    });
-
-    describe('rounding tolerance', () => {
-      it('should accept rounded answer for average: 228.57 rounded to 228', () => {
-        expect(validateNumberAnswer('228.57', '228')).toBe(true);
-      });
-
-      it('should accept rounded answer for average: 228.57 rounded to 229', () => {
-        expect(validateNumberAnswer('228.57', '229')).toBe(true);
-      });
-
-      it('should accept 228.6 as answer for 228.57', () => {
-        expect(validateNumberAnswer('228.57', '228.6')).toBe(true);
-      });
-
-      it('should accept 12.5 rounded to 12', () => {
-        expect(validateNumberAnswer('12.5', '12')).toBe(true);
-      });
-
-      it('should accept 12.5 rounded to 13', () => {
-        expect(validateNumberAnswer('12.5', '13')).toBe(true);
-      });
-
-      it('should accept 3.33 as answer for 3.333...', () => {
-        expect(validateNumberAnswer('3.333333', '3.33')).toBe(true);
-      });
-
-      it('should accept 3 as answer for 3.333... (rounded down)', () => {
-        expect(validateNumberAnswer('3.333333', '3')).toBe(true);
-      });
-
-      it('should NOT accept answers that differ by more than 1', () => {
-        expect(validateNumberAnswer('228.57', '230')).toBe(false);
-      });
-
-      it('should NOT accept answers that differ by more than 1 (lower)', () => {
-        expect(validateNumberAnswer('228.57', '227')).toBe(false);
-      });
-
-      it('should accept answers within 0.5 for small numbers', () => {
-        expect(validateNumberAnswer('5.7', '6')).toBe(true);
-      });
-
-      it('should accept 0.33 for 1/3', () => {
-        expect(validateNumberAnswer('0.333333', '0.33')).toBe(true);
-      });
-
-      it('should work with Swedish comma format', () => {
-        expect(validateNumberAnswer('228,57', '228')).toBe(true);
-      });
-
-      it('should NOT accept 228.57 when correct answer is integer 228', () => {
-        // If the correct answer is an integer, rounding tolerance does not apply
-        // Child must answer exactly 228, not 228.57
-        expect(validateNumberAnswer('228', '228.57')).toBe(false);
       });
     });
   });
