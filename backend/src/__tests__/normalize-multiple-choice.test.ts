@@ -38,8 +38,9 @@ describe('normalizeMultipleChoiceProblem', () => {
     const answer = problem.correct_answer.trim();
 
     // Helper to check if a letter exists in options
+    // FIX: Return false when options are missing - the letter can't exist in non-existent options
     const letterExistsInOptions = (letter: string): boolean => {
-      if (!options || options.length === 0) return true;
+      if (!options || options.length === 0) return false;
       return options.some(opt => opt.charAt(0).toUpperCase() === letter);
     };
 
@@ -76,8 +77,13 @@ describe('normalizeMultipleChoiceProblem', () => {
       }
     }
 
+    // REJECT multiple_choice without options - don't allow it through
+    if (!options || options.length === 0) {
+      throw new Error('Multiple choice question must have options');
+    }
+
     // Fallback
-    return { correct_answer: firstChar || 'A', options: problem.options || null };
+    return { correct_answer: firstChar || 'A', options };
   }
 
   describe('correct_answer normalization', () => {
@@ -158,16 +164,28 @@ describe('normalizeMultipleChoiceProblem', () => {
       expect(result.options).toEqual(existingOptions);
     });
 
-    it('should return empty options array when cannot extract', () => {
-      // When options is passed as empty array and extraction fails, it stays empty
-      const result = normalizeMultipleChoiceProblem({
-        answer_type: 'multiple_choice',
-        correct_answer: 'A',
-        options: [],
-        question_text: 'A question with no options embedded'
-      });
-      // Empty array is passed through as-is (null only when options undefined)
-      expect(result.options).toEqual([]);
+    it('should throw error when cannot extract options', () => {
+      // When options is passed as empty array and extraction fails, it should throw
+      expect(() => {
+        normalizeMultipleChoiceProblem({
+          answer_type: 'multiple_choice',
+          correct_answer: 'A',
+          options: [],
+          question_text: 'A question with no options embedded'
+        });
+      }).toThrow('Multiple choice question must have options');
+    });
+
+    it('should throw error when options is undefined for multiple_choice', () => {
+      // When options is undefined for multiple_choice, it should throw
+      expect(() => {
+        normalizeMultipleChoiceProblem({
+          answer_type: 'multiple_choice',
+          correct_answer: 'A',
+          options: undefined,
+          question_text: 'A question without options'
+        });
+      }).toThrow('Multiple choice question must have options');
     });
   });
 });

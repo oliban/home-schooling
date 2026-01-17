@@ -98,8 +98,9 @@ function normalizeMultipleChoiceProblem(problem: {
   const answer = problem.correct_answer.trim();
 
   // Helper to check if a letter exists in options
+  // FIX: Return false when options are missing - the letter can't exist in non-existent options
   const letterExistsInOptions = (letter: string): boolean => {
-    if (!options || options.length === 0) return true; // No options to check against
+    if (!options || options.length === 0) return false;
     return options.some(opt => opt.charAt(0).toUpperCase() === letter);
   };
 
@@ -141,8 +142,14 @@ function normalizeMultipleChoiceProblem(problem: {
     console.warn(`[Adventures] Could not normalize multiple_choice answer: "${answer}". Options: ${options.join(', ')}`);
   }
 
+  // REJECT multiple_choice without options - don't allow it through
+  if (!options || options.length === 0) {
+    console.error(`[Adventures] REJECTED: multiple_choice question has no options: "${problem.question_text?.substring(0, 100)}..."`);
+    throw new Error('Multiple choice question must have options');
+  }
+
   // Fallback: return first char uppercase (might be wrong but at least consistent)
-  return { correct_answer: firstChar || 'A', options: options || null };
+  return { correct_answer: firstChar || 'A', options };
 }
 
 // Configuration

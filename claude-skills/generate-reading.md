@@ -206,6 +206,11 @@ For ALL reading questions, you MUST follow this exact format:
 
 **VALIDATION RULES:**
 
+0. **`options` array is REQUIRED** for all multiple_choice questions
+   - Must have at least 2 options (typically 4: A, B, C, D)
+   - Without options, the question CANNOT be displayed to the child
+   - ❌ NEVER create multiple_choice without an options array
+
 1. **`correct_answer` must be ONLY the letter** (A, B, C, or D), NOT the full text
    - ✅ CORRECT: `"correct_answer": "C"`
    - ❌ WRONG: `"correct_answer": "C: Han var glad"`

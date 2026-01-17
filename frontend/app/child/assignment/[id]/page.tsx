@@ -309,7 +309,7 @@ export default function AssignmentPage() {
 
   const question = assignment.questions[currentIndex];
   const options = question.options ? JSON.parse(question.options) : null;
-  const isMultipleChoice = question.answer_type === 'multiple_choice' || options;
+  const isMultipleChoice = question.answer_type === 'multiple_choice' && options;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">

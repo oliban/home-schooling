@@ -577,6 +577,115 @@ describe('Assignment Scores', () => {
     });
   });
 
+  describe('Multiple Choice Validation', () => {
+    it('should reject multiple_choice problems without options', () => {
+      const db = getDb();
+
+      // Simulate what the POST /api/assignments validation should do
+      const problems = [
+        {
+          question_text: 'What is correct?',
+          correct_answer: 'A',
+          answer_type: 'multiple_choice',
+          options: null, // Invalid - missing options
+          difficulty: 'easy'
+        }
+      ];
+
+      // Validation logic from assignments.ts
+      let validationError: string | null = null;
+      for (let i = 0; i < problems.length; i++) {
+        const p = problems[i];
+        if (p.answer_type === 'multiple_choice') {
+          if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+            validationError = `Problem ${i + 1}: multiple_choice requires options array with at least 2 items`;
+            break;
+          }
+        }
+      }
+
+      expect(validationError).toBe('Problem 1: multiple_choice requires options array with at least 2 items');
+    });
+
+    it('should reject multiple_choice problems with only one option', () => {
+      // Validation logic from assignments.ts
+      const problems = [
+        {
+          question_text: 'What is correct?',
+          correct_answer: 'A',
+          answer_type: 'multiple_choice',
+          options: ['A: Yes'], // Invalid - only one option
+          difficulty: 'easy'
+        }
+      ];
+
+      let validationError: string | null = null;
+      for (let i = 0; i < problems.length; i++) {
+        const p = problems[i];
+        if (p.answer_type === 'multiple_choice') {
+          if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+            validationError = `Problem ${i + 1}: multiple_choice requires options array with at least 2 items`;
+            break;
+          }
+        }
+      }
+
+      expect(validationError).toBe('Problem 1: multiple_choice requires options array with at least 2 items');
+    });
+
+    it('should accept multiple_choice problems with valid options', () => {
+      // Validation logic from assignments.ts
+      const problems = [
+        {
+          question_text: 'What is correct?',
+          correct_answer: 'A',
+          answer_type: 'multiple_choice',
+          options: ['A: Yes', 'B: No'], // Valid
+          difficulty: 'easy'
+        }
+      ];
+
+      let validationError: string | null = null;
+      for (let i = 0; i < problems.length; i++) {
+        const p = problems[i];
+        if (p.answer_type === 'multiple_choice') {
+          if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+            validationError = `Problem ${i + 1}: multiple_choice requires options array with at least 2 items`;
+            break;
+          }
+        }
+      }
+
+      expect(validationError).toBeNull();
+    });
+
+    it('should not validate options for number answer types', () => {
+      // Validation logic from assignments.ts
+      const problems = [
+        {
+          question_text: 'What is 2+2?',
+          correct_answer: '4',
+          answer_type: 'number',
+          options: null, // OK for number type
+          difficulty: 'easy'
+        }
+      ];
+
+      let validationError: string | null = null;
+      for (let i = 0; i < problems.length; i++) {
+        const p = problems[i];
+        if (p.answer_type === 'multiple_choice') {
+          if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+            validationError = `Problem ${i + 1}: multiple_choice requires options array with at least 2 items`;
+            break;
+          }
+        }
+      }
+
+      expect(validationError).toBeNull();
+    });
+  });
+
   describe('Reading Assignment Coins', () => {
     it('should award coins for correct reading answers (package-based)', () => {
       const db = getDb();

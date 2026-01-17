@@ -407,6 +407,20 @@ router.post('/', authenticateParent, async (req, res) => {
     const assignmentId = uuidv4();
     const grade = gradeLevel || child.grade_level;
 
+    // Validate multiple_choice problems have options BEFORE starting transaction
+    if (type === 'math' && problems && Array.isArray(problems)) {
+      for (let i = 0; i < problems.length; i++) {
+        const p = problems[i];
+        if (p.answer_type === 'multiple_choice') {
+          if (!p.options || !Array.isArray(p.options) || p.options.length < 2) {
+            return res.status(400).json({
+              error: `Problem ${i + 1}: multiple_choice requires options array with at least 2 items`
+            });
+          }
+        }
+      }
+    }
+
     db.transaction(() => {
       db.run(
         `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, assigned_by_id)
