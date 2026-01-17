@@ -9,6 +9,7 @@ import { authenticateParent, authenticateChild, authenticateAny } from '../middl
 import { validateNumberAnswer } from '../utils/answer-validation.js';
 import { updateAdventureOnCompletion } from './adventures.js';
 import type { Assignment, MathProblem, ReadingQuestion, PackageProblem, AssignmentAnswer } from '../types/index.js';
+import { isAnswerableQuestion } from '../utils/question-validation.js';
 
 // Cache TTL in seconds (shorter for active assignments that change frequently)
 const ASSIGNMENTS_CACHE_TTL = 60; // 1 minute
@@ -636,18 +637,20 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           );
         }
 
-        // Check if assignment is complete (all problems answered)
-        const totalProblems = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM package_problems WHERE package_id = ?',
+        // Check if assignment is complete (all ANSWERABLE problems answered)
+        // Unanswerable questions (corrupted multiple_choice) should not block completion
+        const allProblems = db.all<{ answer_type: string | null; options: string | null }>(
+          'SELECT answer_type, options FROM package_problems WHERE package_id = ?',
           [assignment.package_id]
         );
+        const answerableCount = allProblems.filter(p => isAnswerableQuestion(p.answer_type, p.options)).length;
 
         const answeredProblems = db.get<{ count: number }>(
           'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND child_answer IS NOT NULL',
           [req.params.id]
         );
 
-        if (answeredProblems && totalProblems && answeredProblems.count === totalProblems.count) {
+        if (answeredProblems && answeredProblems.count >= answerableCount) {
           questionComplete = true;
           db.run(
             "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -685,18 +688,20 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           [answer as string, isCorrect ? 1 : 0, questionId, req.params.id]
         );
 
-        // Check if all questions answered
-        const totalQuestions = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ?',
+        // Check if all ANSWERABLE questions answered
+        // Reading questions are always multiple_choice, so check options validity
+        const allQuestions = db.all<{ options: string | null }>(
+          'SELECT options FROM reading_questions WHERE assignment_id = ?',
           [req.params.id]
         );
+        const answerableCount = allQuestions.filter(q => isAnswerableQuestion('multiple_choice', q.options)).length;
 
         const answeredQuestions = db.get<{ count: number }>(
           'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ? AND child_answer IS NOT NULL',
           [req.params.id]
         );
 
-        if (answeredQuestions && totalQuestions && answeredQuestions.count === totalQuestions.count) {
+        if (answeredQuestions && answeredQuestions.count >= answerableCount) {
           questionComplete = true;
           db.run(
             "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -779,18 +784,19 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
           ]
         );
 
-        // Check if assignment complete
-        const totalProblems = db.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ?',
+        // Check if assignment complete (all ANSWERABLE problems answered)
+        const allMathProblems = db.all<{ answer_type: string | null; options: string | null }>(
+          'SELECT answer_type, options FROM math_problems WHERE assignment_id = ?',
           [req.params.id]
         );
+        const answerableMathCount = allMathProblems.filter(p => isAnswerableQuestion(p.answer_type, p.options)).length;
 
         const solvedProblems = db.get<{ count: number }>(
           'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND child_answer IS NOT NULL',
           [req.params.id]
         );
 
-        if (solvedProblems && totalProblems && solvedProblems.count === totalProblems.count) {
+        if (solvedProblems && solvedProblems.count >= answerableMathCount) {
           questionComplete = true;
           db.run(
             "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",

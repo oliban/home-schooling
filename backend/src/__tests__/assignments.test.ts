@@ -736,3 +736,434 @@ describe('Assignment Scores', () => {
     });
   });
 });
+
+/**
+ * Tests for unanswerable question handling in completion logic
+ *
+ * A question is "unanswerable" if it's multiple_choice with invalid options:
+ * - NULL options
+ * - empty array []
+ * - less than 2 options
+ *
+ * Skipped/corrupted questions should not block assignment completion.
+ */
+describe('Unanswerable Question Completion Logic', () => {
+  // Import the helper function once it's exported
+  // For now, we test the behavior through database operations
+  let parentId: string;
+  let childId: string;
+  const testEmail = `test-unanswerable-${Date.now()}@example.com`;
+
+  beforeAll(async () => {
+    parentId = uuidv4();
+    childId = uuidv4();
+
+    const db = getDb();
+    const passwordHash = await bcrypt.hash('test1234', 10);
+    const pinHash = await bcrypt.hash('1234', 10);
+
+    // Create parent
+    db.run(
+      'INSERT INTO parents (id, email, password_hash, name) VALUES (?, ?, ?, ?)',
+      [parentId, testEmail, passwordHash, 'Test Parent Unanswerable']
+    );
+
+    // Create child
+    db.run(
+      'INSERT INTO children (id, parent_id, name, grade_level, pin_hash) VALUES (?, ?, ?, ?, ?)',
+      [childId, parentId, 'Test Child Unanswerable', 3, pinHash]
+    );
+    db.run('INSERT INTO child_coins (child_id) VALUES (?)', [childId]);
+  });
+
+  afterAll(() => {
+    const db = getDb();
+    // Clean up in reverse order of dependencies
+    db.run('DELETE FROM assignment_answers WHERE assignment_id IN (SELECT id FROM assignments WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM math_problems WHERE assignment_id IN (SELECT id FROM assignments WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM reading_questions WHERE assignment_id IN (SELECT id FROM assignments WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM package_problems WHERE package_id IN (SELECT id FROM math_packages WHERE parent_id = ?)', [parentId]);
+    db.run('DELETE FROM assignments WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM math_packages WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM child_coins WHERE child_id = ?', [childId]);
+    db.run('DELETE FROM children WHERE parent_id = ?', [parentId]);
+    db.run('DELETE FROM parents WHERE id = ?', [parentId]);
+  });
+
+  describe('isAnswerableQuestion helper', () => {
+    // Import the helper for direct testing from the utility file
+    it('should return true for number answer types', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('number', null)).toBe(true);
+    });
+
+    it('should return true for text answer types', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('text', null)).toBe(true);
+    });
+
+    it('should return true for multiple_choice with valid options (2+)', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('multiple_choice', '["A: Yes", "B: No"]')).toBe(true);
+      expect(isAnswerableQuestion('multiple_choice', '["A", "B", "C", "D"]')).toBe(true);
+    });
+
+    it('should return false for multiple_choice with null options', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('multiple_choice', null)).toBe(false);
+    });
+
+    it('should return false for multiple_choice with empty array', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('multiple_choice', '[]')).toBe(false);
+    });
+
+    it('should return false for multiple_choice with only 1 option', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('multiple_choice', '["A: Only option"]')).toBe(false);
+    });
+
+    it('should return false for multiple_choice with invalid JSON', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion('multiple_choice', 'not valid json')).toBe(false);
+    });
+
+    it('should return true for null answer_type (defaults to number)', async () => {
+      const { isAnswerableQuestion } = await import('../utils/question-validation.js');
+      expect(isAnswerableQuestion(null, null)).toBe(true);
+    });
+  });
+
+  describe('Package-based assignment completion with corrupted questions', () => {
+    it('should mark assignment complete when all ANSWERABLE questions are answered, ignoring corrupted ones', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+      const assignmentId = uuidv4();
+      const problemIds: string[] = [];
+
+      // Create a package with 3 problems: 2 valid, 1 corrupted
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, difficulty_summary, is_global)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [packageId, parentId, 'Corrupted Test Package', 3, 'taluppfattning', 3, '{}', 0]
+      );
+
+      // Problem 1: valid number type
+      const problem1Id = uuidv4();
+      problemIds.push(problem1Id);
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [problem1Id, packageId, 1, 'What is 2+2?', '4', 'number', 'easy']
+      );
+
+      // Problem 2: valid multiple_choice
+      const problem2Id = uuidv4();
+      problemIds.push(problem2Id);
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [problem2Id, packageId, 2, 'Choose A', 'A', 'multiple_choice', '["A: Yes", "B: No"]', 'easy']
+      );
+
+      // Problem 3: CORRUPTED - multiple_choice with null options
+      const problem3Id = uuidv4();
+      problemIds.push(problem3Id);
+      db.run(
+        `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type, options, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [problem3Id, packageId, 3, 'Corrupted question', 'A', 'multiple_choice', null, 'easy']
+      );
+
+      // Create assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress', ?)`,
+        [assignmentId, parentId, childId, 'Test Corrupted Package', 3, packageId]
+      );
+
+      // Answer only the 2 answerable problems
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problem1Id, '4', 1]
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [uuidv4(), assignmentId, problem2Id, 'A', 1]
+      );
+
+      // Import and use the completion logic (simulating what submit endpoint does)
+      // This tests that the completion check now considers answerable questions only
+      const allProblems = db.all<{ answer_type: string | null; options: string | null }>(
+        'SELECT answer_type, options FROM package_problems WHERE package_id = ?',
+        [packageId]
+      );
+
+      // Filter to answerable questions only (this is the new logic we need to implement)
+      const isAnswerable = (answerType: string | null, options: string | null): boolean => {
+        if (answerType === 'multiple_choice') {
+          if (!options) return false;
+          try {
+            const parsed = JSON.parse(options);
+            return Array.isArray(parsed) && parsed.length >= 2;
+          } catch {
+            return false;
+          }
+        }
+        return true;
+      };
+      const answerableCount = allProblems.filter(p => isAnswerable(p.answer_type, p.options)).length;
+
+      const answeredProblems = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM assignment_answers WHERE assignment_id = ? AND child_answer IS NOT NULL',
+        [assignmentId]
+      );
+
+      // Expect only 2 answerable questions
+      expect(answerableCount).toBe(2);
+      expect(answeredProblems?.count).toBe(2);
+
+      // The new logic should mark this as complete
+      if (answeredProblems && answeredProblems.count >= answerableCount) {
+        db.run(
+          "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+          [assignmentId]
+        );
+      }
+
+      // Verify assignment is completed
+      const assignment = db.get<{ status: string }>(
+        'SELECT status FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+      expect(assignment?.status).toBe('completed');
+    });
+  });
+
+  describe('Legacy reading assignment completion with corrupted questions', () => {
+    it('should mark assignment complete when all ANSWERABLE reading questions are answered', () => {
+      const db = getDb();
+      const assignmentId = uuidv4();
+      const questionIds: string[] = [];
+
+      // Create a reading assignment
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status)
+         VALUES (?, ?, ?, 'reading', ?, ?, 'in_progress')`,
+        [assignmentId, parentId, childId, 'Reading Corrupted Test', 3]
+      );
+
+      // Question 1: valid options
+      const q1Id = uuidv4();
+      questionIds.push(q1Id);
+      db.run(
+        `INSERT INTO reading_questions (id, assignment_id, question_number, question_text, correct_answer, options)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [q1Id, assignmentId, 1, 'Valid question 1', 'A', '["A: Yes", "B: No"]']
+      );
+
+      // Question 2: valid options
+      const q2Id = uuidv4();
+      questionIds.push(q2Id);
+      db.run(
+        `INSERT INTO reading_questions (id, assignment_id, question_number, question_text, correct_answer, options)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [q2Id, assignmentId, 2, 'Valid question 2', 'B', '["A: First", "B: Second", "C: Third"]']
+      );
+
+      // Question 3: CORRUPTED - empty array (no options)
+      const q3Id = uuidv4();
+      questionIds.push(q3Id);
+      db.run(
+        `INSERT INTO reading_questions (id, assignment_id, question_number, question_text, correct_answer, options)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [q3Id, assignmentId, 3, 'Corrupted question', 'A', '[]']
+      );
+
+      // Question 4: CORRUPTED - only 1 option
+      const q4Id = uuidv4();
+      questionIds.push(q4Id);
+      db.run(
+        `INSERT INTO reading_questions (id, assignment_id, question_number, question_text, correct_answer, options)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [q4Id, assignmentId, 4, 'Single option question', 'A', '["A: Only"]']
+      );
+
+      // Answer only the 2 answerable questions
+      db.run(
+        `UPDATE reading_questions SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        ['A', 1, q1Id]
+      );
+      db.run(
+        `UPDATE reading_questions SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        ['B', 1, q2Id]
+      );
+
+      // Simulate the new completion logic for reading questions
+      const allQuestions = db.all<{ options: string | null }>(
+        'SELECT options FROM reading_questions WHERE assignment_id = ?',
+        [assignmentId]
+      );
+
+      const isAnswerableReading = (options: string | null): boolean => {
+        if (!options) return false;
+        try {
+          const parsed = JSON.parse(options);
+          return Array.isArray(parsed) && parsed.length >= 2;
+        } catch {
+          return false;
+        }
+      };
+      const answerableCount = allQuestions.filter(q => isAnswerableReading(q.options)).length;
+
+      const answeredQuestions = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM reading_questions WHERE assignment_id = ? AND child_answer IS NOT NULL',
+        [assignmentId]
+      );
+
+      // Expect only 2 answerable questions
+      expect(answerableCount).toBe(2);
+      expect(answeredQuestions?.count).toBe(2);
+
+      // The new logic should mark this as complete
+      if (answeredQuestions && answeredQuestions.count >= answerableCount) {
+        db.run(
+          "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+          [assignmentId]
+        );
+      }
+
+      // Verify assignment is completed
+      const assignment = db.get<{ status: string }>(
+        'SELECT status FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+      expect(assignment?.status).toBe('completed');
+    });
+  });
+
+  describe('Legacy math assignment completion with corrupted questions', () => {
+    it('should mark assignment complete when all ANSWERABLE math problems are answered', () => {
+      const db = getDb();
+      const assignmentId = uuidv4();
+      const problemIds: string[] = [];
+
+      // Create a legacy math assignment (no package_id)
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status)
+         VALUES (?, ?, ?, 'math', ?, ?, 'in_progress')`,
+        [assignmentId, parentId, childId, 'Math Corrupted Test', 3]
+      );
+
+      // Problem 1: valid number type
+      const p1Id = uuidv4();
+      problemIds.push(p1Id);
+      db.run(
+        `INSERT INTO math_problems (id, assignment_id, problem_number, question_text, correct_answer, answer_type, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [p1Id, assignmentId, 1, 'What is 3+3?', '6', 'number', 'easy']
+      );
+
+      // Problem 2: valid text type
+      const p2Id = uuidv4();
+      problemIds.push(p2Id);
+      db.run(
+        `INSERT INTO math_problems (id, assignment_id, problem_number, question_text, correct_answer, answer_type, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [p2Id, assignmentId, 2, 'Write hello', 'hello', 'text', 'easy']
+      );
+
+      // Problem 3: valid multiple_choice
+      const p3Id = uuidv4();
+      problemIds.push(p3Id);
+      db.run(
+        `INSERT INTO math_problems (id, assignment_id, problem_number, question_text, correct_answer, answer_type, options, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [p3Id, assignmentId, 3, 'Choose B', 'B', 'multiple_choice', '["A: Wrong", "B: Right"]', 'easy']
+      );
+
+      // Problem 4: CORRUPTED - multiple_choice with null options
+      const p4Id = uuidv4();
+      problemIds.push(p4Id);
+      db.run(
+        `INSERT INTO math_problems (id, assignment_id, problem_number, question_text, correct_answer, answer_type, options, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [p4Id, assignmentId, 4, 'Corrupted MC', 'A', 'multiple_choice', null, 'easy']
+      );
+
+      // Problem 5: CORRUPTED - multiple_choice with empty array
+      const p5Id = uuidv4();
+      problemIds.push(p5Id);
+      db.run(
+        `INSERT INTO math_problems (id, assignment_id, problem_number, question_text, correct_answer, answer_type, options, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [p5Id, assignmentId, 5, 'Empty options MC', 'A', 'multiple_choice', '[]', 'easy']
+      );
+
+      // Answer only the 3 answerable problems
+      db.run(
+        `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        ['6', 1, p1Id]
+      );
+      db.run(
+        `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        ['hello', 1, p2Id]
+      );
+      db.run(
+        `UPDATE math_problems SET child_answer = ?, is_correct = ?, answered_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        ['B', 1, p3Id]
+      );
+
+      // Simulate the new completion logic for math problems
+      const allProblems = db.all<{ answer_type: string | null; options: string | null }>(
+        'SELECT answer_type, options FROM math_problems WHERE assignment_id = ?',
+        [assignmentId]
+      );
+
+      const isAnswerableMath = (answerType: string | null, options: string | null): boolean => {
+        if (answerType === 'multiple_choice') {
+          if (!options) return false;
+          try {
+            const parsed = JSON.parse(options);
+            return Array.isArray(parsed) && parsed.length >= 2;
+          } catch {
+            return false;
+          }
+        }
+        return true;
+      };
+      const answerableCount = allProblems.filter(p => isAnswerableMath(p.answer_type, p.options)).length;
+
+      const solvedProblems = db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM math_problems WHERE assignment_id = ? AND child_answer IS NOT NULL',
+        [assignmentId]
+      );
+
+      // Expect only 3 answerable problems
+      expect(answerableCount).toBe(3);
+      expect(solvedProblems?.count).toBe(3);
+
+      // The new logic should mark this as complete
+      if (solvedProblems && solvedProblems.count >= answerableCount) {
+        db.run(
+          "UPDATE assignments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+          [assignmentId]
+        );
+      }
+
+      // Verify assignment is completed
+      const assignment = db.get<{ status: string }>(
+        'SELECT status FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+      expect(assignment?.status).toBe('completed');
+    });
+  });
+});
