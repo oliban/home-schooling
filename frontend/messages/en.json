@@ -18,30 +18,30 @@
   },
   "home": {
     "hero": {
-      "title": "Time for an adventure!",
-      "subtitle": "Explore math mysteries and dive into exciting stories",
-      "startButton": "Start the adventure!",
-      "parentButton": "Parent"
+      "title": "Learning that feels like play!",
+      "subtitle": "Math and reading practice aligned with Swedish curriculum (LGR 22). Earn coins, collect characters, and level up while learning!",
+      "startButton": "Start learning!",
+      "parentButton": "Parent Portal"
     },
     "features": {
       "math": {
         "title": "Math",
-        "description": "Crack the code!"
+        "description": "Problems that grow with you"
       },
       "reading": {
-        "title": "Reading",
-        "description": "Discover worlds"
+        "title": "Swedish",
+        "description": "Stories & comprehension"
       },
       "coins": {
-        "title": "Coins",
-        "description": "Collect treasures"
+        "title": "Rewards",
+        "description": "Earn for every answer"
       },
       "characters": {
-        "title": "Characters",
-        "description": "Build your collection"
+        "title": "Collection",
+        "description": "Unlock fun characters"
       }
     },
-    "imageAlt": "Magical school world"
+    "imageAlt": "Children learning together"
   },
   "login": {
     "title": "Welcome to Brainrot-skolan!",

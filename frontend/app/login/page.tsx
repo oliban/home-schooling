@@ -76,14 +76,14 @@ export default function ChildLogin() {
 
   if (showParentInput || children.length === 0) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white">
-        <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
-          <div className="text-4xl mb-4">🎒</div>
-          <h1 className="text-2xl font-bold mb-2">{t('login.welcome')}</h1>
-          <p className="text-gray-600 mb-6">{t('login.enterFamilyCode')}</p>
+      <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white">
+        <div className="bg-white p-8 rounded-2xl shadow-card-warm max-w-md w-full text-center">
+          <div className="text-5xl mb-4 animate-float">🎒</div>
+          <h1 className="text-2xl font-display font-bold text-sunset-twilight mb-2">{t('login.welcome')}</h1>
+          <p className="text-sunset-twilight/70 mb-6">{t('login.enterFamilyCode')}</p>
 
           {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-center">
+            <div className="bg-sunset-coral/10 text-sunset-coral p-3 rounded-xl mb-4 text-center">
               {error}
             </div>
           )}
@@ -96,21 +96,21 @@ export default function ChildLogin() {
             onChange={(e) => setParentId(e.target.value.replace(/\D/g, ''))}
             onKeyDown={(e) => e.key === 'Enter' && parentId.trim() && handleParentIdSubmit()}
             placeholder="____"
-            className="w-full p-4 border-2 rounded-xl mb-4 text-center text-3xl font-bold tracking-[0.5em]"
+            className="w-full p-4 border-2 border-sunset-peach rounded-xl mb-4 text-center text-3xl font-bold tracking-[0.5em] text-sunset-twilight focus:border-sunset-tangerine focus:outline-none"
           />
           <button
             onClick={handleParentIdSubmit}
             disabled={!parentId.trim()}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
+            className="w-full py-3 bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral text-white rounded-xl font-display font-semibold hover:from-sunset-amber hover:via-sunset-gold hover:to-sunset-tangerine disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 transition-all shadow-md hover:shadow-lg"
           >
             {t('login.continue')}
           </button>
 
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">{t('login.noAccount')}</p>
+          <div className="mt-6 pt-4 border-t border-sunset-peach/30">
+            <p className="text-sm text-sunset-twilight/60 mb-2">{t('login.noAccount')}</p>
             <a
               href="/parent/login"
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              className="text-sunset-tangerine hover:text-sunset-coral font-medium text-sm transition-colors"
             >
               {t('login.createParent')}
             </a>
@@ -121,15 +121,15 @@ export default function ChildLogin() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white">
-      <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-2">
+    <main className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white">
+      <div className="bg-white p-8 rounded-2xl shadow-card-warm max-w-md w-full">
+        <h1 className="text-3xl font-display font-bold text-center text-sunset-twilight mb-2">
           {t('login.welcome')}
         </h1>
-        <p className="text-gray-600 text-center mb-8">{t('login.whichChild')}</p>
+        <p className="text-sunset-twilight/70 text-center mb-8">{t('login.whichChild')}</p>
 
         {error && (
-          <div className="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-center">
+          <div className="bg-sunset-coral/10 text-sunset-coral p-3 rounded-xl mb-4 text-center">
             {error}
           </div>
         )}
@@ -139,14 +139,14 @@ export default function ChildLogin() {
             <button
               key={child.id}
               onClick={() => setSelectedChild(child.id)}
-              className={`p-4 rounded-xl border-2 transition-all ${
+              className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 ${
                 selectedChild === child.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-sunset-tangerine bg-sunset-amber/20 shadow-card-warm'
+                  : 'border-sunset-peach hover:border-sunset-tangerine/50'
               }`}
             >
               <div className="text-3xl mb-2">👤</div>
-              <div className="font-medium">{child.name}</div>
+              <div className="font-display font-medium text-sunset-twilight">{child.name}</div>
             </button>
           ))}
         </div>
@@ -154,7 +154,7 @@ export default function ChildLogin() {
         {selectedChild && (
           <>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+              <label className="block text-sm font-medium text-sunset-twilight/70 mb-2 text-center">
                 {t('login.enterPin')}
               </label>
               <input
@@ -164,7 +164,7 @@ export default function ChildLogin() {
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                 onKeyDown={(e) => e.key === 'Enter' && pin.length === 4 && !loading && handleLogin()}
-                className="w-full text-center text-3xl tracking-[0.5em] p-4 border-2 rounded-xl focus:border-blue-500 focus:outline-none"
+                className="w-full text-center text-3xl tracking-[0.5em] p-4 border-2 border-sunset-peach rounded-xl focus:border-sunset-tangerine focus:outline-none text-sunset-twilight"
                 placeholder="____"
               />
             </div>
@@ -172,9 +172,9 @@ export default function ChildLogin() {
             <button
               onClick={handleLogin}
               disabled={pin.length !== 4 || loading}
-              className="w-full py-4 bg-blue-600 text-white rounded-xl text-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-4 bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral text-white rounded-xl text-lg font-display font-semibold hover:from-sunset-amber hover:via-sunset-gold hover:to-sunset-tangerine disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
             >
-              {loading ? t('common.loading') : t('login.start')}
+              {loading ? t('common.loading') : `${t('login.start')} ✨`}
             </button>
           </>
         )}
