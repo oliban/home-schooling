@@ -18,10 +18,10 @@
   },
   "home": {
     "hero": {
-      "title": "Learning that feels like play!",
-      "subtitle": "Math and reading practice aligned with Swedish curriculum (LGR 22). Earn coins, collect characters, and level up while learning!",
-      "startButton": "Start learning!",
-      "parentButton": "Parent Portal"
+      "title": "Your learning adventure awaits!",
+      "subtitle": "Practice math and Swedish reading with fun challenges, earn coins, and build your collection",
+      "startButton": "Child Login",
+      "parentButton": "Parent Login"
     },
     "features": {
       "math": {

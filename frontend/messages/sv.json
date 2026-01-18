@@ -18,10 +18,10 @@
   },
   "home": {
     "hero": {
-      "title": "Lärande som känns som lek!",
-      "subtitle": "Matte och läsförståelse enligt svenska läroplanen (LGR 22). Tjäna mynt, samla karaktärer och bli bättre medan du lär dig!",
-      "startButton": "Börja lära dig!",
-      "parentButton": "Föräldraportalen"
+      "title": "Ditt läroäventyr väntar!",
+      "subtitle": "Öva matte och läsförståelse med roliga utmaningar, tjäna mynt och bygg din samling",
+      "startButton": "Barninloggning",
+      "parentButton": "Föräldrarinloggning"
     },
     "features": {
       "math": {
