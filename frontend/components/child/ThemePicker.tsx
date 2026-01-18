@@ -97,7 +97,7 @@ export function ThemePicker({
   return (
     <div className="space-y-4">
       {/* Theme count indicator */}
-      <div className="text-center text-sm text-gray-600">
+      <div className="text-center text-sm text-sunset-twilight/70">
         {locale === 'sv'
           ? `${selectedCount}/${MAX_THEMES} teman valda`
           : `${selectedCount}/${MAX_THEMES} themes selected`}
@@ -115,18 +115,18 @@ export function ThemePicker({
               className={`
                 p-4 rounded-xl border-2 transition-all transform
                 ${selected
-                  ? 'border-green-500 bg-green-50 shadow-md hover:bg-green-100 hover:scale-105'
+                  ? 'border-sunset-gold bg-sunset-amber/20 shadow-card-warm hover:bg-sunset-amber/30 hover:scale-105'
                   : disabled
-                    ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
-                    : 'border-gray-200 hover:border-blue-300 bg-white hover:scale-105'
+                    ? 'border-sunset-peach/30 bg-sunset-cream/50 opacity-50 cursor-not-allowed'
+                    : 'border-sunset-peach hover:border-sunset-tangerine bg-white hover:scale-105'
                 }
               `}
             >
               <div className="text-3xl mb-1">{theme.emoji}</div>
-              <div className="text-sm font-medium text-gray-800">
+              <div className="text-sm font-medium text-sunset-twilight">
                 {locale === 'sv' ? theme.nameSv : theme.nameEn}
               </div>
-              {selected && <div className="text-xs text-green-600 mt-1">✓</div>}
+              {selected && <div className="text-xs text-sunset-gold mt-1">✓</div>}
             </button>
           );
         })}
@@ -136,7 +136,7 @@ export function ThemePicker({
       <div className="flex justify-center">
         <button
           onClick={handleShuffle}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-sunset-peach/50 hover:bg-sunset-peach rounded-full text-sunset-twilight font-medium transition-colors"
         >
           <span className="text-xl">🎲</span>
           <span className="text-sm">
@@ -146,7 +146,7 @@ export function ThemePicker({
       </div>
 
       <div className="mt-4">
-        <label className="text-sm text-gray-600 mb-1 block">
+        <label className="text-sm text-sunset-twilight/70 mb-1 block">
           {locale === 'sv' ? 'Valda teman (klicka ovan för att lägga till):' : 'Selected themes (click above to add):'}
         </label>
         <div className="relative">
@@ -157,23 +157,23 @@ export function ThemePicker({
             maxLength={100}
             placeholder={locale === 'sv' ? 'T.ex. Dinosaurier, Rymden, Pirater' : 'E.g. Dinosaurs, Space, Pirates'}
             className={`
-              w-full px-4 py-3 pr-10 rounded-lg border-2 transition-colors
+              w-full px-4 py-3 pr-10 rounded-xl border-2 transition-colors text-sunset-twilight
               ${customTheme
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 focus:border-blue-400'
+                ? 'border-sunset-gold bg-sunset-amber/10'
+                : 'border-sunset-peach focus:border-sunset-tangerine'
               }
-              focus:outline-none
+              focus:outline-none placeholder:text-sunset-twilight/40
             `}
           />
           {customTheme && (
-            <span className="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+            <span className="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-sunset-twilight/50">
               {customTheme.length}/100
             </span>
           )}
           {customTheme && (
             <button
               onClick={() => onCustomThemeChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sunset-twilight/50 hover:text-sunset-coral transition-colors"
               title={locale === 'sv' ? 'Rensa' : 'Clear'}
             >
               ✕

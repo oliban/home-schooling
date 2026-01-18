@@ -420,6 +420,42 @@ export const adventures = {
     }>('/adventures/generate-for-parent', { method: 'POST', body: data, token }),
 };
 
+// Compare (peer comparison)
+export const compare = {
+  getPeers: (token: string) =>
+    fetchApi<{
+      siblings: { id: string; name: string; grade_level: number }[];
+      classmates: { id: string; name: string; grade_level: number }[];
+    }>('/compare/peers', { token }),
+
+  getPeerCollection: (token: string, childId: string) =>
+    fetchApi<{
+      childName: string;
+      collection: {
+        id: string;
+        name: string;
+        ascii_art: string;
+        rarity: string;
+        pronunciation: string | null;
+      }[];
+      totalCount: number;
+    }>(`/compare/${childId}/collection`, { token }),
+
+  getPeerStats: (token: string, childId: string) =>
+    fetchApi<{
+      childName: string;
+      gradeLevel: number;
+      stats: {
+        coins: number;
+        totalEarned: number;
+        streak: number;
+        collectibleCount: number;
+        completedAssignments: number;
+        totalAssignments: number;
+      };
+    }>(`/compare/${childId}/stats`, { token }),
+};
+
 // Admin (development only)
 export const admin = {
   getBackupStatus: (token: string) =>

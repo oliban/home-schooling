@@ -157,15 +157,15 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-card-warm">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800">
-            {locale === 'sv' ? 'Skapa ditt äventyr' : 'Create Your Adventure'}
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral rounded-t-2xl">
+          <h2 className="text-xl font-display font-bold text-white">
+            {locale === 'sv' ? 'Skapa ditt äventyr' : 'Create Your Adventure'} ✨
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+            className="text-white/80 hover:text-white text-2xl leading-none transition-colors"
             disabled={generating}
           >
             &times;
@@ -173,16 +173,16 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
         </div>
 
         {/* Progress indicator */}
-        <div className="flex justify-center gap-2 py-4">
+        <div className="flex justify-center gap-2 py-4 bg-sunset-cream/50">
           {['type', 'theme', 'size'].map((s, i) => (
             <div
               key={s}
-              className={`w-3 h-3 rounded-full ${
+              className={`w-3 h-3 rounded-full transition-colors ${
                 step === s
-                  ? 'bg-blue-500'
+                  ? 'bg-sunset-tangerine'
                   : (step === 'generating' || ['type', 'theme', 'size'].indexOf(step) > i)
-                    ? 'bg-green-500'
-                    : 'bg-gray-200'
+                    ? 'bg-sunset-gold'
+                    : 'bg-sunset-peach/50'
               }`}
             />
           ))}
@@ -193,31 +193,31 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
           {/* Step 1: Choose Type */}
           {step === 'type' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-center text-gray-700 mb-6">
+              <h3 className="text-lg font-display font-semibold text-center text-sunset-twilight mb-6">
                 {locale === 'sv' ? 'Vad vill du göra?' : 'What do you want to do?'}
               </h3>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => handleSelectType('math')}
-                  className="flex-1 max-w-[250px] p-6 rounded-2xl border-2 border-gray-200 hover:border-blue-400 bg-white transition-all transform hover:scale-105"
+                  className="flex-1 max-w-[250px] p-6 rounded-2xl border-2 border-sunset-peach hover:border-sunset-tangerine bg-white hover:bg-sunset-cream/50 transition-all transform hover:scale-105 shadow-sm hover:shadow-card-warm"
                 >
                   <div className="text-5xl mb-3">📐</div>
-                  <div className="font-bold text-lg text-gray-800">
+                  <div className="font-display font-bold text-lg text-sunset-twilight">
                     {locale === 'sv' ? 'Matte' : 'Math'}
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-sunset-twilight/70 mt-1">
                     {locale === 'sv' ? 'Lösningsuppgifter med roliga teman' : 'Problem solving with fun themes'}
                   </div>
                 </button>
                 <button
                   onClick={() => handleSelectType('reading')}
-                  className="flex-1 max-w-[250px] p-6 rounded-2xl border-2 border-gray-200 hover:border-purple-400 bg-white transition-all transform hover:scale-105"
+                  className="flex-1 max-w-[250px] p-6 rounded-2xl border-2 border-sunset-peach hover:border-sunset-coral bg-white hover:bg-sunset-cream/50 transition-all transform hover:scale-105 shadow-sm hover:shadow-card-warm"
                 >
                   <div className="text-5xl mb-3">📖</div>
-                  <div className="font-bold text-lg text-gray-800">
+                  <div className="font-display font-bold text-lg text-sunset-twilight">
                     {locale === 'sv' ? 'Läsning' : 'Reading'}
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-sunset-twilight/70 mt-1">
                     {locale === 'sv' ? 'Korta berättelser med frågor' : 'Short stories with questions'}
                   </div>
                 </button>
@@ -228,7 +228,7 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
           {/* Step 2: Choose Theme */}
           {step === 'theme' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-center text-gray-700 mb-6">
+              <h3 className="text-lg font-display font-semibold text-center text-sunset-twilight mb-6">
                 {locale === 'sv' ? 'Välj ett tema' : 'Choose a theme'}
               </h3>
               <ThemePicker
@@ -243,7 +243,7 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
           {/* Step 3: Choose Size */}
           {step === 'size' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-center text-gray-700 mb-6">
+              <h3 className="text-lg font-display font-semibold text-center text-sunset-twilight mb-6">
                 {locale === 'sv' ? 'Hur många frågor?' : 'How many questions?'}
               </h3>
               <SizeSelector
@@ -253,7 +253,7 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
                 locale={locale}
               />
               {error && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center">
+                <div className="mt-4 p-3 bg-sunset-coral/10 border border-sunset-coral/30 rounded-lg text-sunset-coral text-center">
                   {error}
                 </div>
               )}
@@ -262,16 +262,15 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
 
           {/* Generating state */}
           {step === 'generating' && (
-            <div className="text-center py-12 relative overflow-hidden">
+            <div className="text-center py-12 relative overflow-hidden bg-gradient-to-b from-sunset-cream/50 to-white rounded-xl">
               {/* Dancing theme emojis */}
               <div className="flex justify-center gap-4 mb-6 min-h-[80px]">
                 {getSelectedEmojis().length > 0 ? (
                   getSelectedEmojis().map((emoji, i) => (
                     <span
                       key={i}
-                      className="text-5xl"
+                      className="text-5xl animate-float"
                       style={{
-                        animation: 'float 2s ease-in-out infinite',
                         animationDelay: `${i * 0.3}s`
                       }}
                     >
@@ -279,25 +278,17 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
                     </span>
                   ))
                 ) : (
-                  <span className="text-6xl animate-bounce">✨</span>
+                  <span className="text-6xl animate-float">✨</span>
                 )}
               </div>
-              <style jsx>{`
-                @keyframes float {
-                  0%, 100% { transform: translateY(0) rotate(0deg); }
-                  25% { transform: translateY(-20px) rotate(10deg); }
-                  50% { transform: translateY(-10px) rotate(-5deg); }
-                  75% { transform: translateY(-25px) rotate(5deg); }
-                }
-              `}</style>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
+              <h3 className="text-xl font-display font-bold text-sunset-twilight mb-2">
                 {locale === 'sv' ? 'Skapar ditt äventyr...' : 'Creating your adventure...'}
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sunset-twilight/70">
                 {locale === 'sv' ? 'Detta tar ungefär en halv minut' : 'This will take about half a minute'}
               </p>
               <div className="mt-6 flex justify-center">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-sunset-tangerine border-t-transparent rounded-full animate-spin"></div>
               </div>
             </div>
           )}
@@ -305,10 +296,10 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
 
         {/* Footer */}
         {step !== 'generating' && (
-          <div className="flex justify-between p-4 border-t bg-gray-50 rounded-b-2xl">
+          <div className="flex justify-between p-4 border-t border-sunset-peach/30 bg-sunset-cream/30 rounded-b-2xl">
             <button
               onClick={step === 'type' ? onClose : handleBack}
-              className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium"
+              className="px-6 py-2 text-sunset-twilight/70 hover:text-sunset-twilight font-medium transition-colors"
             >
               {step === 'type'
                 ? (locale === 'sv' ? 'Avbryt' : 'Cancel')
@@ -320,10 +311,10 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
               <button
                 onClick={handleThemeNext}
                 disabled={!canProceedFromTheme}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-6 py-2 rounded-xl font-display font-medium transition-all ${
                   canProceedFromTheme
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    ? 'bg-sunset-tangerine hover:bg-sunset-coral text-white shadow-sm hover:shadow-md'
+                    : 'bg-sunset-peach/50 text-sunset-twilight/40 cursor-not-allowed'
                 }`}
               >
                 {locale === 'sv' ? 'Nästa' : 'Next'}
@@ -334,13 +325,13 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
               <button
                 onClick={handleGenerate}
                 disabled={!canProceedFromSize}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-6 py-2 rounded-xl font-display font-medium transition-all ${
                   canProceedFromSize
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral hover:from-sunset-amber hover:via-sunset-gold hover:to-sunset-tangerine text-white shadow-md hover:shadow-lg'
+                    : 'bg-sunset-peach/50 text-sunset-twilight/40 cursor-not-allowed'
                 }`}
               >
-                {locale === 'sv' ? 'Skapa äventyret!' : 'Create adventure!'}
+                ✨ {locale === 'sv' ? 'Skapa äventyret!' : 'Create adventure!'}
               </button>
             )}
           </div>

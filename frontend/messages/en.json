@@ -139,7 +139,8 @@
       "title": "New collectible unlocked!",
       "message": "A new brainrot artwork is now available in the shop!",
       "viewButton": "View!"
-    }
+    },
+    "compareWithFriends": "Compare with friends"
   },
   "assignment": {
     "question": "Question {current}/{total}",
@@ -205,7 +206,59 @@
       "title": "Session Expired",
       "message": "Your session has expired or the login token is invalid. Please log in again to continue.",
       "button": "Log Out & Return to Login"
-    }
+    },
+    "progress": "{owned} of {total} collected"
+  },
+  "treasureReveal": {
+    "tapToReveal": "Tap to reveal your treasure!",
+    "newDiscovery": "You found something...",
+    "newTreasure": "NEW TREASURE!",
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary",
+      "mythic": "Mythic",
+      "secret": "Secret"
+    },
+    "keepCollecting": "Keep collecting!",
+    "close": "Close"
+  },
+  "compare": {
+    "title": "Compare",
+    "subtitle": "See how you stack up against your friends!",
+    "vsTitle": "You vs {name}",
+    "compareSubtitle": "Who has the best stats?",
+    "noPeersTitle": "No friends yet",
+    "noPeersMessage": "Ask your parent to connect you with siblings or classmates!",
+    "sibling": "Sibling",
+    "classmate": "Classmate",
+    "siblingsSection": "Siblings",
+    "classmatesSection": "Classmates",
+    "gradeLevel": "Grade {grade}",
+    "compareButton": "Compare",
+    "statsTab": "Stats",
+    "collectionTab": "Collection",
+    "you": "You",
+    "friend": "Friend",
+    "stats": {
+      "currentCoins": "Current Coins",
+      "totalEarned": "Total Earned",
+      "streak": "Streak",
+      "collectibles": "Collectibles"
+    },
+    "itsATie": "It's a tie",
+    "winner": "{name} wins!",
+    "backToPeers": "Back to friends",
+    "sharedCollectibles": "Shared Collectibles",
+    "onlyYouHave": "Only {name} has",
+    "allShared": "All shared!",
+    "onlyTheyHave": "Only {name} has",
+    "youHaveAll": "You have them all!",
+    "sharingSummary": "You share {shared} items, you have {unique} unique items",
+    "noSharedItems": "No shared items yet",
+    "accessDenied": "You cannot view this person's profile",
+    "loadError": "Could not load comparison data"
   },
   "parent": {
     "dashboard": {

@@ -22,16 +22,16 @@ const SIZE_ICONS: Record<string, string> = {
 
 const SIZE_COLORS: Record<string, { selected: string; hover: string }> = {
   quick: {
-    selected: 'border-green-500 bg-green-50',
-    hover: 'hover:border-green-300'
+    selected: 'border-sunset-gold bg-sunset-amber/20 shadow-card-warm',
+    hover: 'hover:border-sunset-gold'
   },
   medium: {
-    selected: 'border-blue-500 bg-blue-50',
-    hover: 'hover:border-blue-300'
+    selected: 'border-sunset-tangerine bg-sunset-peach/30 shadow-card-warm',
+    hover: 'hover:border-sunset-tangerine'
   },
   challenge: {
-    selected: 'border-purple-500 bg-purple-50',
-    hover: 'hover:border-purple-300'
+    selected: 'border-sunset-coral bg-sunset-coral/20 shadow-card-warm',
+    hover: 'hover:border-sunset-coral'
   }
 };
 
@@ -54,16 +54,16 @@ export function SizeSelector({
             className={`
               flex-1 max-w-[200px] p-6 rounded-2xl border-2 transition-all transform hover:scale-105
               ${isSelected
-                ? `${colors.selected} shadow-md`
-                : `border-gray-200 bg-white ${colors.hover}`
+                ? colors.selected
+                : `border-sunset-peach bg-white ${colors.hover}`
               }
             `}
           >
             <div className="text-4xl mb-2">{SIZE_ICONS[size.id]}</div>
-            <div className="font-bold text-gray-800">
+            <div className="font-display font-bold text-sunset-twilight">
               {locale === 'sv' ? size.nameSv : size.nameEn}
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-sunset-twilight/70 mt-1">
               {size.questionCount} {locale === 'sv' ? 'frågor' : 'questions'}
             </div>
           </button>

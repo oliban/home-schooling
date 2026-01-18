@@ -139,7 +139,8 @@
       "title": "Nytt samlarobjekt upplåst!",
       "message": "Ett nytt brainrot-konstverk finns nu i butiken!",
       "viewButton": "Titta!"
-    }
+    },
+    "compareWithFriends": "Jämför med vänner"
   },
   "assignment": {
     "question": "Fråga {current}/{total}",
@@ -190,6 +191,7 @@
     "clickToHear": "Klicka för att höra",
     "newCollectible": "Nytt samlarobjekt!",
     "awesome": "Fantastiskt!",
+    "progress": "Samlarframsteg",
     "rarity": {
       "common": "Vanlig",
       "rare": "Sällsynt",
@@ -205,6 +207,44 @@
       "title": "Sessionen har gått ut",
       "message": "Din session har gått ut eller inloggningstoken är ogiltig. Logga in igen för att fortsätta.",
       "button": "Logga ut & Återgå till inloggning"
+    }
+  },
+  "treasureReveal": {
+    "tapToReveal": "Tryck för att avslöja!",
+    "newDiscovery": "Du har hittat något..."
+  },
+  "compare": {
+    "title": "Jämför med vänner",
+    "subtitle": "Se hur du ligger till",
+    "sibling": "Syskon",
+    "classmate": "Klasskompis",
+    "siblingsSection": "Syskon",
+    "classmatesSection": "Klasskompisar",
+    "noPeersTitle": "Inga vänner att jämföra med",
+    "noPeersMessage": "Be dina föräldrar att lägga till fler barn eller bjud in klasskompisar!",
+    "loadError": "Kunde inte ladda vänner",
+    "accessDenied": "Du har inte tillgång till denna jämförelse",
+    "backToPeers": "Tillbaka till vänner",
+    "vsTitle": "Du vs {name}",
+    "compareSubtitle": "Vem leder?",
+    "statsTab": "Statistik",
+    "collectionTab": "Samling",
+    "you": "Du",
+    "friend": "Kompis",
+    "itsATie": "Oavgjort",
+    "winner": "{name} leder",
+    "sharedCollectibles": "Ni har båda",
+    "onlyYouHave": "Bara {name} har",
+    "onlyTheyHave": "Bara {name} har",
+    "allShared": "Alla dina är delade!",
+    "youHaveAll": "Du har alla deras!",
+    "sharingSummary": "{count} gemensamma, {myUnique} unika för dig, {peerUnique} unika för dem",
+    "noSharedItems": "Ni har inga gemensamma samlarobjekt",
+    "stats": {
+      "currentCoins": "Mynt nu",
+      "totalEarned": "Totalt tjänat",
+      "streak": "Dagsstreak",
+      "collectibles": "Samlarobjekt"
     }
   },
   "parent": {

@@ -17,6 +17,7 @@ import packagesRoutes from './routes/packages.js';
 import curriculumRoutes from './routes/curriculum.js';
 import adminRoutes from './routes/admin.js';
 import adventuresRoutes from './routes/adventures.js';
+import compareRoutes from './routes/compare.js';
 import { isDevelopment } from './config/cors.js';
 
 // Re-export OCR queue types and functions for external use
@@ -177,6 +178,7 @@ app.use('/api/packages', packagesRoutes);
 app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/adventures', adventuresRoutes);
+app.use('/api/compare', compareRoutes);
 
 // Log admin routes availability
 if (isDevelopment()) {

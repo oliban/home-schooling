@@ -2,14 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Google Fonts imports for warm sunset aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap');
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 249, 250, 251;
+
+  /* Sunset color variables */
+  --sunset-gold: #FFB347;
+  --sunset-coral: #FF6B6B;
+  --sunset-peach: #FFCBA4;
+  --sunset-tangerine: #FF8C42;
+  --sunset-amber: #F9C74F;
+  --sunset-cream: #FFF8E7;
+  --sunset-twilight: #2D3047;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  font-family: 'Nunito', sans-serif;
 }
 
 /* ASCII Art Display */
@@ -70,4 +83,133 @@ body {
 .mythic-sparkle {
   background-size: 200% auto;
   animation: mythicSparkle 2s ease-in-out infinite;
+}
+
+/* ===== Sunset Theme Glow Effects ===== */
+
+/* Golden treasure glow */
+.treasure-glow {
+  box-shadow: 0 0 20px rgba(255, 179, 71, 0.4),
+              0 0 40px rgba(255, 179, 71, 0.2),
+              0 0 60px rgba(255, 179, 71, 0.1);
+}
+
+/* Pulsing gold aura for treasure reveal */
+@keyframes goldAura {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255, 179, 71, 0.5),
+                0 0 60px rgba(249, 199, 79, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(255, 179, 71, 0.7),
+                0 0 100px rgba(249, 199, 79, 0.5);
+  }
+}
+
+.gold-aura {
+  animation: goldAura 2s ease-in-out infinite;
+}
+
+/* Rarity glow effects for sunset theme */
+.rarity-common {
+  box-shadow: 0 4px 12px rgba(45, 48, 71, 0.08);
+}
+
+.rarity-rare {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.rarity-epic {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.35), 0 4px 15px rgba(168, 85, 247, 0.2);
+}
+
+.rarity-legendary {
+  box-shadow: 0 0 25px rgba(255, 179, 71, 0.5), 0 4px 20px rgba(249, 199, 79, 0.3);
+}
+
+.rarity-mythic {
+  box-shadow: 0 0 30px rgba(236, 72, 153, 0.4),
+              0 0 50px rgba(168, 85, 247, 0.3),
+              0 0 70px rgba(249, 199, 79, 0.2);
+}
+
+.rarity-secret {
+  box-shadow: 0 0 25px rgba(217, 119, 6, 0.4), 0 4px 20px rgba(245, 158, 11, 0.25);
+}
+
+/* Magic shimmer gradient background */
+.magic-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 179, 71, 0.3) 25%,
+    rgba(249, 199, 79, 0.5) 50%,
+    rgba(255, 179, 71, 0.3) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: magicShimmer 2s linear infinite;
+}
+
+@keyframes magicShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Sunset gradient backgrounds */
+.bg-sunset-gradient {
+  background: linear-gradient(135deg, #FFF8E7 0%, rgba(255, 203, 164, 0.3) 50%, #fff 100%);
+}
+
+.bg-sunset-header {
+  background: linear-gradient(135deg, #FFB347 0%, #FF8C42 100%);
+}
+
+/* Coin pouch styling */
+.coin-pouch {
+  background: linear-gradient(135deg, #FFF8E7 0%, #FFB347 100%);
+  box-shadow: 0 4px 15px rgba(255, 179, 71, 0.3);
+}
+
+/* Wavy border effect */
+.wavy-bottom {
+  position: relative;
+}
+
+.wavy-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: inherit;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40'%3E%3Cpath fill='white' d='M0,40 L0,20 Q150,0 300,20 T600,20 T900,20 T1200,20 L1200,40 Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40'%3E%3Cpath fill='white' d='M0,40 L0,20 Q150,0 300,20 T600,20 T900,20 T1200,20 L1200,40 Z'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+}
+
+/* Treasure notification bounce */
+@keyframes treasureBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-8px) scale(1.05); }
+  50% { transform: translateY(-4px) scale(1.02); }
+  75% { transform: translateY(-6px) scale(1.03); }
+}
+
+.treasure-bounce {
+  animation: treasureBounce 2s ease-in-out infinite;
+}
+
+/* Particle effects base */
+.particle {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+/* Display font for headings */
+.font-display {
+  font-family: 'Baloo 2', cursive;
 }
