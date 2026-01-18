@@ -11,7 +11,7 @@ import type { SketchPadHandle } from '@/components/ui/SketchPad';
 
 const SketchPad = dynamic(() => import('@/components/ui/SketchPad'), {
   ssr: false,
-  loading: () => <div className="h-[400px] bg-gray-100 rounded-xl animate-pulse" />
+  loading: () => <div className="h-[400px] bg-sunset-cream rounded-xl animate-pulse" />
 });
 
 interface Question {
@@ -273,16 +273,16 @@ export default function AssignmentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">{t('common.loading')}</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sunset-cream to-white">
+        <div className="text-xl font-display text-sunset-twilight">{t('common.loading')}</div>
       </div>
     );
   }
 
   if (!assignment) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-red-600">{t('common.error')}</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sunset-cream to-white">
+        <div className="text-xl text-sunset-coral">{t('common.error')}</div>
       </div>
     );
   }
@@ -294,24 +294,24 @@ export default function AssignmentPage() {
     const total = answerableQuestions.length;
 
     return (
-      <main className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-8">
-        <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-3xl font-bold mb-2">{t('assignment.completed.title')}</h1>
-          <div className="text-5xl font-bold text-yellow-500 mb-4">
+      <main className="min-h-screen bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white flex items-center justify-center p-8">
+        <div className="bg-white p-8 rounded-2xl shadow-card-warm max-w-md w-full text-center">
+          <div className="text-6xl mb-4 animate-float">🎉</div>
+          <h1 className="text-3xl font-display font-bold text-sunset-twilight mb-2">{t('assignment.completed.title')}</h1>
+          <div className="text-5xl font-bold text-sunset-gold mb-4">
             {'⭐'.repeat(Math.min(correct, 5))}
           </div>
-          <p className="text-xl text-gray-600 mb-6">
+          <p className="text-xl text-sunset-twilight/70 mb-6">
             {t('assignment.completed.score', { correct, total })}
           </p>
 
-          <div className="bg-yellow-100 p-4 rounded-xl mb-6">
-            <div className="text-2xl">{t('assignment.completed.coinsEarned', { coins: totalCoins })}</div>
+          <div className="bg-gradient-to-r from-sunset-amber/30 to-sunset-gold/30 p-4 rounded-xl mb-6">
+            <div className="text-2xl font-display text-sunset-twilight">{t('assignment.completed.coinsEarned', { coins: totalCoins })} 💰</div>
           </div>
 
           <div className="space-y-2 mb-8">
             {answerableQuestions.map((q, i) => (
-              <div key={q.id} className="flex items-center justify-between text-sm">
+              <div key={q.id} className="flex items-center justify-between text-sm text-sunset-twilight/80">
                 <span>{t('assignment.completed.questionLabel', { number: i + 1 })}</span>
                 <span>{q.is_correct === 1 ? '✅' : '❌'}</span>
               </div>
@@ -320,7 +320,7 @@ export default function AssignmentPage() {
 
           <button
             onClick={() => router.push('/child')}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
+            className="w-full py-3 bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral text-white rounded-xl font-display font-semibold hover:from-sunset-amber hover:via-sunset-gold hover:to-sunset-tangerine transition-all shadow-md hover:shadow-lg"
           >
             🏠 {t('assignment.completed.backButton')}
           </button>
@@ -334,14 +334,14 @@ export default function AssignmentPage() {
   const isMultipleChoice = question.answer_type === 'multiple_choice' && options;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white">
       {/* Header */}
-      <header className="bg-white shadow-sm p-4">
+      <header className="bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral shadow-md p-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push('/child')}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
               title={t('common.back')}
             >
               ←
@@ -349,13 +349,13 @@ export default function AssignmentPage() {
             <span className="text-2xl">
               {assignment.assignment_type === 'math' ? '📐' : '📖'}
             </span>
-            <span className="font-semibold">{assignment.title}</span>
+            <span className="font-display font-semibold text-white">{assignment.title}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-white/80">
               {t('assignment.question', { current: currentIndex + 1, total: assignment.questions.length })}
             </span>
-            <div className="bg-yellow-100 px-3 py-1 rounded-full text-sm">
+            <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm text-white font-medium">
               💰 {totalCoins}
             </div>
           </div>
@@ -364,9 +364,9 @@ export default function AssignmentPage() {
 
       {/* Progress bar */}
       <div className="max-w-5xl mx-auto px-4 pt-4">
-        <div className="h-2 bg-gray-200 rounded-full">
+        <div className="h-2 bg-sunset-peach/50 rounded-full">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all"
+            className="h-full bg-gradient-to-r from-sunset-gold to-sunset-tangerine rounded-full transition-all"
             style={{ width: `${((currentIndex + 1) / assignment.questions.length) * 100}%` }}
           />
         </div>
@@ -417,9 +417,9 @@ export default function AssignmentPage() {
       {/* Question */}
       <div className="max-w-5xl mx-auto p-8">
         <div className="flex flex-col lg:flex-row gap-6">
-        <div className={`bg-white p-8 rounded-2xl shadow-sm flex-1 lg:max-w-[60%] ${feedback?.show && !feedback.isCorrect ? 'animate-shake' : ''}`}>
+        <div className={`bg-white p-8 rounded-2xl shadow-card-warm flex-1 lg:max-w-[60%] ${feedback?.show && !feedback.isCorrect ? 'animate-shake' : ''}`}>
           <div className="flex items-start gap-3 mb-8">
-            <p className="text-xl flex-1">{question.question_text}</p>
+            <p className="text-xl flex-1 text-sunset-twilight">{question.question_text}</p>
             <SpeakButton
               text={question.question_text}
               lang="sv-SE"
@@ -449,11 +449,11 @@ export default function AssignmentPage() {
                     }}
                     className={`w-full p-4 text-left rounded-xl border-2 transition-all flex items-center justify-between gap-3 cursor-pointer ${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-sunset-tangerine bg-sunset-amber/20'
+                        : 'border-sunset-peach hover:border-sunset-tangerine/50'
                     } ${isDisabled ? 'cursor-not-allowed opacity-75 pointer-events-none' : ''}`}
                   >
-                    <span className="flex-1">{option}</span>
+                    <span className="flex-1 text-sunset-twilight">{option}</span>
                     <SpeakButton
                       text={option}
                       lang="sv-SE"
@@ -471,23 +471,23 @@ export default function AssignmentPage() {
               onChange={(e) => setAnswer(e.target.value)}
               disabled={feedback?.show}
               placeholder={t('assignment.answerPlaceholder')}
-              className="w-full p-4 text-xl border-2 rounded-xl focus:border-blue-500 focus:outline-none"
+              className="w-full p-4 text-xl border-2 border-sunset-peach rounded-xl focus:border-sunset-tangerine focus:outline-none text-sunset-twilight placeholder:text-sunset-twilight/40"
               onKeyDown={(e) => e.key === 'Enter' && !feedback?.show && handleSubmit()}
             />
           )}
 
           {/* Feedback */}
           {feedback?.show && (
-            <div className={`mt-6 p-4 rounded-xl ${feedback.isCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
+            <div className={`mt-6 p-4 rounded-xl ${feedback.isCorrect ? 'bg-green-100' : 'bg-sunset-coral/10'}`}>
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-3xl">{feedback.isCorrect ? '✅' : '❌'}</span>
-                <span className="text-xl font-bold">
+                <span className="text-xl font-display font-bold text-sunset-twilight">
                   {feedback.isCorrect ? t('assignment.correct') : t('assignment.incorrect')}
                 </span>
               </div>
 
               {feedback.isCorrect && (
-                <div className="flex items-center gap-2 text-yellow-600">
+                <div className="flex items-center gap-2 text-sunset-gold font-medium">
                   <span>+{feedback.coinsEarned} 💰</span>
                   {feedback.streak > 1 && (
                     <span className="fire-glow">🔥 {t('assignment.streak', { count: feedback.streak })}</span>
@@ -497,7 +497,7 @@ export default function AssignmentPage() {
 
               {/* Attempt indicator for wrong answers that can retry */}
               {!feedback.isCorrect && feedback.canRetry && (
-                <div className="mt-2 text-gray-600">
+                <div className="mt-2 text-sunset-twilight/70">
                   <span>{t('assignment.attempt', { current: feedback.attemptNumber, max: feedback.maxAttempts })}</span>
                 </div>
               )}
@@ -507,7 +507,7 @@ export default function AssignmentPage() {
                 <button
                   onClick={handleBuyHint}
                   disabled={buyingHint || totalCoins < feedback.hintCost}
-                  className="mt-3 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="mt-3 px-4 py-2 bg-sunset-amber text-white rounded-lg hover:bg-sunset-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {buyingHint
                     ? t('assignment.buyingHint')
@@ -517,24 +517,24 @@ export default function AssignmentPage() {
 
               {/* Purchased hint display */}
               {purchasedHint && (
-                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="font-semibold text-yellow-700">{t('assignment.hintLabel')}</div>
-                  <p className="text-gray-700">{purchasedHint}</p>
+                <div className="mt-3 p-3 bg-sunset-amber/20 border border-sunset-gold/30 rounded-lg">
+                  <div className="font-semibold text-sunset-gold">{t('assignment.hintLabel')}</div>
+                  <p className="text-sunset-twilight">{purchasedHint}</p>
                 </div>
               )}
 
               {/* Show correct answer only when question is complete and wrong */}
               {!feedback.isCorrect && feedback.questionComplete && feedback.correctAnswer && (
-                <p className="mt-2 text-gray-700">
+                <p className="mt-2 text-sunset-twilight/80">
                   {t('assignment.correctAnswer', { answer: feedback.correctAnswer })}
                 </p>
               )}
 
               {/* Explanation (shown when question is complete) */}
               {feedback.questionComplete && feedback.explanation && (
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="font-semibold text-blue-700">{t('assignment.explanationLabel')}</div>
-                  <p className="text-gray-700">{feedback.explanation}</p>
+                <div className="mt-3 p-3 bg-sunset-peach/30 border border-sunset-peach rounded-lg">
+                  <div className="font-semibold text-sunset-tangerine">{t('assignment.explanationLabel')}</div>
+                  <p className="text-sunset-twilight">{feedback.explanation}</p>
                 </div>
               )}
             </div>
@@ -544,7 +544,7 @@ export default function AssignmentPage() {
           <div className="mt-8 flex flex-col gap-2">
             {/* Sketch requirement message */}
             {!feedback?.show && question.requires_sketch === 1 && !hasSketchContent && (
-              <p className="text-center text-amber-600 font-medium">
+              <p className="text-center text-sunset-tangerine font-medium">
                 {t('assignment.sketchRequired')}
               </p>
             )}
@@ -553,7 +553,7 @@ export default function AssignmentPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!answer.trim() || submitting || (question.requires_sketch === 1 && !hasSketchContent)}
-                className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-4 bg-gradient-to-r from-sunset-gold via-sunset-tangerine to-sunset-coral text-white rounded-xl font-display font-semibold hover:from-sunset-amber hover:via-sunset-gold hover:to-sunset-tangerine disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
               >
                 {submitting
                   ? t('assignment.submitting')
@@ -564,14 +564,14 @@ export default function AssignmentPage() {
             ) : feedback.canRetry ? (
               <button
                 onClick={handleRetry}
-                className="flex-1 py-4 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+                className="flex-1 py-4 bg-sunset-tangerine text-white rounded-xl font-display font-semibold hover:bg-sunset-coral transition-colors shadow-md"
               >
                 {t('assignment.tryAgain')} 🔄
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex-1 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors"
+                className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-display font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-md hover:shadow-lg"
               >
                 {currentIndex < assignment.questions.length - 1 ? `${t('assignment.nextButton')} →` : `${t('assignment.doneButton')} 🎉`}
               </button>
