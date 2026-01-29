@@ -247,6 +247,8 @@ export const collectibles = {
         id: string;
         name: string;
         ascii_art: string;
+        svg_path?: string | null;
+        expansion_pack?: string | null;
         price: number;
         rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
         owned: boolean;

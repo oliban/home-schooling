@@ -8,6 +8,7 @@ interface Collectible {
   id: string;
   name: string;
   ascii_art: string;
+  svg_path?: string | null;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   pronunciation?: string | null;
 }
@@ -76,10 +77,20 @@ export function TreasureReveal({ collectible, onClose }: TreasureRevealProps) {
     }, 600);
   };
 
-  // Typewriter effect for ASCII art
+  // Typewriter effect for ASCII art (or instant reveal for SVG)
   useEffect(() => {
     if (phase !== 'revealing') return;
 
+    // For SVG collectibles, skip typewriter and go straight to revealed
+    if (collectible.svg_path) {
+      setTimeout(() => {
+        setPhase('revealed');
+        speakItalian(collectible.pronunciation || collectible.name);
+      }, 500); // Short delay for fade-in effect
+      return;
+    }
+
+    // Typewriter effect for ASCII art
     const art = collectible.ascii_art;
     let index = 0;
     const interval = setInterval(() => {
@@ -158,7 +169,7 @@ export function TreasureReveal({ collectible, onClose }: TreasureRevealProps) {
               {t(`collection.rarity.${collectible.rarity}`)}
             </div>
 
-            {/* ASCII Art Card */}
+            {/* Art Card */}
             <div
               className={`relative rounded-2xl border-4 p-6 ${rarityBgClasses[collectible.rarity]} ${
                 rarityGlowClasses[collectible.rarity]
@@ -170,10 +181,20 @@ export function TreasureReveal({ collectible, onClose }: TreasureRevealProps) {
                 className="bg-white/80 backdrop-blur rounded-lg p-4 hover:bg-white transition-colors cursor-pointer w-full"
                 title={t('collection.clickToHear')}
               >
-                <pre className="text-xs sm:text-sm leading-tight font-mono text-center whitespace-pre text-sunset-twilight">
-                  {typedText}
-                  {phase === 'revealing' && <span className="animate-pulse">|</span>}
-                </pre>
+                {collectible.svg_path ? (
+                  <img
+                    src={collectible.svg_path}
+                    alt={collectible.name}
+                    className={`w-24 h-24 mx-auto object-contain transition-opacity duration-500 ${
+                      phase === 'revealing' ? 'opacity-0' : 'opacity-100'
+                    }`}
+                  />
+                ) : (
+                  <pre className="text-xs sm:text-sm leading-tight font-mono text-center whitespace-pre text-sunset-twilight">
+                    {typedText}
+                    {phase === 'revealing' && <span className="animate-pulse">|</span>}
+                  </pre>
+                )}
               </button>
             </div>
 
