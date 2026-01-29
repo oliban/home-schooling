@@ -14,6 +14,8 @@ interface Collectible {
   id: string;
   name: string;
   ascii_art: string;
+  svg_path?: string | null;
+  expansion_pack?: string | null;
   price: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   owned: boolean;
@@ -283,15 +285,23 @@ export default function CollectionPage() {
                   )}
                 </div>
 
-                {/* ASCII Art - Click to hear pronunciation */}
+                {/* Art Display - Click to hear pronunciation */}
                 <button
                   onClick={() => speakItalian(item.pronunciation || item.name)}
                   className="w-full bg-white/80 backdrop-blur rounded-xl p-3 mb-3 overflow-hidden hover:bg-white transition-colors cursor-pointer group relative"
                   title={t('collection.clickToHear')}
                 >
-                  <pre className="text-[10px] sm:text-xs leading-tight font-mono text-center whitespace-pre text-sunset-twilight">
-                    {item.ascii_art}
-                  </pre>
+                  {item.svg_path ? (
+                    <img
+                      src={item.svg_path}
+                      alt={item.name}
+                      className="w-24 h-24 mx-auto object-contain"
+                    />
+                  ) : (
+                    <pre className="text-[10px] sm:text-xs leading-tight font-mono text-center whitespace-pre text-sunset-twilight">
+                      {item.ascii_art}
+                    </pre>
+                  )}
                   <div className="text-xs text-sunset-twilight/40 mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                     🔊 {t('collection.clickToHear')}
                   </div>
