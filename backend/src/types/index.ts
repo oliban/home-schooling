@@ -46,7 +46,7 @@ export interface Assignment {
   id: string;
   parent_id: string;
   child_id: string;
-  assignment_type: 'math' | 'reading';
+  assignment_type: 'math' | 'reading' | 'english';
   title: string;
   grade_level: number;
   status: 'pending' | 'in_progress' | 'completed';
@@ -109,7 +109,7 @@ export interface MathPackage {
   name: string;
   grade_level: number;
   category_id: string | null;
-  assignment_type: 'math' | 'reading';
+  assignment_type: 'math' | 'reading' | 'english';
   problem_count: number;
   difficulty_summary: string | null;
   description: string | null;
@@ -152,7 +152,7 @@ export interface ImportPackageRequest {
     name: string;
     grade_level: number;
     category_id?: string;
-    assignment_type?: 'math' | 'reading';
+    assignment_type?: 'math' | 'reading' | 'english';
     description?: string;
     story_text?: string;
     global?: boolean;

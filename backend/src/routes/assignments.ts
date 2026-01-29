@@ -376,8 +376,8 @@ router.post('/', authenticateParent, async (req, res) => {
       return res.status(400).json({ error: 'childId, type, and title are required' });
     }
 
-    if (type !== 'math' && type !== 'reading') {
-      return res.status(400).json({ error: 'Type must be math or reading' });
+    if (type !== 'math' && type !== 'reading' && type !== 'english') {
+      return res.status(400).json({ error: 'Type must be math, reading, or english' });
     }
 
     const db = getDb();
@@ -522,7 +522,9 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
     }
 
     // Reading assignments use single-attempt logic (no retries)
+    // Math and English assignments support multiple attempts
     const isReadingAssignment = assignment.assignment_type === 'reading';
+    const isEnglishAssignment = assignment.assignment_type === 'english';
 
     let isCorrect = false;
     let correctAnswer = '';
@@ -890,7 +892,8 @@ router.post('/:id/submit', authenticateChild, async (req, res) => {
     // Calculate hint availability and cost
     const hasHint = hint !== null && hint !== '';
     const hintsAllowed = assignment.hints_allowed === 1;
-    const canBuyHint = !isCorrect && hasHint && !hintPurchased && hintsAllowed && canRetry && attemptNumber >= 2;
+    // English assignments don't have purchasable hints (but do show explanations after answering)
+    const canBuyHint = !isCorrect && hasHint && !hintPurchased && hintsAllowed && canRetry && attemptNumber >= 2 && !isEnglishAssignment;
     const hintCost = canBuyHint ? Math.max(1, Math.floor(potentialReward / 2)) : 0;
 
     // Invalidate cache after submission

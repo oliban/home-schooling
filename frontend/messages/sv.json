@@ -123,6 +123,7 @@
     "todaysTasks": "Dagens uppgifter",
     "math": "MATTE",
     "reading": "LÄSNING",
+    "english": "ENGELSKA",
     "tasksCount": "{count} uppgift att göra",
     "tasksCountPlural": "{count} uppgifter att göra",
     "startButton": "Börja!",

@@ -38,7 +38,7 @@ type Step = 'type' | 'theme' | 'size' | 'generating';
 export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreatorProps) {
   const { locale, t } = useLanguage();
   const [step, setStep] = useState<Step>('type');
-  const [contentType, setContentType] = useState<'math' | 'reading' | null>(null);
+  const [contentType, setContentType] = useState<'math' | 'reading' | 'english' | null>(null);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [sizes, setSizes] = useState<Size[]>([]);
   const [customTheme, setCustomTheme] = useState('');
@@ -70,7 +70,7 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
     loadThemes();
   }, []);
 
-  const handleSelectType = (type: 'math' | 'reading') => {
+  const handleSelectType = (type: 'math' | 'reading' | 'english') => {
     setContentType(type);
     setStep('theme');
   };
@@ -219,6 +219,18 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
                   </div>
                   <div className="text-sm text-sunset-twilight/70 mt-1">
                     {locale === 'sv' ? 'Korta berättelser med frågor' : 'Short stories with questions'}
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleSelectType('english')}
+                  className="flex-1 max-w-[250px] p-6 rounded-2xl border-2 border-sunset-peach hover:border-blue-400 bg-white hover:bg-blue-50/50 transition-all transform hover:scale-105 shadow-sm hover:shadow-card-warm"
+                >
+                  <div className="text-5xl mb-3">🇬🇧</div>
+                  <div className="font-display font-bold text-lg text-sunset-twilight">
+                    {locale === 'sv' ? 'Engelska' : 'English'}
+                  </div>
+                  <div className="text-sm text-sunset-twilight/70 mt-1">
+                    {locale === 'sv' ? 'Övningar i engelska' : 'English language practice'}
                   </div>
                 </button>
               </div>

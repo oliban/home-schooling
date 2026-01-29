@@ -35,7 +35,7 @@ interface AssignmentData {
   id: string;
   parent_id: string;
   child_id: string;
-  assignment_type: 'math' | 'reading';
+  assignment_type: 'math' | 'reading' | 'english';
   title: string;
   grade_level: number;
   status: string;
@@ -114,15 +114,16 @@ export default function AssignmentPage() {
       // Find first incomplete AND answerable question:
       // - Must be answerable (valid question structure)
       // - Unanswered (child_answer === null), OR
-      // - For MATH only: Wrong answer but can still retry (is_correct !== 1 AND attempts < 3)
+      // - For MATH and ENGLISH: Wrong answer but can still retry (is_correct !== 1 AND attempts < 3)
       // Reading assignments are single-attempt, so wrong answers are NOT incomplete
       // Corrupted questions (e.g., multiple_choice without options) are skipped automatically
       const MAX_ATTEMPTS = 3;
-      const isReading = data.assignment_type === 'reading';
+      // Math and English support multiple attempts, Reading is single-attempt
+      const supportsMultipleAttempts = data.assignment_type !== 'reading';
       const incompleteIndex = data.questions.findIndex(q =>
         isQuestionAnswerable(q) && (
           q.child_answer === null ||
-          (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+          (supportsMultipleAttempts && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
         )
       );
       if (incompleteIndex >= 0) {
@@ -251,15 +252,16 @@ export default function AssignmentPage() {
     // Reset sketch pad for new question (clears saved sketches array)
     sketchPadRef.current?.resetForNewQuestion();
 
-    // Find next incomplete AND answerable question (unanswered OR wrong with retries left for MATH only)
+    // Find next incomplete AND answerable question (unanswered OR wrong with retries left for MATH and ENGLISH)
     // Reading assignments are single-attempt, so wrong answers are NOT incomplete
     // Corrupted questions (e.g., multiple_choice without options) are skipped automatically
     const MAX_ATTEMPTS = 3;
-    const isReading = assignment.assignment_type === 'reading';
+    // Math and English support multiple attempts, Reading is single-attempt
+    const supportsMultipleAttempts = assignment.assignment_type !== 'reading';
     const nextIncompleteIndex = assignment.questions.findIndex((q, i) =>
       i > currentIndex && isQuestionAnswerable(q) && (
         q.child_answer === null ||
-        (!isReading && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
+        (supportsMultipleAttempts && q.is_correct !== 1 && (q.attempts_count || 0) < MAX_ATTEMPTS)
       )
     );
 
@@ -347,7 +349,7 @@ export default function AssignmentPage() {
               ←
             </button>
             <span className="text-2xl">
-              {assignment.assignment_type === 'math' ? '📐' : '📖'}
+              {assignment.assignment_type === 'math' ? '📐' : assignment.assignment_type === 'reading' ? '📖' : '🇬🇧'}
             </span>
             <span className="font-display font-semibold text-white">{assignment.title}</span>
           </div>

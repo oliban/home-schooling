@@ -8,7 +8,7 @@ export interface ObjectiveData {
   description: string;
   categoryId: string;
   categoryName: string;
-  subject: 'math' | 'reading';
+  subject: 'math' | 'reading' | 'english';
   gradeLevel?: number; // Optional, for grade-specific objectives
 }
 
@@ -69,9 +69,9 @@ export interface GeneratedPrompt {
   prompt: string;
   objectiveCodes: string[];
   questionCount: number;
-  subject: 'math' | 'reading';
+  subject: 'math' | 'reading' | 'english';
   mode: 'broad' | 'deep';
 }
 
 export type PromptMode = 'broad' | 'deep';
-export type Subject = 'math' | 'reading';
+export type Subject = 'math' | 'reading' | 'english';

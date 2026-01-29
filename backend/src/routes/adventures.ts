@@ -343,15 +343,20 @@ interface ObjectiveWithDescription {
 function getRecommendedObjectives(
   childId: string,
   gradeLevel: number,
-  contentType: 'math' | 'reading',
+  contentType: 'math' | 'reading' | 'english',
   count: number
 ): ObjectiveWithDescription[] {
   const db = getDb();
 
   // Get curriculum objectives for the child's grade level
-  const categoryFilter = contentType === 'math'
-    ? `AND co.code LIKE 'MA-%'`
-    : `AND co.code LIKE 'SV-%'`;
+  let categoryFilter: string;
+  if (contentType === 'math') {
+    categoryFilter = `AND co.code LIKE 'MA-%'`;
+  } else if (contentType === 'english') {
+    categoryFilter = `AND co.code LIKE 'EN-%'`;
+  } else {
+    categoryFilter = `AND co.code LIKE 'SV-%'`;
+  }
 
   const objectives = db.all<{
     id: number;
@@ -630,6 +635,107 @@ Svara med JSON i exakt detta format:
   }
 }
 
+// Generate English content via Claude API
+async function generateEnglishContent(
+  gradeLevel: number,
+  theme: string,
+  questionCount: number,
+  objectives: ObjectiveWithDescription[]
+): Promise<GeneratedPackage> {
+  const client = getAnthropicClient();
+
+  // Format objectives with EXPANDED descriptions for the prompt
+  const objectivesList = objectives
+    .map(o => `- ${o.code}: ${getExpandedDescription(o.code, o.description)}`)
+    .join('\n');
+  const objectiveCodes = objectives.map(o => o.code);
+
+  const systemPrompt = `Du är en svensk engelsklärare som skapar engelskövningar för grundskolan.
+Skapa ${questionCount} engelskövningar med temat "${theme}".
+Instruktionerna ska vara på SVENSKA men själva engelskövningarna ska innehålla engelska ord och meningar.
+
+KRITISKT VIKTIGT - ÅRSKURS ${gradeLevel}:
+Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALL engelska till vad ett barn i årskurs ${gradeLevel} kan.
+- Årskurs 3-4: Mycket enkla ord (cat, dog, house, happy). Korta fraser. Fokus på vardagsord.
+- Årskurs 5: Enkla meningar. Grundläggande grammatik (presens, preteritum). Vanliga verb och substantiv.
+- Årskurs 6: Något längre meningar. Fler tempus. Adjektiv och adverb. Enkel dialog.
+
+LGR22-MÅL ATT TRÄNA (med beskrivningar):
+${objectivesList}
+
+VIKTIGT FÖR KODVAL: Matcha varje övnings typ med rätt kod:
+- Ordkunskap/Vocabulary → EN-VOC
+- Grammatik → EN-GRM
+- Läsförståelse på engelska → EN-CMP
+- Översättning → EN-TRN
+
+ÖVNINGSTYPER ATT VARIERA MELLAN:
+1. Ordkunskap: "Vad betyder 'happy' på svenska?" (flerval)
+2. Översättning: "Översätt till engelska: 'Jag har en hund'" (text eller flerval)
+3. Fyll i luckorna: "The cat is ___ (stor)" (flerval med A: big, B: small, etc.)
+4. Grammatik: "Vilket är rätt? She ___ to school" (flerval med A: go, B: goes, etc.)
+5. Läsförståelse: Kort engelsk mening + fråga på svenska
+
+Svara med JSON i exakt detta format:
+{
+  "package": {
+    "name": "[Kreativ titel på svenska som inkluderar temat]",
+    "description": "[Kort beskrivning på svenska om engelskövningarna]"
+  },
+  "problems": [
+    {
+      "question_text": "[Instruktion på svenska, engelska ord/meningar i övningen]",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: [Rätt svar]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
+      "explanation": "[Förklaring på svenska varför A är rätt, inkludera översättning]",
+      "hint": "[Ledtråd på svenska]",
+      "difficulty": "easy|medium|hard",
+      "lgr22_codes": ["[VÄLJ rätt kod baserat på övningstypen från: ${objectiveCodes.join(', ')}]"]
+    }
+  ]
+}
+
+- Använd åldersanpassad engelska för ÅRSKURS ${gradeLevel}
+- Alla alternativ ska ha liknande längd
+- Distraktorer ska vara vanliga misstag som barn gör
+- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra
+- Gör övningarna roliga och engagerande med temat "${theme}"`;
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 4000,
+    messages: [{ role: 'user', content: systemPrompt }]
+  });
+
+  const content = response.content[0];
+  if (content.type !== 'text') {
+    throw new Error('Unexpected response format from Claude');
+  }
+
+  // Extract JSON from response
+  let jsonText = content.text;
+
+  // Try to extract from code block first
+  const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonText = jsonMatch[1];
+  } else {
+    // Try to find JSON object directly
+    const jsonObjMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (jsonObjMatch) {
+      jsonText = jsonObjMatch[0];
+    }
+  }
+
+  try {
+    return JSON.parse(sanitizeJsonString(jsonText.trim()));
+  } catch (parseError) {
+    console.error('Failed to parse English JSON. Raw response:', content.text.substring(0, 500));
+    throw parseError;
+  }
+}
+
 // GET /api/adventures/themes - Get available themes and sizes
 router.get('/themes', authenticateChild, (_req, res) => {
   res.json({ themes: THEMES, sizes: SIZES });
@@ -685,14 +791,14 @@ router.post('/generate', authenticateChild, async (req, res) => {
     const db = getDb();
     const childId = req.child!.id;
     const { contentType, themeId, customTheme, sizeId } = req.body as {
-      contentType: 'math' | 'reading';
+      contentType: 'math' | 'reading' | 'english';
       themeId: string;
       customTheme?: string;
       sizeId: 'quick' | 'medium' | 'challenge';
     };
 
     // Validate input
-    if (!contentType || !['math', 'reading'].includes(contentType)) {
+    if (!contentType || !['math', 'reading', 'english'].includes(contentType)) {
       return res.status(400).json({ error: 'Invalid contentType' });
     }
     if (!sizeId || !SIZES.find(s => s.id === sizeId)) {
@@ -757,6 +863,11 @@ router.post('/generate', authenticateChild, async (req, res) => {
           { code: 'MA-TAL-01', description: 'Naturliga tal och deras egenskaper' },
           { code: 'MA-TAL-02', description: 'Positionssystemet för naturliga tal' }
         ];
+      } else if (contentType === 'english') {
+        objectives = [
+          { code: 'EN-VOC-01', description: 'Vardagsord och enkla fraser' },
+          { code: 'EN-GRM-01', description: 'Enkla meningar och frågor' }
+        ];
       } else {
         objectives = [
           { code: 'SV-LITERAL', description: 'Direkt förståelse av texten' },
@@ -768,9 +879,13 @@ router.post('/generate', authenticateChild, async (req, res) => {
     // Generate content via Claude API
     let generated: GeneratedPackage;
     try {
-      generated = contentType === 'math'
-        ? await generateMathContent(child.grade_level, themeName, size.questionCount, objectives)
-        : await generateReadingContent(child.grade_level, themeName, size.questionCount, objectives);
+      if (contentType === 'math') {
+        generated = await generateMathContent(child.grade_level, themeName, size.questionCount, objectives);
+      } else if (contentType === 'english') {
+        generated = await generateEnglishContent(child.grade_level, themeName, size.questionCount, objectives);
+      } else {
+        generated = await generateReadingContent(child.grade_level, themeName, size.questionCount, objectives);
+      }
     } catch (genError) {
       console.error('Claude API generation error:', genError);
       if (genError instanceof Anthropic.APIError) {
@@ -954,7 +1069,7 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
     const parentId = req.user!.id;
     const { childId, contentType, theme, questionCount, objectives } = req.body as {
       childId: string;
-      contentType: 'math' | 'reading';
+      contentType: 'math' | 'reading' | 'english';
       theme: string;
       questionCount: number;
       objectives: Array<{ code: string; description: string }>;
@@ -964,7 +1079,7 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
     if (!childId) {
       return res.status(400).json({ error: 'childId is required' });
     }
-    if (!contentType || !['math', 'reading'].includes(contentType)) {
+    if (!contentType || !['math', 'reading', 'english'].includes(contentType)) {
       return res.status(400).json({ error: 'Invalid contentType' });
     }
     if (!questionCount || questionCount < 1 || questionCount > 20) {
@@ -999,9 +1114,13 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
     // Generate content via Claude API (no quota check for parents)
     let generated: GeneratedPackage;
     try {
-      generated = contentType === 'math'
-        ? await generateMathContent(child.grade_level, theme, questionCount, objectivesWithDescriptions)
-        : await generateReadingContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
+      if (contentType === 'math') {
+        generated = await generateMathContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
+      } else if (contentType === 'english') {
+        generated = await generateEnglishContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
+      } else {
+        generated = await generateReadingContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
+      }
     } catch (genError) {
       console.error('Claude API generation error:', genError);
       if (genError instanceof Anthropic.APIError) {

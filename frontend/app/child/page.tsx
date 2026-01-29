@@ -22,7 +22,7 @@ interface ChildData {
 
 interface Assignment {
   id: string;
-  assignment_type: 'math' | 'reading';
+  assignment_type: 'math' | 'reading' | 'english';
   title: string;
   status: string;
 }
@@ -220,6 +220,7 @@ export default function ChildDashboard() {
   // Filter assignments by type
   const mathActive = assignmentList.filter((a) => a.assignment_type === 'math');
   const readingActive = assignmentList.filter((a) => a.assignment_type === 'reading');
+  const englishActive = assignmentList.filter((a) => a.assignment_type === 'english');
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white">
@@ -257,9 +258,10 @@ export default function ChildDashboard() {
         </h2>
 
         {/* Task cards grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-10">
+        <div className="grid md:grid-cols-3 gap-6 mb-10">
           <TaskCard type="math" assignments={mathActive} />
           <TaskCard type="reading" assignments={readingActive} />
+          <TaskCard type="english" assignments={englishActive} />
         </div>
 
         {/* Create Your Own Adventure button */}

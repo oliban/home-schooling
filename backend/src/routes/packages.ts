@@ -336,7 +336,7 @@ router.get('/', authenticateParent, async (req, res) => {
     } else if (scope === 'global') {
       query += ' AND p.is_global = 1';
     }
-    if (type === 'math' || type === 'reading') {
+    if (type === 'math' || type === 'reading' || type === 'english') {
       query += ' AND p.assignment_type = ?';
       params.push(type);
     }

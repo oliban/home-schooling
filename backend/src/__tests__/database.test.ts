@@ -17,7 +17,7 @@ describe('Database', () => {
   it('should have math categories seeded', () => {
     const db = getDb();
     const categories = db.all<{ id: string }>('SELECT id FROM math_categories');
-    expect(categories.length).toBe(7); // 6 math + 1 reading (lasforstaelse)
+    expect(categories.length).toBe(11); // 6 math + 1 reading + 4 english
   });
 
   it('should have collectibles seeded', () => {
@@ -32,9 +32,9 @@ describe('Database', () => {
       'SELECT id, category_id, code FROM curriculum_objectives'
     );
     expect(objectives.length).toBeGreaterThan(0);
-    // Should have objectives for all 7 categories (6 math + 1 reading)
+    // Should have objectives for all 11 categories (6 math + 1 reading + 4 english)
     const categories = new Set(objectives.map(o => o.category_id));
-    expect(categories.size).toBe(7);
+    expect(categories.size).toBe(11);
   });
 
   it('should have curriculum objectives with valid structure', () => {

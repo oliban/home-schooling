@@ -31,7 +31,7 @@ interface AssignmentDetail {
   id: string;
   parent_id: string;
   child_id: string;
-  assignment_type: 'math' | 'reading';
+  assignment_type: 'math' | 'reading' | 'english';
   title: string;
   grade_level: number;
   status: string;
@@ -156,7 +156,7 @@ export default function AssignmentPreview() {
           <div className="flex items-center gap-3">
             <LanguageSwitcher showLabel={false} />
             <span className="text-2xl">
-              {assignment.assignment_type === 'math' ? '📐' : '📖'}
+              {assignment.assignment_type === 'math' ? '📐' : assignment.assignment_type === 'reading' ? '📖' : '🇬🇧'}
             </span>
             <span className={`px-3 py-1 rounded-full text-sm ${
               assignment.status === 'completed'
@@ -201,12 +201,14 @@ export default function AssignmentPreview() {
                 </div>
                 <div className="text-sm text-gray-500">{t('parent.assignmentPreview.score')}</div>
               </div>
-              {assignment.assignment_type === 'math' && (
+              {(assignment.assignment_type === 'math' || assignment.assignment_type === 'english') && (
                 <>
-                  <div className="p-4 bg-yellow-50 rounded-xl">
-                    <div className="text-3xl font-bold text-yellow-600">{stats.hintsUsed}</div>
-                    <div className="text-sm text-gray-500">{t('parent.assignmentPreview.hintsUsed')}</div>
-                  </div>
+                  {assignment.assignment_type === 'math' && (
+                    <div className="p-4 bg-yellow-50 rounded-xl">
+                      <div className="text-3xl font-bold text-yellow-600">{stats.hintsUsed}</div>
+                      <div className="text-sm text-gray-500">{t('parent.assignmentPreview.hintsUsed')}</div>
+                    </div>
+                  )}
                   <div className="p-4 bg-orange-50 rounded-xl">
                     <div className="text-3xl font-bold text-orange-600">{stats.avgAttempts.toFixed(1)}</div>
                     <div className="text-sm text-gray-500">{t('parent.assignmentPreview.avgAttempts')}</div>

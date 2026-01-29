@@ -404,7 +404,7 @@ export const adventures = {
     token: string,
     data: {
       childId: string;
-      contentType: 'math' | 'reading';
+      contentType: 'math' | 'reading' | 'english';
       theme: string;
       questionCount: number;
       objectives: Array<{ code: string; description: string }>;
