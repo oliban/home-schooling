@@ -159,7 +159,10 @@ class HomeSchoolingDatabase {
       console.log(`Seeded ${collectibles.length} collectibles`);
     }
 
-    // Migration: Seed LOTR expansion collectibles
+    // Migration: Run SQL migration files from migrations directory
+    this.runSqlMigrations();
+
+    // Seed LOTR expansion collectibles (after migrations so expansion_pack column exists)
     const lotrCount = this.db.prepare("SELECT COUNT(*) as count FROM collectibles WHERE expansion_pack = 'lotr-italian'").get() as { count: number };
     if (lotrCount.count < 50) {
       // Remove any existing LOTR collectibles to re-seed
@@ -172,9 +175,6 @@ class HomeSchoolingDatabase {
       }
       console.log(`Seeded ${lotrCollectibles.length} LOTR expansion collectibles`);
     }
-
-    // Migration: Run SQL migration files from migrations directory
-    this.runSqlMigrations();
   }
 
   private runSqlMigrations() {
