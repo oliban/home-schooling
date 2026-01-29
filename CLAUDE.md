@@ -37,6 +37,44 @@ SQLite database at `/data/teacher.db`. Schema in `/backend/src/data/schema.sql`.
 - `GET /api/assignments` - List assignments
 - `POST /api/assignments/:id/submit` - Submit answers
 
+## Collectibles & Expansion Packs
+
+### How the Shop Works
+- Children start with 3 unlocked shop items
+- Each daily login unlocks 2 more regular items + 1 LOTR item
+- Items are shown in a seeded random order (unique per child)
+- `always_visible` items bypass the unlock system
+
+### Adding a New Expansion Pack
+
+1. **Create seed file**: `/backend/src/data/{name}-expansion-seed.ts`
+   ```typescript
+   export interface MyCollectibleSeed {
+     name: string;
+     ascii_art: string;
+     svg_path: string;
+     price: number;
+     rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+     expansion_pack: string;
+     pronunciation: string;
+   }
+   export const myCollectibles: MyCollectibleSeed[] = [...]
+   ```
+
+2. **Add SVG portraits**: `/frontend/public/portraits/{pack-name}/`
+
+3. **Add seeding in database.ts**: Import and seed like LOTR collectibles
+
+4. **Add unlock counter** (optional): Add `unlocked_{pack}_items` column to children table
+
+5. **Update auth.ts**: Increment the counter on daily login
+
+6. **Update collectibles.ts**: Add filtering logic for the new expansion
+
+### Current Expansions
+- **Base set**: 121 Italian brainrot characters (ASCII art)
+- **LOTR Italian** (`lotr-italian`): 50 characters with SVG pixel art, 1 unlocked daily
+
 ## Development Practices
 
 - **TDD (Test-Driven Development)**: Always write tests first before implementing new features or fixing bugs.

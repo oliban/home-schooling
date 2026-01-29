@@ -71,11 +71,12 @@ router.get('/', authenticateChild, async (req, res) => {
     const db = getDb();
 
     // Get child's unlocked shop items count and rowid for seeded ordering
-    const childData = db.get<{ unlocked_shop_items: number; child_rowid: number }>(
-      'SELECT unlocked_shop_items, rowid as child_rowid FROM children WHERE id = ?',
+    const childData = db.get<{ unlocked_shop_items: number; unlocked_lotr_items: number; child_rowid: number }>(
+      'SELECT unlocked_shop_items, unlocked_lotr_items, rowid as child_rowid FROM children WHERE id = ?',
       [childId]
     );
     const unlockedCount = childData?.unlocked_shop_items || 3;
+    const unlockedLotrCount = childData?.unlocked_lotr_items || 5;
     const childRowid = childData?.child_rowid || 1;
 
     // Get all collectibles with ownership status
@@ -113,16 +114,22 @@ router.get('/', authenticateChild, async (req, res) => {
     // Show items based on their position in the random order (row_num)
     // This ensures buying an item doesn't cause new items to appear
     // Items are visible if:
-    // 1. They were unlocked (row_num <= unlockedCount), OR
-    // 2. They are owned (bought before they were naturally unlocked, or still owned), OR
-    // 3. They are marked as always_visible in the database
+    // 1. For regular items: row_num <= unlockedCount
+    // 2. For LOTR expansion: row_num <= unlockedLotrCount (separate counter)
+    // 3. They are owned (bought before they were naturally unlocked, or still owned)
+    // 4. They are marked as always_visible in the database
 
     const filteredCollectibles = collectibles.filter(c => {
-      return c.row_num <= unlockedCount || c.owned === 1 || (c as any).always_visible === 1;
+      const isLotr = (c as any).expansion_pack === 'lotr-italian';
+      const unlockLimit = isLotr ? unlockedLotrCount : unlockedCount;
+      return c.row_num <= unlockLimit || c.owned === 1 || (c as any).always_visible === 1;
     });
 
-    // Sort: always_visible items first, then by original order
+    // Sort: LOTR items first, then always_visible, then by original order
     filteredCollectibles.sort((a, b) => {
+      const aLotr = (a as any).expansion_pack === 'lotr-italian' ? 1 : 0;
+      const bLotr = (b as any).expansion_pack === 'lotr-italian' ? 1 : 0;
+      if (aLotr !== bLotr) return bLotr - aLotr; // LOTR first
       const aVisible = (a as any).always_visible || 0;
       const bVisible = (b as any).always_visible || 0;
       if (aVisible !== bVisible) return bVisible - aVisible; // always_visible first

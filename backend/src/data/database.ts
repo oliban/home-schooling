@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { collectibles } from './collectibles-seed.js';
+import { lotrCollectibles } from './lotr-expansion-seed.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,6 +157,20 @@ class HomeSchoolingDatabase {
         ).run(id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity);
       }
       console.log(`Seeded ${collectibles.length} collectibles`);
+    }
+
+    // Migration: Seed LOTR expansion collectibles
+    const lotrCount = this.db.prepare("SELECT COUNT(*) as count FROM collectibles WHERE expansion_pack = 'lotr-italian'").get() as { count: number };
+    if (lotrCount.count < 50) {
+      // Remove any existing LOTR collectibles to re-seed
+      this.db.exec("DELETE FROM collectibles WHERE expansion_pack = 'lotr-italian'");
+      for (const collectible of lotrCollectibles) {
+        const id = collectible.name.toLowerCase().replace(/ /g, '_').replace(/'/g, '');
+        this.db.prepare(
+          'INSERT INTO collectibles (id, name, ascii_art, price, rarity, pronunciation, svg_path, expansion_pack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(id, collectible.name, collectible.ascii_art, collectible.price, collectible.rarity, collectible.pronunciation, collectible.svg_path, collectible.expansion_pack);
+      }
+      console.log(`Seeded ${lotrCollectibles.length} LOTR expansion collectibles`);
     }
 
     // Migration: Run SQL migration files from migrations directory

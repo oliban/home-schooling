@@ -177,26 +177,29 @@ router.post('/child-login', async (req, res) => {
 
     // Check if this is a new day login - unlock more shop items
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const childData = db.get<{ last_login_date: string | null; unlocked_shop_items: number; new_item_unlocked_today: number }>(
-      'SELECT last_login_date, unlocked_shop_items, new_item_unlocked_today FROM children WHERE id = ?',
+    const childData = db.get<{ last_login_date: string | null; unlocked_shop_items: number; unlocked_lotr_items: number; new_item_unlocked_today: number }>(
+      'SELECT last_login_date, unlocked_shop_items, unlocked_lotr_items, new_item_unlocked_today FROM children WHERE id = ?',
       [child.id]
     );
 
     let newItemUnlocked = false;
     let unlockedShopItems = childData?.unlocked_shop_items || 3;
+    let unlockedLotrItems = childData?.unlocked_lotr_items || 5;
 
     if (childData?.last_login_date !== today) {
-      // New day - unlock 2 more shop items
+      // New day - unlock 2 more shop items + 1 LOTR item
       unlockedShopItems = (childData?.unlocked_shop_items || 3) + 2;
+      unlockedLotrItems = (childData?.unlocked_lotr_items || 5) + 1;
       newItemUnlocked = true;
 
       db.run(
         `UPDATE children SET
           last_login_date = ?,
           unlocked_shop_items = ?,
+          unlocked_lotr_items = ?,
           new_item_unlocked_today = 1
         WHERE id = ?`,
-        [today, unlockedShopItems, child.id]
+        [today, unlockedShopItems, unlockedLotrItems, child.id]
       );
     }
 
