@@ -95,6 +95,8 @@ export interface Collectible {
   price: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   pronunciation?: string | null; // Optional: text to speak instead of name
+  svg_path?: string | null; // Optional: path to SVG portrait
+  expansion_pack?: string | null; // Optional: expansion pack identifier (e.g., 'lotr-italian')
 }
 
 export interface ChildCollectible {

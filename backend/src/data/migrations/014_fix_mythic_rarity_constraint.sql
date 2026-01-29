@@ -2,6 +2,8 @@
 -- Also adds always_visible column to bypass unlock system for specific items
 
 -- Add always_visible column if it doesn't exist
+-- SQLite doesn't support IF NOT EXISTS for columns, but duplicate column errors
+-- are handled gracefully by the migration runner
 ALTER TABLE collectibles ADD COLUMN always_visible INTEGER DEFAULT 0;
 
 -- Insert Bajsalero Bajsalo if not exists

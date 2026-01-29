@@ -213,8 +213,17 @@ class HomeSchoolingDatabase {
         migrationsRun++;
         console.log(`[Migrations] ✓ Applied: ${version}`);
       } catch (err) {
-        console.error(`[Migrations] ✗ Failed: ${version}`, err);
-        throw err; // Don't continue if a migration fails
+        // Handle duplicate column errors gracefully - this happens when schema.sql
+        // already has the column and migration tries to add it again
+        const errMessage = err instanceof Error ? err.message : String(err);
+        if (errMessage.includes('duplicate column name')) {
+          console.log(`[Migrations] ⚠ Skipped (column already exists): ${version}`);
+          recordMigration.run(version);
+          migrationsSkipped++;
+        } else {
+          console.error(`[Migrations] ✗ Failed: ${version}`, err);
+          throw err; // Don't continue if a migration fails
+        }
       }
     }
 
