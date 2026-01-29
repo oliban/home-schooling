@@ -1,29 +1,9 @@
--- Migration: Fix rarity CHECK constraint to include 'mythic' and add Bajsalero
--- SQLite requires recreating the table to modify CHECK constraints
+-- Migration: Add Bajsalero if it doesn't exist
+-- NOTE: The table recreation has been removed because schema.sql already has
+-- the correct CHECK constraint and column structure. This migration now only
+-- ensures Bajsalero exists for databases that were created before it was added.
 
-PRAGMA foreign_keys = OFF;
-
--- Create new table with correct constraint
-CREATE TABLE collectibles_new (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    ascii_art TEXT NOT NULL,
-    price INTEGER NOT NULL,
-    rarity TEXT CHECK (rarity IN ('common', 'rare', 'epic', 'legendary', 'mythic')),
-    always_visible INTEGER DEFAULT 0
-);
-
--- Copy existing data
-INSERT INTO collectibles_new (id, name, ascii_art, price, rarity, always_visible)
-SELECT id, name, ascii_art, price, rarity, COALESCE(always_visible, 0) FROM collectibles;
-
--- Drop old table and rename new one
-DROP TABLE collectibles;
-ALTER TABLE collectibles_new RENAME TO collectibles;
-
-PRAGMA foreign_keys = ON;
-
--- Now insert Bajsalero Bajsalo
+-- Insert Bajsalero Bajsalo (OR IGNORE handles if it already exists)
 INSERT OR IGNORE INTO collectibles (id, name, ascii_art, price, rarity, always_visible)
 VALUES (
     'bajsalero_bajsalo',

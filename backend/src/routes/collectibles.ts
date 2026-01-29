@@ -13,9 +13,10 @@ const COLLECTIBLES_CACHE_TTL = 300; // 5 minutes
 const DEFAULT_LIMIT = 150;
 const MAX_LIMIT = 150;
 
-// Cache key generator for collectibles list by child (includes pagination)
-function getCollectiblesCacheKey(childId: string, limit: number, offset: number): string {
-  return `collectibles:child:${childId}:limit:${limit}:offset:${offset}`;
+// Cache key generator for collectibles list by child (includes pagination and expansion pack filter)
+function getCollectiblesCacheKey(childId: string, limit: number, offset: number, expansionPack?: string): string {
+  const base = `collectibles:child:${childId}:limit:${limit}:offset:${offset}`;
+  return expansionPack ? `${base}:expansion:${expansionPack}` : base;
 }
 
 // Invalidate collectibles cache for a child (all pagination variants)
@@ -35,6 +36,7 @@ async function invalidateCollectiblesCache(childId: string): Promise<void> {
 
 // Get all collectibles with ownership status (limited by unlocked count for shop)
 // Supports lazy loading with pagination: ?limit=N&offset=M (default limit=20, offset=0)
+// Supports filtering by expansion pack: ?expansion_pack=lotr-italian
 router.get('/', authenticateChild, async (req, res) => {
   try {
     const childId = req.child!.id;
@@ -46,7 +48,10 @@ router.get('/', authenticateChild, async (req, res) => {
     );
     const offset = Math.max(0, parseInt(req.query.offset as string, 10) || 0);
 
-    const cacheKey = getCollectiblesCacheKey(childId, limit, offset);
+    // Parse expansion pack filter (optional)
+    const expansionPack = req.query.expansion_pack as string | undefined;
+
+    const cacheKey = getCollectiblesCacheKey(childId, limit, offset, expansionPack);
 
     // Try to get from cache first
     try {
@@ -76,7 +81,20 @@ router.get('/', authenticateChild, async (req, res) => {
     // Get all collectibles with ownership status
     // Uses seeded pseudo-random ordering so each child sees a unique shop order
     // Formula mixes child rowid with collectible rowid using multiplication for true shuffling
-    const collectibles = db.all<Collectible & { owned: number; row_num: number }>(`
+    // Optionally filter by expansion_pack
+    const collectiblesQuery = expansionPack
+      ? `
+      SELECT c.*,
+        CASE WHEN cc.child_id IS NOT NULL THEN 1 ELSE 0 END as owned,
+        ROW_NUMBER() OVER (
+          ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
+        ) as row_num
+      FROM collectibles c
+      LEFT JOIN child_collectibles cc ON c.id = cc.collectible_id AND cc.child_id = ?
+      WHERE c.expansion_pack = ?
+      ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
+    `
+      : `
       SELECT c.*,
         CASE WHEN cc.child_id IS NOT NULL THEN 1 ELSE 0 END as owned,
         ROW_NUMBER() OVER (
@@ -85,7 +103,12 @@ router.get('/', authenticateChild, async (req, res) => {
       FROM collectibles c
       LEFT JOIN child_collectibles cc ON c.id = cc.collectible_id AND cc.child_id = ?
       ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
-    `, [childId]);
+    `;
+
+    const collectibles = db.all<Collectible & { owned: number; row_num: number }>(
+      collectiblesQuery,
+      expansionPack ? [childId, expansionPack] : [childId]
+    );
 
     // Show items based on their position in the random order (row_num)
     // This ensures buying an item doesn't cause new items to appear
@@ -117,7 +140,9 @@ router.get('/', authenticateChild, async (req, res) => {
         price: c.price,
         rarity: c.rarity,
         owned: c.owned === 1,
-        pronunciation: (c as any).pronunciation || null
+        pronunciation: c.pronunciation || null,
+        svg_path: c.svg_path || null,
+        expansion_pack: c.expansion_pack || null
       })),
       unlockedCount,
       totalCount: collectibles.length,
