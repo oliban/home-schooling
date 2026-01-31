@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { assignments } from '@/lib/api';
 import { fireConfetti } from '@/components/ui/Confetti';
 import { SpeakButton } from '@/components/ui/SpeakButton';
-import { useTranslation } from '@/lib/LanguageContext';
+import { useTranslation, useLanguage } from '@/lib/LanguageContext';
 import type { SketchPadHandle } from '@/components/ui/SketchPad';
 
 const SketchPad = dynamic(() => import('@/components/ui/SketchPad'), {
@@ -66,6 +66,7 @@ export default function AssignmentPage() {
   const router = useRouter();
   const params = useParams();
   const { t } = useTranslation();
+  const { locale } = useLanguage();
   const assignmentId = params.id as string;
 
   const [assignment, setAssignment] = useState<AssignmentData | null>(null);
@@ -335,8 +336,12 @@ export default function AssignmentPage() {
   const options = question.options ? JSON.parse(question.options) : null;
   const isMultipleChoice = question.answer_type === 'multiple_choice' && options;
 
-  // Determine speech language based on assignment type
-  const speechLang = assignment.assignment_type === 'english' ? 'en-US' : 'sv-SE';
+  // Determine speech language based on assignment type and UI locale
+  // - Math and reading: always Swedish (content is in Swedish)
+  // - English: matches UI locale (Swedish UI = Swedish instructions, English UI = English instructions)
+  const speechLang = assignment.assignment_type === 'english'
+    ? (locale === 'en' ? 'en-US' : 'sv-SE')
+    : 'sv-SE';
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white">

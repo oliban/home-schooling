@@ -106,7 +106,8 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
           contentType,
           themeId: 'custom',
           customTheme: customTheme.trim(),
-          sizeId: selectedSize.id
+          sizeId: selectedSize.id,
+          locale
         })
       });
 

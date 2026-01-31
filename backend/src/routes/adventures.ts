@@ -640,7 +640,8 @@ async function generateEnglishContent(
   gradeLevel: number,
   theme: string,
   questionCount: number,
-  objectives: ObjectiveWithDescription[]
+  objectives: ObjectiveWithDescription[],
+  locale: 'sv' | 'en' = 'sv'
 ): Promise<GeneratedPackage> {
   const client = getAnthropicClient();
 
@@ -650,7 +651,67 @@ async function generateEnglishContent(
     .join('\n');
   const objectiveCodes = objectives.map(o => o.code);
 
-  const systemPrompt = `You are an English teacher creating English exercises for Swedish elementary school students.
+  // Choose prompt based on locale
+  // Swedish UI: Instructions in Swedish, English content for learning
+  // English UI: Everything in English
+  const systemPrompt = locale === 'sv'
+    ? `Du är en engelsklärare som skapar engelska övningar för svenska grundskoleelever.
+Skapa ${questionCount} engelska övningar med temat "${theme}".
+
+VIKTIGT OM SPRÅK:
+- Instruktioner och frågor ska vara på SVENSKA (så barnet förstår vad de ska göra)
+- Svarsalternativen ska vara på ENGELSKA (det barnet ska lära sig)
+- Förklaringar och ledtrådar på SVENSKA
+- Exempel: "Vad betyder 'happy' på engelska?" med alternativ "A: Glad", "B: Sad", etc.
+
+KRITISKT - ÅRSKURS ${gradeLevel}:
+Detta barn går i årskurs ${gradeLevel}. Du MÅSTE anpassa ALL engelska till vad ett barn i årskurs ${gradeLevel} kan förstå.
+- Årskurs 3-4: Mycket enkla ord (cat, dog, house, happy). Korta fraser. Fokus på vardagsord.
+- Årskurs 5: Enkla meningar. Grundläggande grammatik (presens, imperfekt). Vanliga verb och substantiv.
+- Årskurs 6: Något längre meningar. Fler tempus. Adjektiv och adverb. Enkla dialoger.
+
+LGR22-MÅL ATT TRÄNA (med beskrivningar):
+${objectivesList}
+
+VIKTIGT FÖR KODVAL: Matcha varje övningstyp med rätt kod:
+- Ordförråd → EN-VOC
+- Grammatik → EN-GRM
+- Läsförståelse → EN-CMP
+- Översättning → EN-TRN
+
+ÖVNINGSTYPER ATT VARIERA MELLAN:
+1. Ordförråd: "Vad betyder 'glad' på engelska?" (flerval med engelska alternativ)
+2. Översättning: "Översätt till engelska: 'Jag har en hund'" (svar: "I have a dog")
+3. Fyll i luckan: "The cat is very ___." (flerval: A: big, B: small, etc.)
+4. Grammatik: "Vilket är rätt? She ___ to school every day." (A: go, B: goes, etc.)
+5. Läsförståelse: Kort engelsk mening + fråga om den på svenska
+
+Svara med JSON i exakt detta format:
+{
+  "package": {
+    "name": "[Kreativ svensk titel som inkluderar temat]",
+    "description": "[Kort svensk beskrivning av övningarna]"
+  },
+  "problems": [
+    {
+      "question_text": "[Fråga/instruktion på SVENSKA]",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: [Rätt svar på ENGELSKA]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
+      "explanation": "[Förklaring på SVENSKA varför A är rätt, inkludera översättning]",
+      "hint": "[Hjälpsam ledtråd på SVENSKA]",
+      "difficulty": "easy|medium|hard",
+      "lgr22_codes": ["[Välj rätt kod baserat på övningstyp från: ${objectiveCodes.join(', ')}]"]
+    }
+  ]
+}
+
+- Använd åldersanpassad engelska för ÅRSKURS ${gradeLevel}
+- Alla alternativ ska ha liknande längd
+- Distraktorer ska vara vanliga misstag som barn gör
+- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra
+- Gör övningarna roliga och engagerande med temat "${theme}"`
+    : `You are an English teacher creating English exercises for Swedish elementary school students.
 Create ${questionCount} English exercises with the theme "${theme}".
 ALL content must be in ENGLISH - questions, instructions, options, hints, and explanations.
 The only Swedish should be in translation exercises where the answer involves Swedish words.
@@ -730,7 +791,18 @@ Respond with JSON in exactly this format:
   }
 
   try {
-    return JSON.parse(sanitizeJsonString(jsonText.trim()));
+    const generated: GeneratedPackage = JSON.parse(sanitizeJsonString(jsonText.trim()));
+
+    // Validate curriculum codes using Sonnet (like math does)
+    console.log(`[Adventures] Validating ${generated.problems.length} English problem(s) curriculum codes...`);
+    generated.problems = await validateCurriculumCodesBatch(
+      client,
+      generated.problems,
+      gradeLevel,
+      'english'
+    );
+
+    return generated;
   } catch (parseError) {
     console.error('Failed to parse English JSON. Raw response:', content.text.substring(0, 500));
     throw parseError;
@@ -791,11 +863,12 @@ router.post('/generate', authenticateChild, async (req, res) => {
   try {
     const db = getDb();
     const childId = req.child!.id;
-    const { contentType, themeId, customTheme, sizeId } = req.body as {
+    const { contentType, themeId, customTheme, sizeId, locale } = req.body as {
       contentType: 'math' | 'reading' | 'english';
       themeId: string;
       customTheme?: string;
       sizeId: 'quick' | 'medium' | 'challenge';
+      locale?: 'sv' | 'en';
     };
 
     // Validate input
@@ -883,7 +956,7 @@ router.post('/generate', authenticateChild, async (req, res) => {
       if (contentType === 'math') {
         generated = await generateMathContent(child.grade_level, themeName, size.questionCount, objectives);
       } else if (contentType === 'english') {
-        generated = await generateEnglishContent(child.grade_level, themeName, size.questionCount, objectives);
+        generated = await generateEnglishContent(child.grade_level, themeName, size.questionCount, objectives, locale || 'sv');
       } else {
         generated = await generateReadingContent(child.grade_level, themeName, size.questionCount, objectives);
       }
@@ -1068,12 +1141,13 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
   try {
     const db = getDb();
     const parentId = req.user!.id;
-    const { childId, contentType, theme, questionCount, objectives } = req.body as {
+    const { childId, contentType, theme, questionCount, objectives, locale } = req.body as {
       childId: string;
       contentType: 'math' | 'reading' | 'english';
       theme: string;
       questionCount: number;
       objectives: Array<{ code: string; description: string }>;
+      locale?: 'sv' | 'en';
     };
 
     // Validate input
@@ -1118,7 +1192,7 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
       if (contentType === 'math') {
         generated = await generateMathContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
       } else if (contentType === 'english') {
-        generated = await generateEnglishContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
+        generated = await generateEnglishContent(child.grade_level, theme, questionCount, objectivesWithDescriptions, locale || 'sv');
       } else {
         generated = await generateReadingContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
       }

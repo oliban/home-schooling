@@ -32,27 +32,49 @@ interface CurriculumCorrection {
 // Cache for curriculum descriptions (populated from database)
 let cachedDescriptions: Record<string, string> | null = null;
 
+// Separate caches for different assignment types
+let cachedMathDescriptions: Record<string, string> | null = null;
+let cachedEnglishDescriptions: Record<string, string> | null = null;
+
 /**
  * Fetches curriculum code descriptions from the database.
  * Uses extended_description if available, falls back to description.
  * Results are cached for the lifetime of the process.
  */
-function getCodeDescriptions(): Record<string, string> {
-  if (cachedDescriptions) {
-    return cachedDescriptions;
+function getCodeDescriptions(assignmentType: 'math' | 'english'): Record<string, string> {
+  if (assignmentType === 'math') {
+    if (cachedMathDescriptions) {
+      return cachedMathDescriptions;
+    }
+
+    const db = getDb();
+    const objectives = db.all<{ code: string; extended_description: string | null; description: string }>(
+      `SELECT code, extended_description, description FROM curriculum_objectives WHERE code LIKE 'MA-%'`
+    );
+
+    cachedMathDescriptions = {};
+    for (const obj of objectives) {
+      cachedMathDescriptions[obj.code] = obj.extended_description || obj.description;
+    }
+
+    return cachedMathDescriptions;
+  } else {
+    if (cachedEnglishDescriptions) {
+      return cachedEnglishDescriptions;
+    }
+
+    const db = getDb();
+    const objectives = db.all<{ code: string; extended_description: string | null; description: string }>(
+      `SELECT code, extended_description, description FROM curriculum_objectives WHERE code LIKE 'EN-%'`
+    );
+
+    cachedEnglishDescriptions = {};
+    for (const obj of objectives) {
+      cachedEnglishDescriptions[obj.code] = obj.extended_description || obj.description;
+    }
+
+    return cachedEnglishDescriptions;
   }
-
-  const db = getDb();
-  const objectives = db.all<{ code: string; extended_description: string | null; description: string }>(
-    `SELECT code, extended_description, description FROM curriculum_objectives WHERE code LIKE 'MA-%'`
-  );
-
-  cachedDescriptions = {};
-  for (const obj of objectives) {
-    cachedDescriptions[obj.code] = obj.extended_description || obj.description;
-  }
-
-  return cachedDescriptions;
 }
 
 /**
@@ -63,7 +85,7 @@ export async function validateCurriculumCodesBatch(
   client: Anthropic,
   problems: GeneratedProblem[],
   gradeLevel: number,
-  assignmentType: 'math' | 'reading'
+  assignmentType: 'math' | 'reading' | 'english'
 ): Promise<GeneratedProblem[]> {
   // Skip validation for reading assignments (those use SV- codes)
   if (assignmentType === 'reading') {
@@ -71,7 +93,7 @@ export async function validateCurriculumCodesBatch(
   }
 
   // Get curriculum descriptions from database
-  const descriptions = getCodeDescriptions();
+  const descriptions = getCodeDescriptions(assignmentType);
 
   // Build the validation prompt
   const codesList = Object.entries(descriptions)
@@ -82,7 +104,9 @@ export async function validateCurriculumCodesBatch(
     `${i + 1}. "${p.question_text}" (svar: ${p.correct_answer}) → kod: ${p.lgr22_codes[0] || 'none'}`
   ).join('\n');
 
-  const prompt = `Du är expert på svenska LGR22 läroplanen för matematik.
+  // Use different prompts for math vs english
+  const prompt = assignmentType === 'math'
+    ? `Du är expert på svenska LGR22 läroplanen för matematik.
 
 Granska dessa ${problems.length} matteuppgifter för årskurs ${gradeLevel}.
 För varje uppgift, verifiera om tilldelad lgr22-kod matchar det faktiska innehållet.
@@ -104,7 +128,26 @@ ${codesList}
 ${problemsList}
 
 **Svara med JSON-array med ENDAST korrigeringar (tom array om alla är korrekta):**
-[{"index": 0, "currentCode": "MA-SAN-04", "correctCode": "MA-PRO-06", "reason": "division, not combinatorics"}]`;
+[{"index": 0, "currentCode": "MA-SAN-04", "correctCode": "MA-PRO-06", "reason": "division, not combinatorics"}]`
+    : `Du är expert på svenska LGR22 läroplanen för engelska.
+
+Granska dessa ${problems.length} engelska övningar för årskurs ${gradeLevel}.
+För varje övning, verifiera om tilldelad lgr22-kod matchar det faktiska innehållet.
+
+**VIKTIGA REGLER:**
+- EN-VOC (ordförråd) är för uppgifter som testar ordkunskap, betydelser, synonymer
+- EN-GRM (grammatik) är för uppgifter om verbformer, ordföljd, tempus, pluralformer
+- EN-CMP (läsförståelse) är för uppgifter som kräver förståelse av engelsk text
+- EN-TRN (översättning) är för uppgifter som ber eleven översätta mellan svenska och engelska
+
+**Tillgängliga koder:**
+${codesList}
+
+**Övningar att granska:**
+${problemsList}
+
+**Svara med JSON-array med ENDAST korrigeringar (tom array om alla är korrekta):**
+[{"index": 0, "currentCode": "EN-VOC", "correctCode": "EN-GRM", "reason": "tests verb conjugation, not vocabulary"}]`;
 
   try {
     const response = await client.messages.create({

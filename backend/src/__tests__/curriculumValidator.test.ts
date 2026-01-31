@@ -188,5 +188,50 @@ describe('CurriculumValidator', () => {
       // Should not apply invalid correction
       expect(result[0].lgr22_codes).toEqual(['MA-PRO-03']);
     });
+
+    it('should validate English assignments with EN-* codes', async () => {
+      const problems = [
+        createTestProblem('What does "happy" mean?', 'EN-VOC'),
+        createTestProblem('She ___ to school every day', 'EN-VOC')
+      ];
+
+      mockClient.messages.create.mockResolvedValue({
+        content: [{
+          type: 'text',
+          text: '[{"index": 1, "currentCode": "EN-VOC", "correctCode": "EN-GRM", "reason": "tests verb conjugation, not vocabulary"}]'
+        }]
+      });
+
+      const result = await validateCurriculumCodesBatch(
+        mockClient as unknown as Anthropic,
+        problems,
+        4,
+        'english'
+      );
+
+      expect(result[0].lgr22_codes).toEqual(['EN-VOC']);
+      expect(result[1].lgr22_codes).toEqual(['EN-GRM']);
+      expect(mockClient.messages.create).toHaveBeenCalled();
+    });
+
+    it('should use English-specific prompt for English assignments', async () => {
+      const problems = [createTestProblem('Translate: Jag har en hund', 'EN-TRN')];
+
+      mockClient.messages.create.mockResolvedValue({
+        content: [{ type: 'text', text: '[]' }]
+      });
+
+      await validateCurriculumCodesBatch(
+        mockClient as unknown as Anthropic,
+        problems,
+        5,
+        'english'
+      );
+
+      const callArgs = mockClient.messages.create.mock.calls[0][0];
+      expect(callArgs.messages[0].content).toContain('engelska');
+      expect(callArgs.messages[0].content).toContain('EN-VOC');
+      expect(callArgs.messages[0].content).toContain('EN-GRM');
+    });
   });
 });
