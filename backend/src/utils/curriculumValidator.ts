@@ -135,10 +135,19 @@ Granska dessa ${problems.length} engelska övningar för årskurs ${gradeLevel}.
 För varje övning, verifiera om tilldelad lgr22-kod matchar det faktiska innehållet.
 
 **VIKTIGA REGLER:**
+- EN-LIS (lyssna) är ENDAST för uppgifter där eleven lyssnar på talad engelska
+- EN-REA (läsa) är för uppgifter där eleven läser engelska texter
+- EN-SPE (tala) är för muntliga övningar och presentationer
+- EN-WRI (skriva) är för uppgifter där eleven producerar skriven text
 - EN-VOC (ordförråd) är för uppgifter som testar ordkunskap, betydelser, synonymer
 - EN-GRM (grammatik) är för uppgifter om verbformer, ordföljd, tempus, pluralformer
-- EN-CMP (läsförståelse) är för uppgifter som kräver förståelse av engelsk text
+- EN-CMP (läsförståelse) är för uppgifter som kräver förståelse och analys av engelsk text
 - EN-TRN (översättning) är för uppgifter som ber eleven översätta mellan svenska och engelska
+- EN-CUL (kultur) är för uppgifter om engelskspråkiga länder, traditioner och samhälle
+- EN-STR (strategier) är för uppgifter om inlärningsstrategier och kommunikationsstrategier
+
+**Nivåer (01 = åk 1-3, 02 = åk 4-6, 03 = åk 7-9):**
+- Välj rätt nivå baserat på elevens årskurs
 
 **Tillgängliga koder:**
 ${codesList}
@@ -147,7 +156,7 @@ ${codesList}
 ${problemsList}
 
 **Svara med JSON-array med ENDAST korrigeringar (tom array om alla är korrekta):**
-[{"index": 0, "currentCode": "EN-VOC", "correctCode": "EN-GRM", "reason": "tests verb conjugation, not vocabulary"}]`;
+[{"index": 0, "currentCode": "EN-VOC-01", "correctCode": "EN-GRM-02", "reason": "tests verb conjugation, not vocabulary"}]`;
 
   try {
     const response = await client.messages.create({
