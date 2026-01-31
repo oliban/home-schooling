@@ -650,57 +650,58 @@ async function generateEnglishContent(
     .join('\n');
   const objectiveCodes = objectives.map(o => o.code);
 
-  const systemPrompt = `Du är en svensk engelsklärare som skapar engelskövningar för grundskolan.
-Skapa ${questionCount} engelskövningar med temat "${theme}".
-Instruktionerna ska vara på SVENSKA men själva engelskövningarna ska innehålla engelska ord och meningar.
+  const systemPrompt = `You are an English teacher creating English exercises for Swedish elementary school students.
+Create ${questionCount} English exercises with the theme "${theme}".
+ALL content must be in ENGLISH - questions, instructions, options, hints, and explanations.
+The only Swedish should be in translation exercises where the answer involves Swedish words.
 
-KRITISKT VIKTIGT - ÅRSKURS ${gradeLevel}:
-Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALL engelska till vad ett barn i årskurs ${gradeLevel} kan.
-- Årskurs 3-4: Mycket enkla ord (cat, dog, house, happy). Korta fraser. Fokus på vardagsord.
-- Årskurs 5: Enkla meningar. Grundläggande grammatik (presens, preteritum). Vanliga verb och substantiv.
-- Årskurs 6: Något längre meningar. Fler tempus. Adjektiv och adverb. Enkel dialog.
+CRITICAL - GRADE ${gradeLevel} (Swedish "årskurs"):
+This child is in grade ${gradeLevel}. You MUST adapt ALL English to what a child in grade ${gradeLevel} can understand.
+- Grade 3-4: Very simple words (cat, dog, house, happy). Short phrases. Focus on everyday words.
+- Grade 5: Simple sentences. Basic grammar (present, past tense). Common verbs and nouns.
+- Grade 6: Slightly longer sentences. More tenses. Adjectives and adverbs. Simple dialogue.
 
-LGR22-MÅL ATT TRÄNA (med beskrivningar):
+LGR22 OBJECTIVES TO PRACTICE (with descriptions):
 ${objectivesList}
 
-VIKTIGT FÖR KODVAL: Matcha varje övnings typ med rätt kod:
-- Ordkunskap/Vocabulary → EN-VOC
-- Grammatik → EN-GRM
-- Läsförståelse på engelska → EN-CMP
-- Översättning → EN-TRN
+IMPORTANT FOR CODE SELECTION: Match each exercise type with the correct code:
+- Vocabulary → EN-VOC
+- Grammar → EN-GRM
+- Reading comprehension → EN-CMP
+- Translation → EN-TRN
 
-ÖVNINGSTYPER ATT VARIERA MELLAN:
-1. Ordkunskap: "Vad betyder 'happy' på svenska?" (flerval)
-2. Översättning: "Översätt till engelska: 'Jag har en hund'" (text eller flerval)
-3. Fyll i luckorna: "The cat is ___ (stor)" (flerval med A: big, B: small, etc.)
-4. Grammatik: "Vilket är rätt? She ___ to school" (flerval med A: go, B: goes, etc.)
-5. Läsförståelse: Kort engelsk mening + fråga på svenska
+EXERCISE TYPES TO VARY BETWEEN:
+1. Vocabulary: "What does 'glad' mean in English?" (multiple choice with English options)
+2. Translation: "Translate to English: 'Jag har en hund'" (answer: "I have a dog")
+3. Fill in the blanks: "The cat is very ___." (multiple choice: A: big, B: small, etc.)
+4. Grammar: "Which is correct? She ___ to school every day." (A: go, B: goes, etc.)
+5. Reading comprehension: Short English sentence + question about it in English
 
-Svara med JSON i exakt detta format:
+Respond with JSON in exactly this format:
 {
   "package": {
-    "name": "[Kreativ titel på svenska som inkluderar temat]",
-    "description": "[Kort beskrivning på svenska om engelskövningarna]"
+    "name": "[Creative English title that includes the theme]",
+    "description": "[Short English description of the exercises]"
   },
   "problems": [
     {
-      "question_text": "[Instruktion på svenska, engelska ord/meningar i övningen]",
+      "question_text": "[Question/instruction in English]",
       "correct_answer": "A",
       "answer_type": "multiple_choice",
-      "options": ["A: [Rätt svar]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
-      "explanation": "[Förklaring på svenska varför A är rätt, inkludera översättning]",
-      "hint": "[Ledtråd på svenska]",
+      "options": ["A: [Correct answer]", "B: [Wrong option]", "C: [Wrong option]", "D: [Wrong option]"],
+      "explanation": "[Explanation in English why A is correct, include translation if relevant]",
+      "hint": "[Helpful hint in English]",
       "difficulty": "easy|medium|hard",
-      "lgr22_codes": ["[VÄLJ rätt kod baserat på övningstypen från: ${objectiveCodes.join(', ')}]"]
+      "lgr22_codes": ["[Choose correct code based on exercise type from: ${objectiveCodes.join(', ')}]"]
     }
   ]
 }
 
-- Använd åldersanpassad engelska för ÅRSKURS ${gradeLevel}
-- Alla alternativ ska ha liknande längd
-- Distraktorer ska vara vanliga misstag som barn gör
-- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra
-- Gör övningarna roliga och engagerande med temat "${theme}"`;
+- Use age-appropriate English for GRADE ${gradeLevel}
+- All options should have similar length
+- Distractors should be common mistakes children make
+- Difficulty distribution: 40% easy, 40% medium, 20% hard
+- Make the exercises fun and engaging with the theme "${theme}"`;
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',

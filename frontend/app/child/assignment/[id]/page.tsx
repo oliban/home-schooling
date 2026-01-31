@@ -335,6 +335,9 @@ export default function AssignmentPage() {
   const options = question.options ? JSON.parse(question.options) : null;
   const isMultipleChoice = question.answer_type === 'multiple_choice' && options;
 
+  // Determine speech language based on assignment type
+  const speechLang = assignment.assignment_type === 'english' ? 'en-US' : 'sv-SE';
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-sunset-cream via-sunset-peach/20 to-white">
       {/* Header */}
@@ -424,7 +427,7 @@ export default function AssignmentPage() {
             <p className="text-xl flex-1 text-sunset-twilight">{question.question_text}</p>
             <SpeakButton
               text={question.question_text}
-              lang="sv-SE"
+              lang={speechLang}
               size="md"
               label={t('assignment.listenToQuestion')}
             />
@@ -458,7 +461,7 @@ export default function AssignmentPage() {
                     <span className="flex-1 text-sunset-twilight">{option}</span>
                     <SpeakButton
                       text={option}
-                      lang="sv-SE"
+                      lang={speechLang}
                       size="sm"
                       label={t('assignment.listenToAnswer')}
                     />
