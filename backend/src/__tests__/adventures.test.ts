@@ -579,6 +579,41 @@ describe('Adventures Feature', () => {
     });
   });
 
+  describe('English Content Generation Prompt Rules', () => {
+    it('should include idiom completion rules in English prompts', async () => {
+      // Import the adventures module to check prompt generation
+      // We can't easily test the actual prompt content without mocking,
+      // but we can verify the file contains the expected rules
+      const fs = await import('fs');
+      const path = await import('path');
+
+      const adventuresPath = path.join(process.cwd(), 'src', 'routes', 'adventures.ts');
+      const content = fs.readFileSync(adventuresPath, 'utf-8');
+
+      // Verify Swedish prompt contains idiom rules
+      expect(content).toContain('KRITISKT FÖR IDIOM/UTTRYCK');
+      expect(content).toContain('det FAKTISKA ORDET som saknas');
+      expect(content).toContain("'Let the ___ out of the bag'");
+      expect(content).toContain('"cat"');
+
+      // Verify English prompt contains idiom rules
+      expect(content).toContain('CRITICAL FOR IDIOMS/EXPRESSIONS');
+      expect(content).toContain('ACTUAL MISSING WORD');
+    });
+
+    it('should warn against confusing idiom meaning with idiom words', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+
+      const adventuresPath = path.join(process.cwd(), 'src', 'routes', 'adventures.ts');
+      const content = fs.readFileSync(adventuresPath, 'utf-8');
+
+      // Verify both prompts warn about the specific mistake
+      expect(content).toContain('INTE "secret"');  // Swedish version
+      expect(content).toContain('NOT "secret"');   // English version
+    });
+  });
+
   describe('Development-only File Saving', () => {
     const originalNodeEnv = process.env.NODE_ENV;
 

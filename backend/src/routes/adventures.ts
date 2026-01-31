@@ -686,6 +686,12 @@ VIKTIGT FÖR KODVAL: Matcha varje övningstyp med rätt kod:
 4. Grammatik: "Vilket är rätt? She ___ to school every day." (A: go, B: goes, etc.)
 5. Läsförståelse: Kort engelsk mening + fråga om den på svenska
 
+KRITISKT FÖR IDIOM/UTTRYCK:
+- Om frågan ber om att fylla i ett ord i ett idiom/uttryck, är rätt svar det FAKTISKA ORDET som saknas, INTE betydelsen.
+- Exempel: "Complete: 'Let the ___ out of the bag'" → Rätt svar är "cat" (det saknade ordet), INTE "secret" (betydelsen).
+- Exempel: "Complete: 'It's raining ___ and dogs'" → Rätt svar är "cats", INTE "heavily".
+- Om du vill fråga om betydelsen av ett idiom, ställ frågan som "Vad betyder uttrycket X?" istället.
+
 Svara med JSON i exakt detta format:
 {
   "package": {
@@ -737,6 +743,12 @@ EXERCISE TYPES TO VARY BETWEEN:
 3. Fill in the blanks: "The cat is very ___." (multiple choice: A: big, B: small, etc.)
 4. Grammar: "Which is correct? She ___ to school every day." (A: go, B: goes, etc.)
 5. Reading comprehension: Short English sentence + question about it in English
+
+CRITICAL FOR IDIOMS/EXPRESSIONS:
+- If asking to fill in a word in an idiom/expression, the correct answer is the ACTUAL MISSING WORD, NOT the meaning.
+- Example: "Complete: 'Let the ___ out of the bag'" → Correct answer is "cat" (the missing word), NOT "secret" (the meaning).
+- Example: "Complete: 'It's raining ___ and dogs'" → Correct answer is "cats", NOT "heavily".
+- If you want to ask about the meaning of an idiom, phrase the question as "What does the expression X mean?" instead.
 
 Respond with JSON in exactly this format:
 {
