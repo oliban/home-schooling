@@ -254,14 +254,34 @@ export function AdventureCreator({ quota, onClose, onSuccess }: AdventureCreator
           {step === 'theme' && (
             <div className="space-y-4">
               <h3 className="text-lg font-display font-semibold text-center text-sunset-twilight mb-6">
-                {locale === 'sv' ? 'Välj ett tema' : 'Choose a theme'}
+                {contentType === 'quiz'
+                  ? (locale === 'sv' ? 'Vad vill du lära dig om?' : 'What do you want to learn about?')
+                  : (locale === 'sv' ? 'Välj ett tema' : 'Choose a theme')}
               </h3>
-              <ThemePicker
-                themes={themes}
-                customTheme={customTheme}
-                onCustomThemeChange={setCustomTheme}
-                locale={locale}
-              />
+              {contentType === 'quiz' ? (
+                <div className="max-w-md mx-auto space-y-4">
+                  <div className="text-center text-sunset-twilight/70 mb-4">
+                    {locale === 'sv'
+                      ? 'Skriv ett ämne du vill ha ett quiz om, t.ex. dinosaurier, rymden, vikingar...'
+                      : 'Enter a topic you want a quiz about, e.g. dinosaurs, space, vikings...'}
+                  </div>
+                  <input
+                    type="text"
+                    value={customTheme}
+                    onChange={(e) => setCustomTheme(e.target.value)}
+                    placeholder={locale === 'sv' ? 'T.ex. Dinosaurier' : 'E.g. Dinosaurs'}
+                    className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:border-purple-400 focus:outline-none text-lg text-center"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <ThemePicker
+                  themes={themes}
+                  customTheme={customTheme}
+                  onCustomThemeChange={setCustomTheme}
+                  locale={locale}
+                />
+              )}
             </div>
           )}
 
