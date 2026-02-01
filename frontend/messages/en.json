@@ -124,6 +124,7 @@
     "math": "MATH",
     "reading": "READING",
     "english": "ENGLISH",
+    "quiz": "QUIZ",
     "tasksCount": "{count} task to do",
     "tasksCountPlural": "{count} tasks to do",
     "startButton": "Start!",

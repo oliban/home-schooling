@@ -11,7 +11,7 @@ interface Assignment {
 }
 
 interface TaskCardProps {
-  type: 'math' | 'reading' | 'english';
+  type: 'math' | 'reading' | 'english' | 'quiz';
   assignments: Assignment[];
 }
 
@@ -19,14 +19,16 @@ export function TaskCard({ type, assignments }: TaskCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
-  const icon = type === 'math' ? '📐' : type === 'reading' ? '📖' : '🇬🇧';
-  const title = type === 'math' ? t('childDashboard.math') : type === 'reading' ? t('childDashboard.reading') : t('childDashboard.english');
+  const icon = type === 'math' ? '📐' : type === 'reading' ? '📖' : type === 'english' ? '🇬🇧' : '🧠';
+  const title = type === 'math' ? t('childDashboard.math') : type === 'reading' ? t('childDashboard.reading') : type === 'english' ? t('childDashboard.english') : t('childDashboard.quiz');
   const gradient =
     type === 'math'
       ? 'from-sunset-tangerine to-sunset-coral'
       : type === 'reading'
         ? 'from-sunset-gold to-sunset-amber'
-        : 'from-blue-400 to-blue-600';
+        : type === 'english'
+          ? 'from-blue-400 to-blue-600'
+          : 'from-purple-400 to-purple-600';
 
   const hasAssignments = assignments.length > 0;
   const primaryAssignment = assignments[0];

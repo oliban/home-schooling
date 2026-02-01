@@ -614,6 +614,142 @@ describe('Adventures Feature', () => {
     });
   });
 
+  describe('Quiz Content Type', () => {
+    it('should allow quiz as a valid content_type for adventures', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+      const assignmentId = uuidv4();
+      const adventureId = uuidv4();
+
+      // Create package with quiz assignment_type
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, 'quiz', ?, 1, ?)`,
+        [packageId, parentId, 'Quiz: Dinosaurier', 4, null, 5, childId]
+      );
+
+      // Create assignment with quiz type
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'quiz', ?, ?, 'pending', ?)`,
+        [assignmentId, parentId, childId, 'Quiz: Dinosaurier', 4, packageId]
+      );
+
+      // Create adventure generation record with quiz content_type
+      db.run(
+        `INSERT INTO adventure_generations (id, child_id, assignment_id, package_id, theme, custom_theme, content_type, question_count, status)
+         VALUES (?, ?, ?, ?, 'custom', 'Dinosaurier', 'quiz', 5, 'active')`,
+        [adventureId, childId, assignmentId, packageId]
+      );
+
+      // Verify the records were created correctly
+      const adventure = db.get<{ content_type: string; custom_theme: string }>(
+        'SELECT content_type, custom_theme FROM adventure_generations WHERE id = ?',
+        [adventureId]
+      );
+      expect(adventure?.content_type).toBe('quiz');
+      expect(adventure?.custom_theme).toBe('Dinosaurier');
+
+      const assignment = db.get<{ assignment_type: string }>(
+        'SELECT assignment_type FROM assignments WHERE id = ?',
+        [assignmentId]
+      );
+      expect(assignment?.assignment_type).toBe('quiz');
+
+      const pkg = db.get<{ assignment_type: string }>(
+        'SELECT assignment_type FROM math_packages WHERE id = ?',
+        [packageId]
+      );
+      expect(pkg?.assignment_type).toBe('quiz');
+
+      // Clean up
+      db.run('DELETE FROM adventure_generations WHERE id = ?', [adventureId]);
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+
+    it('should support story_text for quiz context introduction', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+
+      const contextIntro = 'Dinosaurier var reptiler som levde för miljontals år sedan. De fanns i många olika storlekar och former.';
+
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, story_text, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, 'quiz', ?, ?, 1, ?)`,
+        [packageId, parentId, 'Quiz: Dinosaurier', 4, null, 5, contextIntro, childId]
+      );
+
+      const pkg = db.get<{ story_text: string; assignment_type: string }>(
+        'SELECT story_text, assignment_type FROM math_packages WHERE id = ?',
+        [packageId]
+      );
+
+      expect(pkg?.assignment_type).toBe('quiz');
+      expect(pkg?.story_text).toBe(contextIntro);
+
+      // Clean up
+      db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+
+    it('should count quiz adventures toward child quota', () => {
+      const db = getDb();
+      const packageId = uuidv4();
+      const assignmentId = uuidv4();
+      const adventureId = uuidv4();
+
+      // Create quiz adventure
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, assignment_type, problem_count, is_child_generated, generated_for_child_id)
+         VALUES (?, ?, ?, ?, ?, 'quiz', ?, 1, ?)`,
+        [packageId, parentId, 'Quiz: Buddhism', 4, null, 5, childId]
+      );
+
+      db.run(
+        `INSERT INTO assignments (id, parent_id, child_id, assignment_type, title, grade_level, status, package_id)
+         VALUES (?, ?, ?, 'quiz', ?, ?, 'pending', ?)`,
+        [assignmentId, parentId, childId, 'Quiz: Buddhism', 4, packageId]
+      );
+
+      db.run(
+        `INSERT INTO adventure_generations (id, child_id, assignment_id, package_id, theme, custom_theme, content_type, question_count, status)
+         VALUES (?, ?, ?, ?, 'custom', 'Buddhism', 'quiz', 5, 'active')`,
+        [adventureId, childId, assignmentId, packageId]
+      );
+
+      // Check that quiz counts toward quota
+      const active = db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM adventure_generations ag
+         JOIN assignments a ON ag.assignment_id = a.id
+         WHERE ag.child_id = ? AND ag.status = 'active' AND a.status != 'completed'`,
+        [childId]
+      );
+
+      expect(active?.count).toBeGreaterThanOrEqual(1);
+
+      // Clean up
+      db.run('DELETE FROM adventure_generations WHERE id = ?', [adventureId]);
+      db.run('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+      db.run('DELETE FROM math_packages WHERE id = ?', [packageId]);
+    });
+
+    it('should include quiz generation prompt rules in adventures.ts', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+
+      const adventuresPath = path.join(process.cwd(), 'src', 'routes', 'adventures.ts');
+      const content = fs.readFileSync(adventuresPath, 'utf-8');
+
+      // Verify quiz content generation function exists
+      expect(content).toContain('generateQuizContent');
+      expect(content).toContain('KUNSKAPSQUIZ');
+      expect(content).toContain('story_text');
+
+      // Verify quiz is handled in content type validation
+      expect(content).toContain("'quiz'");
+    });
+  });
+
   describe('Development-only File Saving', () => {
     const originalNodeEnv = process.env.NODE_ENV;
 

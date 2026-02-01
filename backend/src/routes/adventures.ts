@@ -343,9 +343,14 @@ interface ObjectiveWithDescription {
 function getRecommendedObjectives(
   childId: string,
   gradeLevel: number,
-  contentType: 'math' | 'reading' | 'english',
+  contentType: 'math' | 'reading' | 'english' | 'quiz',
   count: number
 ): ObjectiveWithDescription[] {
+  // Quiz content doesn't use curriculum objectives - return empty
+  if (contentType === 'quiz') {
+    return [];
+  }
+
   const db = getDb();
 
   // Get curriculum objectives for the child's grade level
@@ -821,6 +826,100 @@ Respond with JSON in exactly this format:
   }
 }
 
+// Generate quiz content via Claude API
+// Quizzes are topic-based multiple choice questions about any subject (dinosaurs, Buddhism, space, etc.)
+async function generateQuizContent(
+  gradeLevel: number,
+  theme: string,
+  questionCount: number
+): Promise<GeneratedPackage> {
+  const client = getAnthropicClient();
+
+  const systemPrompt = `Du är en svensk lärare som skapar kunskapsquiz för grundskoleelever.
+Skapa ${questionCount} flervalsfrågor med temat "${theme}".
+
+DETTA ÄR ETT KUNSKAPSQUIZ - INTE MATTE ELLER LÄSFÖRSTÅELSE:
+- Frågorna ska testa kunskap om ämnet "${theme}"
+- Använd faktabaserade frågor som barn kan lära sig av
+- Inkludera en kort introduktion om ämnet (2-4 meningar) i story_text
+
+KRITISKT VIKTIGT - ÅRSKURS ${gradeLevel}:
+Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALLT innehåll till vad ett barn i årskurs ${gradeLevel} kan förstå.
+- Årskurs 1-3: Mycket enkla fakta. Korta frågor. Konkreta svar. Introduktion max 2 meningar.
+- Årskurs 4-6: Mer detaljerad information. Kan inkludera årtal och siffror. Introduktion 2-3 meningar.
+- Årskurs 7-9: Avancerade koncept tillåtna. Djupare förståelse. Introduktion 3-4 meningar.
+
+ÄMNESEXEMPEL OCH ANPASSNING:
+- Dinosaurier: Arter, storlekar, när de levde, varför de dog ut
+- Buddhism/religion: Grundare, viktiga begrepp, traditioner (åldersanpassat)
+- Rymden: Planeter, stjärnor, astronauter, rymdfärder
+- Vikingar: Liv, resor, kultur, historiska händelser
+- Djur: Fakta om djur, habitat, beteenden
+
+Svara med JSON i exakt detta format:
+{
+  "package": {
+    "name": "Quiz: ${theme}",
+    "description": "[Kort beskrivning på svenska]",
+    "story_text": "[2-4 meningar som introducerar ämnet på ett engagerande sätt för barn i årskurs ${gradeLevel}]"
+  },
+  "problems": [
+    {
+      "question_text": "[Fråga på svenska]",
+      "correct_answer": "A",
+      "answer_type": "multiple_choice",
+      "options": ["A: [Rätt svar]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
+      "explanation": "[Förklaring som lär barnet något nytt - OBLIGATORISKT]",
+      "hint": "[Ledtråd]",
+      "difficulty": "easy|medium|hard",
+      "lgr22_codes": []
+    }
+  ]
+}
+
+VIKTIGA REGLER:
+- Alla alternativ ska ha liknande längd (inget uppenbart längre rätt svar)
+- Distraktorer ska vara trovärdiga men tydligt fel
+- Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra
+- VARJE fråga MÅSTE ha en explanation som förklarar det rätta svaret
+- correct_answer ska ENDAST vara bokstaven (A, B, C eller D), ALDRIG hela texten
+- lgr22_codes kan vara tom array [] eftersom quiz inte alltid matchar läroplanen
+- Gör frågorna roliga och engagerande!`;
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 4000,
+    messages: [{ role: 'user', content: systemPrompt }]
+  });
+
+  const content = response.content[0];
+  if (content.type !== 'text') {
+    throw new Error('Unexpected response format from Claude');
+  }
+
+  // Extract JSON from response
+  let jsonText = content.text;
+
+  // Try to extract from code block first
+  const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonText = jsonMatch[1];
+  } else {
+    // Try to find JSON object directly
+    const jsonObjMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (jsonObjMatch) {
+      jsonText = jsonObjMatch[0];
+    }
+  }
+
+  try {
+    return JSON.parse(sanitizeJsonString(jsonText.trim()));
+  } catch (parseError) {
+    console.error('Failed to parse quiz JSON. Raw response:', content.text.substring(0, 500));
+    throw parseError;
+  }
+}
+
 // GET /api/adventures/themes - Get available themes and sizes
 router.get('/themes', authenticateChild, (_req, res) => {
   res.json({ themes: THEMES, sizes: SIZES });
@@ -876,7 +975,7 @@ router.post('/generate', authenticateChild, async (req, res) => {
     const db = getDb();
     const childId = req.child!.id;
     const { contentType, themeId, customTheme, sizeId, locale } = req.body as {
-      contentType: 'math' | 'reading' | 'english';
+      contentType: 'math' | 'reading' | 'english' | 'quiz';
       themeId: string;
       customTheme?: string;
       sizeId: 'quick' | 'medium' | 'challenge';
@@ -884,7 +983,7 @@ router.post('/generate', authenticateChild, async (req, res) => {
     };
 
     // Validate input
-    if (!contentType || !['math', 'reading', 'english'].includes(contentType)) {
+    if (!contentType || !['math', 'reading', 'english', 'quiz'].includes(contentType)) {
       return res.status(400).json({ error: 'Invalid contentType' });
     }
     if (!sizeId || !SIZES.find(s => s.id === sizeId)) {
@@ -942,8 +1041,8 @@ router.post('/generate', authenticateChild, async (req, res) => {
       size.objectiveCount
     );
 
-    // Fallback objectives if none found
-    if (objectives.length === 0) {
+    // Fallback objectives if none found (quiz doesn't use objectives)
+    if (objectives.length === 0 && contentType !== 'quiz') {
       if (contentType === 'math') {
         objectives = [
           { code: 'MA-TAL-01', description: 'Naturliga tal och deras egenskaper' },
@@ -969,6 +1068,8 @@ router.post('/generate', authenticateChild, async (req, res) => {
         generated = await generateMathContent(child.grade_level, themeName, size.questionCount, objectives);
       } else if (contentType === 'english') {
         generated = await generateEnglishContent(child.grade_level, themeName, size.questionCount, objectives, locale || 'sv');
+      } else if (contentType === 'quiz') {
+        generated = await generateQuizContent(child.grade_level, themeName, size.questionCount);
       } else {
         generated = await generateReadingContent(child.grade_level, themeName, size.questionCount, objectives);
       }
@@ -1155,7 +1256,7 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
     const parentId = req.user!.id;
     const { childId, contentType, theme, questionCount, objectives, locale } = req.body as {
       childId: string;
-      contentType: 'math' | 'reading' | 'english';
+      contentType: 'math' | 'reading' | 'english' | 'quiz';
       theme: string;
       questionCount: number;
       objectives: Array<{ code: string; description: string }>;
@@ -1166,7 +1267,7 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
     if (!childId) {
       return res.status(400).json({ error: 'childId is required' });
     }
-    if (!contentType || !['math', 'reading', 'english'].includes(contentType)) {
+    if (!contentType || !['math', 'reading', 'english', 'quiz'].includes(contentType)) {
       return res.status(400).json({ error: 'Invalid contentType' });
     }
     if (!questionCount || questionCount < 1 || questionCount > 20) {
@@ -1205,6 +1306,8 @@ router.post('/generate-for-parent', authenticateParent, async (req, res) => {
         generated = await generateMathContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
       } else if (contentType === 'english') {
         generated = await generateEnglishContent(child.grade_level, theme, questionCount, objectivesWithDescriptions, locale || 'sv');
+      } else if (contentType === 'quiz') {
+        generated = await generateQuizContent(child.grade_level, theme, questionCount);
       } else {
         generated = await generateReadingContent(child.grade_level, theme, questionCount, objectivesWithDescriptions);
       }

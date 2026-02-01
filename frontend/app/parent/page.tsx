@@ -48,7 +48,7 @@ interface AssignmentData {
   id: string;
   child_id: string;
   child_name: string;
-  assignment_type: 'math' | 'reading' | 'english';
+  assignment_type: 'math' | 'reading' | 'english' | 'quiz';
   title: string;
   status: string;
   created_at: string;
@@ -160,7 +160,7 @@ function SortableAssignmentCard({
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">
-            {assignment.assignment_type === 'math' ? '📐' : assignment.assignment_type === 'reading' ? '📖' : '🇬🇧'}
+            {assignment.assignment_type === 'math' ? '📐' : assignment.assignment_type === 'reading' ? '📖' : assignment.assignment_type === 'english' ? '🇬🇧' : '🧠'}
           </span>
           <div>
             <p className="font-medium">{assignment.title}</p>
@@ -912,7 +912,7 @@ export default function ParentDashboard() {
                                   </svg>
                                 </div>
                                 <span className="text-2xl">
-                                  {activeAssignment.assignment_type === 'math' ? '📐' : activeAssignment.assignment_type === 'reading' ? '📖' : '🇬🇧'}
+                                  {activeAssignment.assignment_type === 'math' ? '📐' : activeAssignment.assignment_type === 'reading' ? '📖' : activeAssignment.assignment_type === 'english' ? '🇬🇧' : '🧠'}
                                 </span>
                                 <div>
                                   <p className="font-medium">{activeAssignment.title}</p>
@@ -990,7 +990,7 @@ export default function ParentDashboard() {
                                 >
                                   <div className="flex items-center gap-3">
                                     <span className="text-2xl">
-                                      {assignment.assignment_type === 'math' ? '📐' : assignment.assignment_type === 'reading' ? '📖' : '🇬🇧'}
+                                      {assignment.assignment_type === 'math' ? '📐' : assignment.assignment_type === 'reading' ? '📖' : assignment.assignment_type === 'english' ? '🇬🇧' : '🧠'}
                                     </span>
                                     <div>
                                       <p className="font-medium">{assignment.title}</p>
