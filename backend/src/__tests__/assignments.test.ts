@@ -568,7 +568,8 @@ describe('Assignment Scores', () => {
 
       // Newer assignment (noOrderIds[1]) should come first due to created_at DESC
       expect(assignments[0].id).toBe(noOrderIds[1]);
-      expect(assignments[0].display_order).toBeNull();
+      // display_order defaults to 0 in schema, not null
+      expect(assignments[0].display_order).toBe(0);
 
       // Cleanup
       for (const id of noOrderIds) {
