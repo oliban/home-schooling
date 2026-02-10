@@ -1150,6 +1150,10 @@ describe('stats-queries service', () => {
       expect(result.math.incorrect).toBe(0);
       expect(result.reading.correct).toBe(0);
       expect(result.reading.incorrect).toBe(0);
+      expect(result.english.correct).toBe(0);
+      expect(result.english.incorrect).toBe(0);
+      expect(result.quiz.correct).toBe(0);
+      expect(result.quiz.incorrect).toBe(0);
     });
 
     it('should apply period filter when provided', () => {
@@ -1196,6 +1200,91 @@ describe('stats-queries service', () => {
         db.run('DELETE FROM assignments WHERE id = ?', [oldAssignmentId]);
       }
     });
+
+    it('should return english and quiz stats from package-based assignments', () => {
+      const db = getDb();
+
+      // Create english package and assignment
+      const englishPackageId = uuidv4();
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, difficulty_summary, is_global, assignment_type)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [englishPackageId, parentId, 'English Package', 3, null, 2, '{}', 0, 'english']
+      );
+      const englishProblemIds: string[] = [];
+      for (let i = 0; i < 2; i++) {
+        const problemId = uuidv4();
+        englishProblemIds.push(problemId);
+        db.run(
+          `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [problemId, englishPackageId, i + 1, `English Q${i + 1}`, 'a', 'multiple_choice']
+        );
+      }
+      const englishAssignmentId = uuidv4();
+      db.run(
+        `INSERT INTO assignments (id, child_id, parent_id, assignment_type, title, status, package_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [englishAssignmentId, childId, parentId, 'english', 'English Test', 'completed', englishPackageId]
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+        [uuidv4(), englishAssignmentId, englishProblemIds[0], 'a', 1]
+      );
+      db.run(
+        `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+        [uuidv4(), englishAssignmentId, englishProblemIds[1], 'b', 0]
+      );
+
+      // Create quiz package and assignment
+      const quizPackageId = uuidv4();
+      db.run(
+        `INSERT INTO math_packages (id, parent_id, name, grade_level, category_id, problem_count, difficulty_summary, is_global, assignment_type)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [quizPackageId, parentId, 'Quiz Package', 3, null, 3, '{}', 0, 'quiz']
+      );
+      const quizProblemIds: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const problemId = uuidv4();
+        quizProblemIds.push(problemId);
+        db.run(
+          `INSERT INTO package_problems (id, package_id, problem_number, question_text, correct_answer, answer_type)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [problemId, quizPackageId, i + 1, `Quiz Q${i + 1}`, 'a', 'multiple_choice']
+        );
+      }
+      const quizAssignmentId = uuidv4();
+      db.run(
+        `INSERT INTO assignments (id, child_id, parent_id, assignment_type, title, status, package_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [quizAssignmentId, childId, parentId, 'quiz', 'Quiz Test', 'completed', quizPackageId]
+      );
+      for (const problemId of quizProblemIds) {
+        db.run(
+          `INSERT INTO assignment_answers (id, assignment_id, problem_id, child_answer, is_correct, answered_at)
+           VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+          [uuidv4(), quizAssignmentId, problemId, 'a', 1]
+        );
+      }
+
+      const result: ChildStats = getChildStats(db, childId);
+
+      // English: 1 correct, 1 incorrect
+      expect(result.english.correct).toBe(1);
+      expect(result.english.incorrect).toBe(1);
+
+      // Quiz: 3 correct, 0 incorrect
+      expect(result.quiz.correct).toBe(3);
+      expect(result.quiz.incorrect).toBe(0);
+
+      // Clean up
+      db.run('DELETE FROM assignment_answers WHERE assignment_id IN (?, ?)', [englishAssignmentId, quizAssignmentId]);
+      db.run('DELETE FROM assignments WHERE id IN (?, ?)', [englishAssignmentId, quizAssignmentId]);
+      db.run('DELETE FROM package_problems WHERE package_id IN (?, ?)', [englishPackageId, quizPackageId]);
+      db.run('DELETE FROM math_packages WHERE id IN (?, ?)', [englishPackageId, quizPackageId]);
+    });
   });
 
   describe('getChildStatsByDate', () => {
@@ -1235,6 +1324,8 @@ describe('stats-queries service', () => {
 
       expect(result.math).toEqual([]);
       expect(result.reading).toEqual([]);
+      expect(result.english).toEqual([]);
+      expect(result.quiz).toEqual([]);
     });
 
     it('should merge package and legacy data on same date', () => {

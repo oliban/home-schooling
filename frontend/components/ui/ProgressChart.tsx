@@ -10,15 +10,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  Cell,
 } from 'recharts';
 
 export interface DailyStatsData {
   date: string;
   childId: string;
   childName: string;
-  subject: 'math' | 'reading';
+  subject: 'math' | 'reading' | 'english' | 'quiz';
   correct: number;
   incorrect: number;
 }
@@ -49,16 +47,31 @@ function getDateRangeString(period: '7d' | '30d' | 'all', locale: string): strin
   return '';
 }
 
-// Ordered by contrast priority: dark, light, medium, then variants
-// 2 children get maximum contrast (dark vs light)
-const CHILD_COLORS = [
-  { correct: '#166534', incorrect: '#991b1b' },  // 1: dark green/red
-  { correct: '#86efac', incorrect: '#fca5a5' },  // 2: light green/red
-  { correct: '#22c55e', incorrect: '#ef4444' },  // 3: medium green/red
-  { correct: '#14b8a6', incorrect: '#f97316' },  // 4: teal-green/orange
-  { correct: '#10b981', incorrect: '#f43f5e' },  // 5: emerald/rose
-  { correct: '#84cc16', incorrect: '#ec4899' },  // 6: lime/pink
-];
+const SUBJECTS = ['math', 'reading', 'english', 'quiz'] as const;
+
+export const SUBJECT_COLORS: Record<string, { color: string; errorColor: string; emoji: string }> = {
+  math:    { color: '#2563eb', errorColor: '#93c5fd', emoji: '📐' },
+  reading: { color: '#16a34a', errorColor: '#86efac', emoji: '📖' },
+  english: { color: '#9333ea', errorColor: '#c4b5fd', emoji: '🇬🇧' },
+  quiz:    { color: '#ea580c', errorColor: '#fdba74', emoji: '🧠' },
+};
+
+// Chart data: one entry per date+child, with per-subject correct/incorrect as fields
+interface ChartEntry {
+  label: string;
+  date: string;
+  childName: string;
+  math: number;
+  math_err: number;
+  reading: number;
+  reading_err: number;
+  english: number;
+  english_err: number;
+  quiz: number;
+  quiz_err: number;
+  // Store per-subject details for tooltip
+  details: Record<string, { correct: number; incorrect: number }>;
+}
 
 export default function ProgressChart({ data, period, onPeriodChange }: ProgressChartProps) {
   const { t, locale } = useTranslation();
@@ -75,22 +88,18 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
     const scrollToEnd = () => {
       if (scrollContainerRef.current) {
         const container = scrollContainerRef.current;
-        // Scroll to the far right
         container.scrollTo({
           left: container.scrollWidth,
-          behavior: 'auto' // Use 'auto' instead of 'smooth' for initial load
+          behavior: 'auto'
         });
       }
     };
 
-    // Try multiple times to ensure chart has rendered
     requestAnimationFrame(() => {
       requestAnimationFrame(scrollToEnd);
     });
 
-    // Fallback with longer delay for complex charts
     const timer = setTimeout(scrollToEnd, 300);
-
     return () => clearTimeout(timer);
   }, [data, period]);
 
@@ -120,103 +129,104 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
   const children = [...new Set(data.map(d => d.childName))].sort();
   const dates = [...new Set(data.map(d => d.date))].sort();
 
-  // Create child to index mapping for colors
-  const childIndexMap = new Map<string, number>();
-  children.forEach((childName, index) => {
-    childIndexMap.set(childName, index);
-  });
-
-  // Create a map for quick lookup
+  // Index raw data for quick lookup
   const dataMap = new Map<string, DailyStatsData>();
   for (const item of data) {
-    const key = `${item.date}-${item.childName}-${item.subject}`;
-    dataMap.set(key, item);
+    dataMap.set(`${item.date}-${item.childName}-${item.subject}`, item);
   }
 
-  // Build chart data: one entry per bar (date + child + subject combination)
-  // Each bar shows stacked correct/incorrect
-  const chartData: Array<{
-    label: string;
-    date: string;
-    childName: string;
-    subject: string;
-    correct: number;
-    incorrect: number;
-    childIndex: number;
-  }> = [];
+  // Build one chart entry per date+child, aggregating subjects as stacked fields
+  const chartData: ChartEntry[] = [];
 
-  // Sort dates ascending for display
-  const sortedDates = dates.sort();
-
-  for (const date of sortedDates) {
+  for (const date of dates) {
     for (const childName of children) {
-      for (const subject of ['math', 'reading'] as const) {
-        const key = `${date}-${childName}-${subject}`;
-        const item = dataMap.get(key);
+      const details: Record<string, { correct: number; incorrect: number }> = {};
+      let hasAny = false;
+
+      for (const subject of SUBJECTS) {
+        const item = dataMap.get(`${date}-${childName}-${subject}`);
         if (item) {
-          const subjectLabel = subject === 'math' ? t('parent.stats.math') : t('parent.stats.reading');
-          // Format date for display (e.g., "Dec 21")
-          const dateObj = new Date(date);
-          const formattedDate = dateObj.toLocaleDateString(locale === 'sv' ? 'sv-SE' : 'en-US', {
-            day: 'numeric',
-            month: 'short'
-          });
-          chartData.push({
-            label: `${formattedDate}\n${childName}\n${subjectLabel}`,
-            date: formattedDate,
-            childName,
-            subject: subjectLabel,
-            correct: item.correct,
-            incorrect: item.incorrect,
-            childIndex: childIndexMap.get(childName) ?? 0,
-          });
+          details[subject] = { correct: item.correct, incorrect: item.incorrect };
+          hasAny = true;
+        } else {
+          details[subject] = { correct: 0, incorrect: 0 };
         }
+      }
+
+      if (hasAny) {
+        const dateObj = new Date(date);
+        const formattedDate = dateObj.toLocaleDateString(locale === 'sv' ? 'sv-SE' : 'en-US', {
+          day: 'numeric',
+          month: 'short'
+        });
+        chartData.push({
+          label: `${formattedDate}\n${childName}`,
+          date: formattedDate,
+          childName,
+          math: details.math.correct,
+          math_err: details.math.incorrect,
+          reading: details.reading.correct,
+          reading_err: details.reading.incorrect,
+          english: details.english.correct,
+          english_err: details.english.incorrect,
+          quiz: details.quiz.correct,
+          quiz_err: details.quiz.incorrect,
+          details,
+        });
       }
     }
   }
 
-  // Custom tooltip
+  // Custom tooltip showing per-subject breakdown
   const CustomTooltip = ({ active, payload }: {
     active?: boolean;
-    payload?: Array<{ value: number; dataKey: string; payload: { date: string; childName: string; subject: string } }>;
+    payload?: Array<{ payload: ChartEntry }>;
   }) => {
     if (active && payload && payload.length) {
-      const correct = payload.find(p => p.dataKey === 'correct')?.value || 0;
-      const incorrect = payload.find(p => p.dataKey === 'incorrect')?.value || 0;
-      const { date, childName, subject } = payload[0]?.payload || {};
-
+      const entry = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border">
-          <p className="font-semibold">{date}</p>
-          <p className="text-sm text-gray-600">{childName} - {subject}</p>
-          <p className="text-sm text-green-600">{t('parent.stats.correct')}: {correct}</p>
-          <p className="text-sm text-red-600">{t('parent.stats.incorrect')}: {incorrect}</p>
+        <div className="bg-white p-3 rounded-lg shadow-lg border min-w-[160px]">
+          <p className="font-semibold">{entry.date}</p>
+          <p className="text-sm text-gray-600 mb-2">{entry.childName}</p>
+          {SUBJECTS.map(subject => {
+            const d = entry.details[subject];
+            if (!d || (d.correct === 0 && d.incorrect === 0)) return null;
+            const { color, emoji } = SUBJECT_COLORS[subject];
+            return (
+              <div key={subject} className="flex items-center justify-between text-sm gap-3">
+                <span>{emoji} {t(`parent.stats.${subject}`)}</span>
+                <span>
+                  <span style={{ color }}>{d.correct} {t('parent.stats.correct').toLowerCase()}</span>
+                  {d.incorrect > 0 && (
+                    <span className="text-gray-400 ml-1">/ {d.incorrect} {t('parent.stats.incorrect').toLowerCase()}</span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
         </div>
       );
     }
     return null;
   };
 
-  // Custom x-axis tick to render three lines (date + name + subject)
+  // Custom x-axis tick: date + child name (2 lines)
   const CustomTick = ({ x, y, payload }: { x: number; y: number; payload: { value: string } }) => {
     const lines = payload.value.split('\n');
     return (
       <g transform={`translate(${x},${y})`}>
-        <text x={0} y={0} dy={12} textAnchor="middle" fill="#6b7280" fontSize={10}>
+        <text x={0} y={0} dy={12} textAnchor="middle" fill="#6b7280" fontSize={11}>
           {lines[0]}
         </text>
-        <text x={0} y={0} dy={24} textAnchor="middle" fill="#374151" fontSize={11} fontWeight={500}>
+        <text x={0} y={0} dy={26} textAnchor="middle" fill="#374151" fontSize={12} fontWeight={500}>
           {lines[1]}
-        </text>
-        <text x={0} y={0} dy={36} textAnchor="middle" fill="#6b7280" fontSize={10}>
-          {lines[2]}
         </text>
       </g>
     );
   };
 
   // Calculate chart width based on number of bars
-  const barWidth = 50;
+  const barWidth = 60;
   const minWidth = Math.max(400, chartData.length * barWidth);
 
   return (
@@ -242,8 +252,8 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
           <ResponsiveContainer width="100%" height={350}>
             <BarChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              barCategoryGap="15%"
+              margin={{ top: 20, right: 30, left: 20, bottom: 45 }}
+              barCategoryGap="20%"
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
@@ -251,7 +261,7 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
                 tick={CustomTick}
                 axisLine={{ stroke: '#d1d5db' }}
                 interval={0}
-                height={70}
+                height={50}
               />
               <YAxis
                 tick={{ fill: '#6b7280', fontSize: 12 }}
@@ -259,57 +269,40 @@ export default function ProgressChart({ data, period, onPeriodChange }: Progress
                 allowDecimals={false}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="correct"
-                stackId="bar"
-                name={t('parent.stats.correct')}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`correct-${index}`}
-                    fill={CHILD_COLORS[entry.childIndex % CHILD_COLORS.length].correct}
-                  />
-                ))}
-              </Bar>
-              <Bar
-                dataKey="incorrect"
-                stackId="bar"
-                name={t('parent.stats.incorrect')}
-                radius={[4, 4, 0, 0]}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`incorrect-${index}`}
-                    fill={CHILD_COLORS[entry.childIndex % CHILD_COLORS.length].incorrect}
-                  />
-                ))}
-              </Bar>
+              {SUBJECTS.map((subject, i) => {
+                const isLast = i === SUBJECTS.length - 1;
+                return [
+                  <Bar
+                    key={subject}
+                    dataKey={subject}
+                    stackId="subjects"
+                    fill={SUBJECT_COLORS[subject].color}
+                  />,
+                  <Bar
+                    key={`${subject}_err`}
+                    dataKey={`${subject}_err`}
+                    stackId="subjects"
+                    fill={SUBJECT_COLORS[subject].errorColor}
+                    radius={isLast ? [4, 4, 0, 0] : undefined}
+                  />,
+                ];
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Legend explaining colors per child */}
+      {/* Subject legend */}
       <div className="flex flex-wrap justify-center gap-4 mt-2 text-sm">
-        {children.map((childName, index) => {
-          const colors = CHILD_COLORS[index % CHILD_COLORS.length];
+        {SUBJECTS.map(subject => {
+          const { color, errorColor, emoji } = SUBJECT_COLORS[subject];
           return (
-            <div key={childName} className="flex items-center gap-2">
-              <span className="text-gray-700 font-medium">{childName}:</span>
-              <div className="flex items-center gap-1">
-                <div
-                  className="w-3 h-3 rounded"
-                  style={{ backgroundColor: colors.correct }}
-                />
-                <span className="text-gray-600">{t('parent.stats.correct')}</span>
+            <div key={subject} className="flex items-center gap-1.5">
+              <div className="flex">
+                <div className="w-3 h-3 rounded-l" style={{ backgroundColor: color }} />
+                <div className="w-3 h-3 rounded-r" style={{ backgroundColor: errorColor }} />
               </div>
-              <div className="flex items-center gap-1">
-                <div
-                  className="w-3 h-3 rounded"
-                  style={{ backgroundColor: colors.incorrect }}
-                />
-                <span className="text-gray-600">{t('parent.stats.incorrect')}</span>
-              </div>
+              <span className="text-gray-600">{emoji} {t(`parent.stats.${subject}`)}</span>
             </div>
           );
         })}

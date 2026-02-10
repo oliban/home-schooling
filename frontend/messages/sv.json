@@ -477,6 +477,8 @@
       "noAnswers": "Inga frågor besvarade än",
       "math": "Matte",
       "reading": "Läsning",
+      "english": "Engelska",
+      "quiz": "Quiz",
       "correct": "Rätt",
       "incorrect": "Fel",
       "total": "Totalt",

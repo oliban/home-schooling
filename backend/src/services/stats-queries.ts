@@ -26,7 +26,7 @@ export interface DateStatsResult {
 /**
  * Subject type for filtering queries
  */
-export type SubjectType = 'math' | 'reading';
+export type SubjectType = 'math' | 'reading' | 'english' | 'quiz';
 
 /**
  * Data source type for distinguishing between:
@@ -193,6 +193,8 @@ export function getStatsByDate(
 export interface ChildStats {
   math: StatsResult;
   reading: StatsResult;
+  english: StatsResult;
+  quiz: StatsResult;
 }
 
 /**
@@ -201,6 +203,8 @@ export interface ChildStats {
 export interface ChildStatsByDate {
   math: DateStatsResult[];
   reading: DateStatsResult[];
+  english: DateStatsResult[];
+  quiz: DateStatsResult[];
 }
 
 /**
@@ -258,6 +262,22 @@ export function getChildStats(
     dateFilter: buildDateFilter(period, getColumnAlias('reading', 'legacy'))
   });
 
+  // Get english stats (package only, no legacy tables)
+  const englishPackage = getAggregatedStats(db, {
+    childId,
+    subject: 'english',
+    dataSource: 'package',
+    dateFilter: buildDateFilter(period, getColumnAlias('english', 'package'))
+  });
+
+  // Get quiz stats (package only, no legacy tables)
+  const quizPackage = getAggregatedStats(db, {
+    childId,
+    subject: 'quiz',
+    dataSource: 'package',
+    dateFilter: buildDateFilter(period, getColumnAlias('quiz', 'package'))
+  });
+
   return {
     math: {
       correct: mathPackage.correct + mathLegacy.correct,
@@ -266,7 +286,9 @@ export function getChildStats(
     reading: {
       correct: readingPackage.correct + readingLegacy.correct,
       incorrect: readingPackage.incorrect + readingLegacy.incorrect
-    }
+    },
+    english: englishPackage,
+    quiz: quizPackage
   };
 }
 
@@ -341,8 +363,26 @@ export function getChildStatsByDate(
     dateFilter: buildDateFilter(period, getColumnAlias('reading', 'legacy'))
   });
 
+  // Get english stats by date (package only)
+  const englishPackageByDate = getStatsByDate(db, {
+    childId,
+    subject: 'english',
+    dataSource: 'package',
+    dateFilter: buildDateFilter(period, getColumnAlias('english', 'package'))
+  });
+
+  // Get quiz stats by date (package only)
+  const quizPackageByDate = getStatsByDate(db, {
+    childId,
+    subject: 'quiz',
+    dataSource: 'package',
+    dateFilter: buildDateFilter(period, getColumnAlias('quiz', 'package'))
+  });
+
   return {
     math: mergeDateStats(mathPackageByDate, mathLegacyByDate),
-    reading: mergeDateStats(readingPackageByDate, readingLegacyByDate)
+    reading: mergeDateStats(readingPackageByDate, readingLegacyByDate),
+    english: englishPackageByDate,
+    quiz: quizPackageByDate
   };
 }

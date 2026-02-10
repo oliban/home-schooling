@@ -490,6 +490,8 @@
       "noAnswers": "No questions answered yet",
       "math": "Math",
       "reading": "Reading",
+      "english": "English",
+      "quiz": "Quiz",
       "correct": "Correct",
       "incorrect": "Incorrect",
       "total": "Total",

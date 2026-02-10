@@ -150,7 +150,7 @@ router.get('/stats-by-date', authenticateParent, (req, res) => {
       date: string;
       childId: string;
       childName: string;
-      subject: 'math' | 'reading';
+      subject: 'math' | 'reading' | 'english' | 'quiz';
       correct: number;
       incorrect: number;
     }> = [];
@@ -158,28 +158,17 @@ router.get('/stats-by-date', authenticateParent, (req, res) => {
     for (const child of childrenList) {
       const childStats = getChildStatsByDate(db, child.id, period);
 
-      // Add math entries
-      for (const stats of childStats.math) {
-        result.push({
-          date: stats.date,
-          childId: child.id,
-          childName: child.name,
-          subject: 'math',
-          correct: stats.correct,
-          incorrect: stats.incorrect
-        });
-      }
-
-      // Add reading entries
-      for (const stats of childStats.reading) {
-        result.push({
-          date: stats.date,
-          childId: child.id,
-          childName: child.name,
-          subject: 'reading',
-          correct: stats.correct,
-          incorrect: stats.incorrect
-        });
+      for (const subject of ['math', 'reading', 'english', 'quiz'] as const) {
+        for (const stats of childStats[subject]) {
+          result.push({
+            date: stats.date,
+            childId: child.id,
+            childName: child.name,
+            subject,
+            correct: stats.correct,
+            incorrect: stats.incorrect
+          });
+        }
       }
     }
 
@@ -219,7 +208,9 @@ router.get('/stats', authenticateParent, (req, res) => {
         childId: child.id,
         childName: child.name,
         math: childStats.math,
-        reading: childStats.reading
+        reading: childStats.reading,
+        english: childStats.english,
+        quiz: childStats.quiz
       };
     });
 
