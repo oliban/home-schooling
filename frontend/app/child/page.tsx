@@ -150,10 +150,10 @@ export default function ChildDashboard() {
   const loadLatestUnlockedItem = async (token: string) => {
     try {
       const response = await collectibles.list(token);
-      const ownedItems = response.collectibles.filter(c => c.owned);
-      if (ownedItems.length > 0) {
-        // Show the most recent unlocked item
-        setUnlockedItem(ownedItems[0]);
+      const newItems = response.collectibles.filter(c => !c.owned);
+      if (newItems.length > 0) {
+        // Show a newly visible item the child hasn't bought yet
+        setUnlockedItem(newItems[0]);
       }
     } catch (err) {
       console.error('Failed to load latest unlocked item:', err);

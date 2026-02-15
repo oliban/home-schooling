@@ -91,6 +91,7 @@ export default function AssignmentPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [totalCoins, setTotalCoins] = useState(0);
+  const [sessionCoinsEarned, setSessionCoinsEarned] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [purchasedHint, setPurchasedHint] = useState<string | null>(null);
   const [buyingHint, setBuyingHint] = useState(false);
@@ -167,6 +168,7 @@ export default function AssignmentPage() {
       });
 
       setTotalCoins(result.totalCoins);
+      setSessionCoinsEarned(prev => prev + result.coinsEarned);
 
       if (result.isCorrect) {
         fireConfetti('coins');
@@ -309,7 +311,7 @@ export default function AssignmentPage() {
           </p>
 
           <div className="bg-gradient-to-r from-sunset-amber/30 to-sunset-gold/30 p-4 rounded-xl mb-6">
-            <div className="text-2xl font-display text-sunset-twilight">{t('assignment.completed.coinsEarned', { coins: totalCoins })} 💰</div>
+            <div className="text-2xl font-display text-sunset-twilight">{t('assignment.completed.coinsEarned', { coins: sessionCoinsEarned })} 💰</div>
           </div>
 
           <div className="space-y-2 mb-8">
