@@ -1528,7 +1528,7 @@ export const collectibles: CollectibleSeed[] = [
   TORNADO
    POWER`,
     price: 2500,
-    rarity: 'mythic', // Note: Migration 022 changes this to 'secret' in DB
+    rarity: 'secret',
     pronunciation: 'Pruttàlero Pruttàla'
   },
   {
@@ -1544,7 +1544,7 @@ export const collectibles: CollectibleSeed[] = [
    SITTING
    MASTER`,
     price: 2200,
-    rarity: 'mythic',
+    rarity: 'secret',
     pronunciation: 'Sittàlero Sittàla'
   },
   {
@@ -1561,7 +1561,7 @@ export const collectibles: CollectibleSeed[] = [
    MAXIMUM
     GLASS`,
     price: 2300,
-    rarity: 'mythic',
+    rarity: 'secret',
     pronunciation: 'Glassàlero Glassàla'
   },
   {
@@ -1577,7 +1577,7 @@ export const collectibles: CollectibleSeed[] = [
  LEGENDARY
    GOAT`,
     price: 2400,
-    rarity: 'mythic',
+    rarity: 'secret',
     pronunciation: 'Bockàlero Bockàla'
   },
   {
@@ -1592,7 +1592,7 @@ export const collectibles: CollectibleSeed[] = [
     FINGER
    MASTER`,
     price: 2600,
-    rarity: 'mythic',
+    rarity: 'secret',
     pronunciation: 'Fitchilèra Fitchlìla'
   }
 ];
