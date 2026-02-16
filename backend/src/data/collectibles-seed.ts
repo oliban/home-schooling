@@ -1514,6 +1514,86 @@ export const collectibles: CollectibleSeed[] = [
     price: 2000,
     rarity: 'mythic', // Note: Migration 022 changes this to 'secret' in DB
     pronunciation: 'Bajaléro Bajsalà' // Phonetic spelling for Italian TTS
+  },
+  {
+    name: "Pruttalero Pruttala",
+    ascii_art: `   ~~~***~~~
+  ~ PRRRRT ~
+ ~  *****  ~
+  ~ ~~~~~ ~
+   ~~~ ~~~
+    ( O )
+    / | \\
+   /  |  \\
+  TORNADO
+   POWER`,
+    price: 2500,
+    rarity: 'mythic', // Note: Migration 022 changes this to 'secret' in DB
+    pronunciation: 'Pruttàlero Pruttàla'
+  },
+  {
+    name: "Sittalero Sittala",
+    ascii_art: `   _______
+  |  ZzZ  |
+  | /---\\ |
+  ||  O  ||
+  || /|\\ ||
+  ||_/ \\_||
+ _|_________|_
+ ULTIMATE
+   SITTING
+   MASTER`,
+    price: 2200,
+    rarity: 'mythic',
+    pronunciation: 'Sittàlero Sittàla'
+  },
+  {
+    name: "Glassalero Glassala",
+    ascii_art: `    @@@@@@
+   @@@**@@@
+  @@@@**@@@@
+   @@@**@@@
+    @@**@@
+     \\**/ 
+      \\/
+      ||
+    ======
+   MAXIMUM
+    GLASS`,
+    price: 2300,
+    rarity: 'mythic',
+    pronunciation: 'Glassàlero Glassàla'
+  },
+  {
+    name: "Bockalero Bockala",
+    ascii_art: `   /\\   /\\
+  (  \\_/  )
+  |  O O  |
+  |   ^   |
+   \\ === /
+    |||||
+   /| | |\\
+  / | | | \\
+ LEGENDARY
+   GOAT`,
+    price: 2400,
+    rarity: 'mythic',
+    pronunciation: 'Bockàlero Bockàla'
+  },
+  {
+    name: "Fiscilera Ficlila",
+    ascii_art: `    *NYPP*
+   /  ||  \\
+  |   ||   |
+   \\  **  /
+    \\ ** /
+     \\**/
+    TRICKY
+    FINGER
+   MASTER`,
+    price: 2600,
+    rarity: 'mythic',
+    pronunciation: 'Fitchilèra Fitchlìla'
   }
 ];
 
