@@ -1478,6 +1478,24 @@ export const collectibles: CollectibleSeed[] = [
     price: 1950,
     rarity: 'legendary'
   },
+  {
+    name: "Ariana Velocissima",
+    ascii_art: `    *** *** ***
+     \\  |  /
+   ___\\ | /___
+  /   \\|/   \\
+ /   >>O>>   \\
+|    /   \\    |
+|   /     \\   |
+ \\  ~SPEED~  /
+  \\_________/
+   ~~~||||~~~
+    11 GOLD
+     ITALIA`,
+    price: 1888,
+    rarity: 'legendary',
+    pronunciation: 'Ariána Velotchíssima'
+  },
 
   // ==========================================
   // SECRET (1 character) - Ultimate rarity
