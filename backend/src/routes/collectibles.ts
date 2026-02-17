@@ -87,6 +87,7 @@ router.get('/', authenticateChild, async (req, res) => {
       ? `
       SELECT c.*,
         CASE WHEN cc.child_id IS NOT NULL THEN 1 ELSE 0 END as owned,
+        cc.custom_name,
         ROW_NUMBER() OVER (
           ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
         ) as row_num
@@ -98,6 +99,7 @@ router.get('/', authenticateChild, async (req, res) => {
       : `
       SELECT c.*,
         CASE WHEN cc.child_id IS NOT NULL THEN 1 ELSE 0 END as owned,
+        cc.custom_name,
         ROW_NUMBER() OVER (
           ORDER BY (((${childRowid} + 1) * (c.rowid * 2654435761)) % 2147483647)
         ) as row_num
@@ -147,6 +149,7 @@ router.get('/', authenticateChild, async (req, res) => {
         price: c.price,
         rarity: c.rarity,
         owned: c.owned === 1,
+        custom_name: (c as any).custom_name || null,
         pronunciation: c.pronunciation || null,
         svg_path: c.svg_path || null,
         expansion_pack: c.expansion_pack || null
@@ -313,6 +316,42 @@ router.post('/:id/buy', authenticateChild, async (req, res) => {
     }
 
     res.status(500).json({ error: 'Failed to purchase collectible' });
+  }
+});
+
+// Rename an owned collectible (set custom display name)
+router.patch('/:id/rename', authenticateChild, async (req, res) => {
+  try {
+    const db = getDb();
+    const childId = req.child!.id;
+    const collectibleId = req.params.id;
+    const { customName } = req.body;
+
+    // Validate: must own the collectible
+    const owned = db.get<ChildCollectible>(
+      'SELECT * FROM child_collectibles WHERE child_id = ? AND collectible_id = ?',
+      [childId, collectibleId]
+    );
+
+    if (!owned) {
+      return res.status(403).json({ error: 'You do not own this collectible' });
+    }
+
+    // Set or clear the custom name (null/empty string removes custom name)
+    const trimmedName = customName?.trim() || null;
+
+    db.run(
+      'UPDATE child_collectibles SET custom_name = ? WHERE child_id = ? AND collectible_id = ?',
+      [trimmedName, childId, collectibleId]
+    );
+
+    // Invalidate cache so updated name is reflected immediately
+    await invalidateCollectiblesCache(childId);
+
+    res.json({ success: true, customName: trimmedName });
+  } catch (error) {
+    console.error('Rename collectible error:', error);
+    res.status(500).json({ error: 'Failed to rename collectible' });
   }
 });
 
