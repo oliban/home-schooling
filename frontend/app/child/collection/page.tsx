@@ -19,6 +19,7 @@ interface Collectible {
   price: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   owned: boolean;
+  custom_name?: string | null;
   pronunciation?: string | null;
 }
 
@@ -66,6 +67,8 @@ export default function CollectionPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [unlockedCount, setUnlockedCount] = useState(0);
   const [sessionError, setSessionError] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('childToken');
@@ -145,6 +148,34 @@ export default function CollectionPage() {
   const handleCloseTreasureReveal = () => {
     setShowTreasureReveal(false);
     setPurchasedItem(null);
+  };
+
+  const handleStartRename = (item: Collectible) => {
+    setRenamingId(item.id);
+    setRenameValue(item.custom_name || '');
+  };
+
+  const handleRenameSubmit = async (item: Collectible) => {
+    const token = localStorage.getItem('childToken');
+    if (!token) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/collectibles/${item.id}/rename`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ customName: renameValue.trim() || null })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(prev => prev.map(i =>
+          i.id === item.id ? { ...i, custom_name: data.customName } : i
+        ));
+      }
+    } catch (err) {
+      console.error('Rename failed:', err);
+    } finally {
+      setRenamingId(null);
+      setRenameValue('');
+    }
   };
 
   if (loading) {
@@ -310,13 +341,40 @@ export default function CollectionPage() {
                   )}
                 </button>
 
-                {/* Name */}
-                <button
-                  onClick={() => speakItalian(item.pronunciation || item.name)}
-                  className="w-full font-display font-bold text-center mb-3 text-sunset-twilight hover:text-sunset-tangerine transition-colors cursor-pointer"
-                >
-                  {item.name}
-                </button>
+                {/* Name — editable for owned items */}
+                {item.owned && renamingId === item.id ? (
+                  <div className="mb-3 flex gap-1">
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleRenameSubmit(item); if (e.key === 'Escape') setRenamingId(null); }}
+                      placeholder={item.name}
+                      maxLength={40}
+                      className="flex-1 text-sm border-2 border-sunset-tangerine rounded-lg px-2 py-1 font-display text-sunset-twilight outline-none min-w-0"
+                    />
+                    <button onClick={() => handleRenameSubmit(item)} className="text-green-600 hover:text-green-700 px-1">✓</button>
+                    <button onClick={() => setRenamingId(null)} className="text-gray-400 hover:text-gray-600 px-1">✕</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-1 mb-3 group">
+                    <button
+                      onClick={() => speakItalian(item.pronunciation || item.custom_name || item.name)}
+                      className="font-display font-bold text-center text-sunset-twilight hover:text-sunset-tangerine transition-colors cursor-pointer"
+                    >
+                      {item.custom_name || item.name}
+                    </button>
+                    {item.owned && (
+                      <button
+                        onClick={() => handleStartRename(item)}
+                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-xs text-sunset-twilight/50 transition-opacity ml-1"
+                        title="Döp om"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Buy button */}
                 {activeTab === 'shop' && (
@@ -354,3 +412,4 @@ export default function CollectionPage() {
     </main>
   );
 }
+
