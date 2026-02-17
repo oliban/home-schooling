@@ -5,7 +5,7 @@ export interface CollectibleSeed {
   name: string;
   ascii_art: string;
   price: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'secret';
   pronunciation?: string; // Optional: text to speak instead of name (for correct pronunciation)
 }
 
