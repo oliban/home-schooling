@@ -580,6 +580,24 @@ VIKTIGT FÖR KODVAL: Matcha varje frågas typ med rätt kod:
 - Karaktärers känslor/motiv → SV-CHARACTER
 - Ordförståelse → SV-VOCABULARY
 
+STRIKTA REGLER FÖR SVARSALTERNATIV - FÖLJ DESSA EXAKT:
+
+STEG 1: Formulera rätt svar FÖRST med full detalj och korrekt längd.
+STEG 2: Skapa 3 fel-alternativ som:
+  - Är EXAKT LIKA LÅNGA (± 3 ord) som rätt svar
+  - Låter lika genomtänkta och detaljerade som rätt svar
+  - Är plausibla och logiska - de ska KUNNA vara rätt för ett barn som inte läst noga
+  - ALDRIG är uppenbara nonsens-svar eller mycket kortare än rätt svar
+STEG 3: Placera rätt svar SLUMPMÄSSIGT på A, B, C eller D (inte alltid A!).
+
+EXEMPEL PÅ FEL (undvik detta):
+  options: ["A: Han var rädd för vad breven symboliserade", "B: Arg", "C: Trött", "D: Glad"]
+  ← FEL! B/C/D är för korta. Rätt svar sticker ut direkt.
+
+EXEMPEL PÅ RÄTT:
+  options: ["A: Han var irriterad över allt besvär det orsakade hemma", "B: Han var rädd för vad breven symboliserade för familjen", "C: Han ville skydda Harry från farliga kontakter utifrån", "D: Han var orolig att Harry skulle bli besviken på innehållet"]
+  ← RÄTT! Alla alternativ är lika långa och lika genomtänkta.
+
 Svara med JSON i exakt detta format:
 {
   "package": {
@@ -590,10 +608,10 @@ Svara med JSON i exakt detta format:
   "problems": [
     {
       "question_text": "[Fråga på svenska - enkelt språk för årskurs ${gradeLevel}]",
-      "correct_answer": "A",
+      "correct_answer": "[Slumpmässig bokstav: A, B, C eller D - VARIERA mellan frågorna]",
       "answer_type": "multiple_choice",
-      "options": ["A: [Rätt svar]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
-      "explanation": "[Förklaring varför A är rätt]",
+      "options": ["A: [Alt 1 - lika lång som övriga]", "B: [Alt 2 - lika lång som övriga]", "C: [Alt 3 - lika lång som övriga]", "D: [Alt 4 - lika lång som övriga]"],
+      "explanation": "[Förklaring varför rätt svar är rätt]",
       "hint": "[Ledtråd]",
       "difficulty": "easy|medium|hard",
       "lgr22_codes": ["[VÄLJ rätt kod baserat på frågetypen från: ${objectiveCodes.join(', ')}]"]
@@ -602,8 +620,7 @@ Svara med JSON i exakt detta format:
 }
 
 - Använd åldersanpassat språk för ÅRSKURS ${gradeLevel}
-- Alla alternativ ska ha liknande längd (inget uppenbart längre rätt svar)
-- Distraktorer ska vara trovärdiga men tydligt fel
+- KONTROLLERA varje fråga: kan man gissa rätt bara genom att titta på längden? Om ja, skriv om!
 - Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra (men ALLTID inom årskurs ${gradeLevel} nivå!)`;
 
   const response = await client.messages.create({
@@ -761,13 +778,31 @@ Respond with JSON in exactly this format:
     "name": "[Creative English title that includes the theme]",
     "description": "[Short English description of the exercises]"
   },
+STRICT RULES FOR ANSWER OPTIONS - FOLLOW EXACTLY:
+
+STEP 1: Write the correct answer FIRST with full detail and appropriate length.
+STEP 2: Create 3 wrong options that:
+  - Are EXACTLY THE SAME LENGTH (± 3 words) as the correct answer
+  - Sound equally thoughtful and detailed as the correct answer
+  - Are plausible - they should LOOK like they could be correct to a child who doesn't know
+  - Are NEVER obviously silly or much shorter than the correct answer
+STEP 3: Place the correct answer RANDOMLY at A, B, C, or D (NOT always A!).
+
+BAD EXAMPLE (avoid this):
+  options: ["A: She goes to school every day", "B: go", "C: gone", "D: going"]
+  ← WRONG! B/C/D are too short. Correct answer stands out immediately.
+
+GOOD EXAMPLE:
+  options: ["A: She go to school every day", "B: She goes to school every day", "C: She going to school every day", "D: She gone to school every day"]
+  ← RIGHT! All options are the same length and look plausible.
+
   "problems": [
     {
       "question_text": "[Question/instruction in English]",
-      "correct_answer": "A",
+      "correct_answer": "[Random letter: A, B, C, or D - VARY between questions]",
       "answer_type": "multiple_choice",
-      "options": ["A: [Correct answer]", "B: [Wrong option]", "C: [Wrong option]", "D: [Wrong option]"],
-      "explanation": "[Explanation in English why A is correct, include translation if relevant]",
+      "options": ["A: [Option 1 - same length as others]", "B: [Option 2 - same length as others]", "C: [Option 3 - same length as others]", "D: [Option 4 - same length as others]"],
+      "explanation": "[Explanation in English why the correct answer is correct, include translation if relevant]",
       "hint": "[Helpful hint in English]",
       "difficulty": "easy|medium|hard",
       "lgr22_codes": ["[Choose correct code based on exercise type from: ${objectiveCodes.join(', ')}]"]
@@ -776,7 +811,7 @@ Respond with JSON in exactly this format:
 }
 
 - Use age-appropriate English for GRADE ${gradeLevel}
-- All options should have similar length
+- CHECK every question: can you guess the right answer just by looking at length? If yes, rewrite!
 - Distractors should be common mistakes children make
 - Difficulty distribution: 40% easy, 40% medium, 20% hard
 - Make the exercises fun and engaging with the theme "${theme}"`;
@@ -856,6 +891,24 @@ Detta barn går i ÅRSKURS ${gradeLevel}. Du MÅSTE anpassa ALLT innehåll till 
 - Vikingar: Liv, resor, kultur, historiska händelser
 - Djur: Fakta om djur, habitat, beteenden
 
+STRIKTA REGLER FÖR SVARSALTERNATIV - FÖLJ DESSA EXAKT:
+
+STEG 1: Formulera rätt svar FÖRST med full detalj och korrekt längd.
+STEG 2: Skapa 3 fel-alternativ som:
+  - Är EXAKT LIKA LÅNGA (± 3 ord) som rätt svar
+  - Låter lika genomtänkta och detaljerade som rätt svar
+  - Är plausibla - de ska KUNNA verka rätt för ett barn som inte kan ämnet
+  - ALDRIG är uppenbara nonsens-svar eller mycket kortare än rätt svar
+STEG 3: Placera rätt svar SLUMPMÄSSIGT på A, B, C eller D (inte alltid A!).
+
+EXEMPEL PÅ FEL (undvik detta):
+  options: ["A: Siddharta Gautama som levde i Indien för 2500 år sedan", "B: Jesus", "C: Muhammed", "D: Buddha"]
+  ← FEL! B/C/D är för korta jämfört med A. Rätt svar sticker ut direkt.
+
+EXEMPEL PÅ RÄTT:
+  options: ["A: Konfucius, en kinesisk filosof som levde för ungefär 2500 år sedan", "B: Siddharta Gautama, en prins i Indien som levde för ungefär 2500 år sedan", "C: Muhammed, en arabisk profet som levde för ungefär 1400 år sedan", "D: Abraham, en patriark som grundade en av världens äldsta religioner"]
+  ← RÄTT! Alla alternativ är lika långa och lika detaljerade.
+
 Svara med JSON i exakt detta format:
 {
   "package": {
@@ -866,9 +919,9 @@ Svara med JSON i exakt detta format:
   "problems": [
     {
       "question_text": "[Fråga på svenska]",
-      "correct_answer": "A",
+      "correct_answer": "[Slumpmässig bokstav: A, B, C eller D - VARIERA mellan frågorna]",
       "answer_type": "multiple_choice",
-      "options": ["A: [Rätt svar]", "B: [Fel alternativ]", "C: [Fel alternativ]", "D: [Fel alternativ]"],
+      "options": ["A: [Alt 1 - lika lång som övriga]", "B: [Alt 2 - lika lång som övriga]", "C: [Alt 3 - lika lång som övriga]", "D: [Alt 4 - lika lång som övriga]"],
       "explanation": "[Förklaring som lär barnet något nytt - OBLIGATORISKT]",
       "hint": "[Ledtråd]",
       "difficulty": "easy|medium|hard",
@@ -878,8 +931,7 @@ Svara med JSON i exakt detta format:
 }
 
 VIKTIGA REGLER:
-- Alla alternativ ska ha liknande längd (inget uppenbart längre rätt svar)
-- Distraktorer ska vara trovärdiga men tydligt fel
+- KONTROLLERA varje fråga: kan man gissa rätt bara genom att titta på längden? Om ja, skriv om!
 - Svårighetsfördelning: 40% lätta, 40% medel, 20% svåra
 - VARJE fråga MÅSTE ha en explanation som förklarar det rätta svaret
 - correct_answer ska ENDAST vara bokstaven (A, B, C eller D), ALDRIG hela texten
